@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>MiladGeo Leica Simulator</title>
+
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:#222722}
+body{font-family:"Courier New",monospace;color:#11170f;overflow-x:hidden}
+button,input,select,a{font:inherit}a{text-decoration:none;color:inherit}
+
+.app{
+ width:100%;
+ max-width:100%;
+ min-height:100vh;
+ padding:7px;
+ background:linear-gradient(145deg,#c5cbbf,#7d8879 7%,#4b574b 13%,#222a22 18%,#171c17 82%,#4e594d 90%,#aab3a4);
+}
+.device{
+ width:100%;
+ min-height:calc(100vh - 14px);
+ padding:7px;
+ border:3px solid #394238;
+ border-radius:25px;
+ background:linear-gradient(145deg,#a9b89f,#70806b 18%,#4f5c4c 80%,#9eaa96);
+ box-shadow:inset 0 0 0 2px #c7d0bf,inset 0 0 20px #1d241d,0 4px 15px #000;
+}
+.screenFrame{
+ width:100%;
+ min-height:calc(100vh - 28px);
+ padding:7px;
+ background:#282d27;
+ border:4px solid #171b17;
+ box-shadow:inset 0 0 0 2px #555a51;
+}
+.screen{
+ width:100%;
+ min-height:calc(100vh - 42px);
+ padding:10px;
+ background:
+  repeating-linear-gradient(0deg,rgba(20,28,18,.025) 0 1px,transparent 1px 4px),
+  radial-gradient(ellipse at 50% 20%,rgba(230,235,215,.32),transparent 58%),
+  #aeb6a0;
+ border:2px solid #4e544a;
+ box-shadow:inset 0 0 22px rgba(20,25,18,.28);
+}
+
+.header{
+ display:flex;justify-content:space-between;align-items:center;
+ min-height:34px;padding:3px 2px 8px;
+ border-bottom:2px solid #4b5147;font-weight:bold;font-size:14px
+}
+.logo{letter-spacing:1px}.status{font-size:10px}
+
+.page{display:none}.page.active{display:block}
+.title{font-size:17px;font-weight:bold;padding:12px 0 7px;border-bottom:2px solid #4b5147;margin-bottom:10px}
+.subtitle{font-size:10px;margin:4px 0 9px;color:#414b3e}
+
+.card{
+ padding:9px;margin-bottom:9px;
+ border:2px solid #4d5349;
+ background:rgba(190,196,177,.38);
+ box-shadow:inset 0 0 9px rgba(255,255,255,.12)
+}
+.card-title{font-weight:bold;font-size:13px;margin-bottom:8px}
+
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.menu-btn{
+ min-width:0;min-height:66px;padding:8px;text-align:left;
+ border:2px solid #3d433b;border-radius:4px;
+ background:linear-gradient(#d3d6cb,#a9aea3);
+ color:#10160f;font-weight:bold;
+ box-shadow:inset 0 1px #f4f5ef,0 2px #20251f
+}
+.menu-btn.locked{opacity:.43}
+.menu-num{font-size:18px;margin-right:5px}
+.menu-state{display:block;margin:5px 0 0 25px;font-size:9px}
+
+.setup-status{display:grid;gap:3px}
+.setup-line{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px dotted #73796c;font-size:11px}
+.ok{color:#1b5e25;font-weight:bold}.not-ok{color:#596153}
+
+label{display:block;font-size:10px;margin:7px 0 3px}
+input,select{
+ width:100%;height:37px;padding:0 7px;
+ color:#11170f;background:#adb5a1;
+ border:2px solid #4a5147;border-radius:3px;
+ outline:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.16)
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.btn{
+ width:100%;min-height:38px;padding:6px;
+ color:#11170f;font-weight:bold;
+ background:linear-gradient(#d5d8ce,#a7ada1);
+ border:2px solid #3d433b;border-radius:4px;
+ box-shadow:inset 0 1px #f5f6ef,0 2px #20251f
+}
+.btn.primary{background:linear-gradient(#dfe2d8,#b5bbae)}
+.btn.danger{background:linear-gradient(#c6c6bc,#9ea298)}
+.btn.gray{background:#a6aba1}
+.back{margin-bottom:7px}
+
+.set-box{
+ display:flex;align-items:center;gap:7px;
+ padding:7px;margin-top:8px;border:2px solid #4d5349;
+ background:rgba(168,176,158,.4)
+}
+.tick{
+ flex:0 0 23px;width:23px;height:23px;border-radius:50%;
+ display:flex;align-items:center;justify-content:center;
+ border:2px solid #5a6255;color:#555d50
+}
+.tick.done{background:#3a713e;border-color:#1d4324;color:#eef4e9}
+.set-text{font-size:10px}.set-text.done{color:#1b5e25;font-weight:bold}
+
+.result{
+ padding:8px;margin-top:8px;border:2px solid #4b5147;
+ background:rgba(181,188,168,.35)
+}
+.result-line{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dotted #73796c;font-size:11px}
+.result-line:last-child{border-bottom:0}
+.result-label{color:#3d473a}.result-value{font-weight:bold;color:#162017;text-align:right}
+.az{text-align:center;font-size:20px;font-weight:bold;padding:6px;color:#172219}
+
+.point{
+ margin-bottom:7px;border:2px solid #4b5147;background:rgba(184,191,171,.4)
+}
+.point-head{display:flex;justify-content:space-between;gap:5px;padding:7px;background:rgba(100,111,94,.28)}
+.point-name{font-weight:bold}
+.point-body{padding:7px}
+.coord{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.coord div{padding:5px;text-align:center;background:rgba(130,140,120,.25)}
+.coord span{display:block;font-size:9px;color:#4d574a}.coord b{font-size:10px}
+.point-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.small-btn{min-height:32px;border:2px solid #42483f;background:linear-gradient(#d0d3c9,#a8ada2);font-weight:bold}
+.small-btn.delete{background:linear-gradient(#c2c2b8,#9fa198)}
+
+.empty{text-align:center;padding:22px 7px;border:2px dashed #687061;color:#535d50;font-size:11px}
+.footer{text-align:center;padding:8px 0 0;font-size:8px;color:#596354}
+
+.toast{
+ position:fixed;left:50%;bottom:15px;transform:translate(-50%,80px);
+ max-width:90%;padding:9px 13px;background:#3d493b;color:#f0f3e9;
+ border:2px solid #aeb8a3;border-radius:4px;opacity:0;transition:.2s;z-index:99;
+ font-size:11px;text-align:center
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media(max-width:380px){
+ .screen{padding:8px}.menu-grid{gap:5px}.menu-btn{min-height:61px;padding:6px}
+ .title{font-size:15px}.row3{gap:4px}.row{gap:5px}
+}
+
+/* NO-JS FALLBACK: hash targets still give visible SET feedback */
+body:has(#job-set:target) #jobFallbackTick{display:flex}
+body:has(#station-set:target) #stationFallbackTick{display:flex}
+body:has(#orientation-set:target) #orientationFallbackTick{display:flex}
+.fallback-tick{display:none;align-items:center;gap:8px;margin-top:8px;padding:8px;border:1px solid #6d7b66;background:#dfe8d9;color:#165b20;font-weight:800;border-radius:8px}
+</style>
+</head>
+
+<body>
+<div class="app"><div class="device"><div class="screenFrame"><div class="screen">
+
+<div class="header"><div class="logo">Q-SURVEY • MILADGEO</div><div id="headerStatus">NO JOB</div></div>
+
+<section id="main" class="page active">
+<div class="title">MAIN MENU</div>
+<div class="card"><div class="card-title">CURRENT JOB</div><div id="jobSummary">No Job</div>
+<a id="jobNavBtn" class="btn primary" href="#job" style="margin-top:8px">JOB / PROJECT</a></div>
+
+<div class="menu-grid">
+<a id="stationNavBtn" class="menu-btn" href="#station"><span class="menu-num">1</span>STATION<span id="stationMenuState" class="menu-state">NOT SET</span></a>
+<button id="measureMenu" class="menu-btn locked" onclick="openMeasure()"><span class="menu-num">2</span>MEASURE<span id="measureMenuState" class="menu-state">🔒 SETUP REQUIRED</span></button>
+<button id="stakeMenu" class="menu-btn locked" onclick="openStake()"><span class="menu-num">3</span>STAKE OUT<span id="stakeMenuState" class="menu-state">🔒 SETUP REQUIRED</span></button>
+<a class="menu-btn" href="#points"><span class="menu-num">4</span>POINTS<span id="pointsMenuState" class="menu-state">0 POINTS</span></a>
+</div>
+
+<div class="card" style="margin-top:9px"><div class="card-title">SETUP STATUS</div>
+<div class="setup-status">
+<div class="setup-line"><span>JOB</span><span id="jobStatus" class="not-ok">NOT SET</span></div>
+<div class="setup-line"><span>STATION</span><span id="stationStatus" class="not-ok">NOT SET</span></div>
+<div class="setup-line"><span>ORIENTATION</span><span id="orientationStatus" class="not-ok">NOT SET</span></div>
+</div></div>
+</section>
+
+<section id="job" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">JOB / PROJECT</div>
+<div class="card"><div class="card-title">CREATE / SELECT JOB</div>
+<label>Job Name</label><input id="jobName" placeholder="ROAD_1405">
+<button type="button" id="setJobBtn" class="btn primary" style="margin-top:9px" onclick="saveJob();return false;">✓ SET JOB</button></div>
+<div id="jobInfo"></div><div id="jobFallbackTick" class="fallback-tick">✓ JOB SET</div>
+</section>
+
+<section id="station" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">1 — STATION</div>
+<div class="card"><div class="card-title">STATION COORDINATES</div>
+<label>Station Point</label><input id="stationName" value="ST01">
+<div class="row3"><div><label>X</label><input id="sx" type="number" step="any"></div><div><label>Y</label><input id="sy" type="number" step="any"></div><div><label>Z</label><input id="sz" type="number" step="any"></div></div>
+<button type="button" id="setStationBtn" class="btn primary" style="margin-top:9px" onclick="setStation();return false;">✓ SET STATION</button><div id="stationSetBox"></div><div id="stationFallbackTick" class="fallback-tick">✓ STATION SET</div></div>
+
+<div class="card"><div class="card-title">ORIENTATION</div>
+<label>Orienting Method</label><select id="orientMethod"><option value="azimuth">AZIMUTH</option><option value="coordinates">COORDINATES</option></select>
+<div id="azimuthMode"><label>Azimuth °</label><input id="manualAz" type="number" step="any" placeholder="0 - 360"><label>Distance / Length m</label><input id="orientationDistance" type="number" step="any" min="0" placeholder="0.000"></div>
+<div id="coordinateMode" style="display:none"><label>Backsight Point</label><input id="backName" value="BS01"><div class="row3"><div><label>X</label><input id="bx" type="number" step="any"></div><div><label>Y</label><input id="by" type="number" step="any"></div><div><label>Z</label><input id="bz" type="number" step="any"></div></div></div>
+<button type="button" id="setOrientationBtn" class="btn primary" style="margin-top:9px" onclick="setOrientation();return false;">✓ SET ORIENTATION</button>
+<div id="orientationResult"></div><div id="orientationSetBox"></div><div id="orientationFallbackTick" class="fallback-tick">✓ ORIENTATION SET</div></div>
+</section>
+
+<section id="measure" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">2 — MEASUREMENT</div>
+<div class="card"><div class="card-title">NEW POINT</div>
+<label>Point Number</label><input id="pointNo" readonly>
+<label>DP</label><input id="pointDP" placeholder="Description">
+<div class="row"><div><label>Distance / SD</label><input id="distance" type="number" step="any"></div><div><label>Azimuth Hz °</label><input id="pointAz" type="number" step="any"></div></div>
+<div class="row"><div><label>ΔZ / dH</label><input id="dz" type="number" step="any" value="0"></div><div><label>HI</label><input id="hi" type="number" step="any" value="0"></div></div>
+<button class="btn primary" style="margin-top:9px" onclick="calculatePoint()">MEAS / CALCULATE</button>
+<div id="pointResult"></div></div>
+</section>
+
+<section id="stake" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">3 — STAKE OUT</div>
+<div class="card"><div class="card-title">TARGET POINT</div><label>Select Point</label><select id="stakeSelect" onchange="loadStakePoint()"><option value="">-- Select Point --</option></select><div id="stakeTarget"></div></div>
+<div class="card"><div class="card-title">STAKE OUT RESULTS</div><div id="stakeResult"><div class="empty">Select a target point.</div></div><button class="btn primary" style="margin-top:8px" onclick="calculateStake()">CALCULATE</button></div>
+</section>
+
+<section id="points" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">4 — POINT LIST</div>
+<div class="card"><div class="card-title">JOB: <span id="pointsJobName">-</span></div><div class="btn-row"><button class="btn primary" onclick="exportPoints()">↓ EXPORT</button><button class="btn danger" onclick="clearAllPoints()">CLEAR ALL</button></div></div>
+<div id="pointsList"></div></section>
+
+<section id="edit" class="page">
+<a class="btn gray back" href="#points">← POINT LIST</a><div class="title">EDIT POINT</div>
+<div class="card"><input type="hidden" id="editId"><label>Point Number</label><input id="editNo"><label>DP</label><input id="editDP">
+<div class="row3"><div><label>X</label><input id="editX" type="number" step="any"></div><div><label>Y</label><input id="editY" type="number" step="any"></div><div><label>Z</label><input id="editZ" type="number" step="any"></div></div>
+<button class="btn primary" style="margin-top:9px" onclick="updatePoint()">✓ SAVE CHANGES</button></div></section>
+
+<div class="footer">LEICA STYLE • MILADGEO TOTAL STATION SIMULATOR</div>
+</div></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+var JOB_KEY="miladgeo_job_v3", SETUP_KEY="miladgeo_setup_v3", POINTS_KEY="miladgeo_points_v3";
+function $(id){return document.getElementById(id);}
+var job={name:"",created:""};
+var setup={stationSet:false,orientationSet:false,stationName:"",sx:null,sy:null,sz:null,orientationMethod:"azimuth",azimuth:null,orientationDistance:null,backName:"",bx:null,by:null,bz:null};
+var points=[]; var lastCalculatedPoint=null;
+function finite(v){return typeof v==='number' && isFinite(v);}
+function num(v){var n=parseFloat(v);return isFinite(n)?n:NaN;}
+function loadData(){try{var j=localStorage.getItem(JOB_KEY),s=localStorage.getItem(SETUP_KEY),p=localStorage.getItem(POINTS_KEY);if(j)job=JSON.parse(j);if(s)setup=JSON.parse(s);if(p)points=JSON.parse(p);if(!job||typeof job!=='object')job={name:"",created:""};if(!setup||typeof setup!=='object')setup={stationSet:false,orientationSet:false};if(!points||!Array.isArray(points))points=[];}catch(e){}}
+function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function showPage(id){var pages=document.querySelectorAll('.page'),i,target=$(id);if(!target)return false;for(i=0;i<pages.length;i++)pages[i].classList.remove('active');target.classList.add('active');try{window.scrollTo(0,0);}catch(e){}if(id==='points')refreshPoints();if(id==='stake')updateStakeSelect();if(id==='main')updateAllUI();return false;}
+function goPage(id){try{history.replaceState(null,'','#'+id);}catch(e){}showPage(id);return false;}
+window.goPage=goPage;
+window.showPage=showPage;
+function saveJob(){var el=$("jobName"),n=el?el.value.replace(/^\s+|\s+$/g,''):'';if(!n){showToast('Enter Job Name');return false;}job.name=n;if(!job.created)job.created=new Date().toISOString();saveJSON(JOB_KEY,job);updateAllUI();showToast('JOB SET ✓');setTimeout(function(){goPage('main');showToast('MAIN MENU');},450);return false;}
+function setStation(){var x=num($("sx").value),y=num($("sy").value),z=num($("sz").value);if(!finite(x)||!finite(y)||!finite(z)){showToast('Enter Station X / Y / Z');return false;}setup.stationName=($("stationName").value||'ST01').replace(/^\s+|\s+$/g,'');setup.sx=x;setup.sy=y;setup.sz=z;setup.stationSet=true;setup.orientationSet=false;saveJSON(SETUP_KEY,setup);renderStationSet();renderOrientationSet();updateAllUI();showToast('STATION SET ✓');return false;}
+function changeOrientationMethod(){var m=$("orientMethod").value;$("azimuthMode").style.display=m==='azimuth'?'block':'none';$("coordinateMode").style.display=m==='coordinates'?'block':'none';}
+function normalizeAzimuth(a){a=a%360;if(a<0)a+=360;return a;}
+function calculateAzimuth(x1,y1,x2,y2){return normalizeAzimuth(Math.atan2(x2-x1,y2-y1)*180/Math.PI);}
+function setOrientation(){if(!setup.stationSet){showToast('Set Station first');return false;}var m=$("orientMethod").value,a,d=num($("orientationDistance").value);if(!finite(d)||d<0){showToast('Enter Orientation Distance / Length');return false;}if(m==='azimuth'){a=num($("manualAz").value);if(!finite(a)||a<0||a>=360){showToast('Enter Azimuth 0–360');return false;}}else{var x=num($("bx").value),y=num($("by").value),z=num($("bz").value);if(!finite(x)||!finite(y)||!finite(z)){showToast('Enter Backsight X / Y / Z');return false;}setup.bx=x;setup.by=y;setup.bz=z;setup.backName=($("backName").value||'BS01').replace(/^\s+|\s+$/g,'');a=calculateAzimuth(setup.sx,setup.sy,x,y);}setup.orientationMethod=m;setup.azimuth=normalizeAzimuth(a);setup.orientationDistance=d;setup.orientationSet=true;saveJSON(SETUP_KEY,setup);$("orientationResult").innerHTML='<div class="result"><div class="az">'+fmt(setup.azimuth,4)+'°</div><div class="result-line"><span>Length</span><b>'+fmt(d,3)+' m</b></div></div>';renderOrientationSet();updateAllUI();showToast('ORIENTATION SET ✓');setTimeout(function(){goPage('main');showToast('SETUP COMPLETE ✓');},550);return false;}
+function setupComplete(){return setup.stationSet===true&&setup.orientationSet===true;}
+function openMeasure(){if(!setupComplete()){showToast('Station & Orientation required');return false;}prepareNewPoint();showPage('measure');return false;}
+function openStake(){if(!setupComplete()){showToast('Station & Orientation required');return false;}showPage('stake');return false;}
+function getNextPointNumber(){var max=0,i,m,n;for(i=0;i<points.length;i++){m=String(points[i].no||'').match(/\d+$/);if(m){n=parseInt(m[0],10);if(n>max)max=n;}}return max+1;}
+function prepareNewPoint(){$("pointNo").value='P'+('000'+getNextPointNumber()).slice(-3);$("pointDP").value='';$("distance").value='';$("pointAz").value='';$("dz").value='';$("hi").value='';$("pointResult").innerHTML='';}
+function calculatePoint(){if(!setupComplete()){showToast('Setup is not complete');return false;}var no=$("pointNo").value.replace(/^\s+|\s+$/g,''),dp=$("pointDP").value.replace(/^\s+|\s+$/g,''),d=num($("distance").value),av=$("pointAz").value.replace(/^\s+|\s+$/g,''),a=av===''?Number(setup.azimuth):num(av),dh=num($("dz").value)||0,h=num($("hi").value)||0;if(!finite(d)){showToast('Enter Distance');return false;}if(!finite(a)){showToast('Enter Azimuth');return false;}a=normalizeAzimuth(a);var r=a*Math.PI/180,x=Number(setup.sx)+d*Math.sin(r),y=Number(setup.sy)+d*Math.cos(r),z=Number(setup.sz)+dh+h;lastCalculatedPoint={id:new Date().getTime(),no:no,dp:dp,x:x,y:y,z:z,distance:d,azimuth:a};$("pointResult").innerHTML='<div class="result"><div class="result-line"><span>Point</span><b>'+escapeHTML(no)+'</b></div><div class="result-line"><span>X</span><b>'+fmt(x,4)+'</b></div><div class="result-line"><span>Y</span><b>'+fmt(y,4)+'</b></div><div class="result-line"><span>Z</span><b>'+fmt(z,4)+'</b></div><button type="button" class="btn primary" style="margin-top:8px" onclick="saveCalculatedPoint();return false;">✓ SAVE POINT</button></div>';return false;}
+function saveCalculatedPoint(){if(!lastCalculatedPoint){showToast('Calculate point first');return false;}points.push(lastCalculatedPoint);saveJSON(POINTS_KEY,points);lastCalculatedPoint=null;prepareNewPoint();updateAllUI();showToast('Point saved ✓');return false;}
+function refreshPoints(){var list=$("pointsList");if(!list)return;$("pointsJobName").textContent=job.name||'-';if(!points.length){list.innerHTML='<div class="empty">No points stored.</div>';return;}var out='',i,p;for(i=0;i<points.length;i++){p=points[i];out+='<div class="point"><div class="point-head"><b>'+escapeHTML(p.no)+'</b><span>DP: '+escapeHTML(p.dp||'-')+'</span></div><div class="point-body"><div class="coord"><div><span>X</span><b>'+fmt(p.x,4)+'</b></div><div><span>Y</span><b>'+fmt(p.y,4)+'</b></div><div><span>Z</span><b>'+fmt(p.z,4)+'</b></div></div><div class="point-actions"><button type="button" class="small-btn" onclick="editPoint('+p.id+');return false;">EDIT</button><button type="button" class="small-btn delete" onclick="deletePoint('+p.id+');return false;">DELETE</button></div></div></div>';}list.innerHTML=out;}
+function deletePoint(id){var a=[];for(var i=0;i<points.length;i++)if(points[i].id!==id)a.push(points[i]);points=a;saveJSON(POINTS_KEY,points);refreshPoints();updateAllUI();showToast('Point deleted');}
+function clearAllPoints(){if(!points.length){showToast('Point list is empty');return;}if(window.confirm&&!window.confirm('CLEAR ALL POINTS?'))return;points=[];try{localStorage.removeItem(POINTS_KEY);}catch(e){}refreshPoints();updateAllUI();showToast('ALL POINTS CLEARED ✓');}
+function editPoint(id){var p=null,i;for(i=0;i<points.length;i++)if(points[i].id===id)p=points[i];if(!p)return;$("editId").value=p.id;$("editNo").value=p.no||'';$("editDP").value=p.dp||'';$("editX").value=p.x;$("editY").value=p.y;$("editZ").value=p.z;showPage('edit');}
+function updatePoint(){var id=num($("editId").value),p=null,i;for(i=0;i<points.length;i++)if(points[i].id===id)p=points[i];if(!p)return;var x=num($("editX").value),y=num($("editY").value),z=num($("editZ").value);if(!finite(x)||!finite(y)||!finite(z)){showToast('Invalid coordinates');return;}p.no=$("editNo").value.replace(/^\s+|\s+$/g,'')||p.no;p.dp=$("editDP").value.replace(/^\s+|\s+$/g,'');p.x=x;p.y=y;p.z=z;saveJSON(POINTS_KEY,points);refreshPoints();updateAllUI();showToast('Point updated ✓');showPage('points');}
+function updateStakeSelect(){var el=$("stakeSelect");if(!el)return;var out='<option value="">-- Select Point --</option>',i,p;for(i=0;i<points.length;i++){p=points[i];out+='<option value="'+p.id+'">'+escapeHTML(p.no)+' — '+escapeHTML(p.dp||'DP')+'</option>';}el.innerHTML=out;}
+function loadStakePoint(){var id=num($("stakeSelect").value),p=null,i;for(i=0;i<points.length;i++)if(points[i].id===id)p=points[i];$("stakeTarget").innerHTML=p?'<div class="result"><div class="result-line"><span>X</span><b>'+fmt(p.x,4)+'</b></div><div class="result-line"><span>Y</span><b>'+fmt(p.y,4)+'</b></div><div class="result-line"><span>Z</span><b>'+fmt(p.z,4)+'</b></div></div>':'';}
+function calculateStake(){var id=num($("stakeSelect").value),p=null,i;for(i=0;i<points.length;i++)if(points[i].id===id)p=points[i];if(!p){showToast('Select target point');return;}var dx=p.x-setup.sx,dy=p.y-setup.sy,d=Math.sqrt(dx*dx+dy*dy),a=calculateAzimuth(setup.sx,setup.sy,p.x,p.y),turn=normalizeAzimuth(a-setup.azimuth),dir='RIGHT';if(turn>180){turn=360-turn;dir='LEFT';}$("stakeResult").innerHTML='<div class="result"><div class="az">'+fmt(a,4)+'°</div><div class="result-line"><span>Distance</span><b>'+fmt(d,4)+' m</b></div><div class="result-line"><span>Turn</span><b>'+dir+' '+fmt(turn,4)+'°</b></div><div class="result-line"><span>ΔZ</span><b>'+fmt(p.z-setup.sz,4)+' m</b></div></div>';}
+function exportPoints(){if(!job.name){showToast('Set Job first');return;}if(!points.length){showToast('No points to export');return;}var csv='Point,DP,X,Y,Z,Distance,Azimuth\n',i,p;for(i=0;i<points.length;i++){p=points[i];csv+='"'+csvSafe(p.no)+'","'+csvSafe(p.dp||'')+'",'+p.x+','+p.y+','+p.z+','+(p.distance==null?'':p.distance)+','+(p.azimuth==null?'':p.azimuth)+(i===points.length-1?'':'\n');}var link=document.createElement('a');link.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));link.download=sanitizeFileName(job.name)+'_POINTS.csv';link.click();showToast('Exported ✓');}
+function csvSafe(v){return String(v).replace(/"/g,'""');}function sanitizeFileName(v){return String(v).replace(/[\\/:*?"<>|]/g,'_')||'MILADGEO_JOB';}
+function renderStationSet(){var el=$("stationSetBox");if(!el)return;el.innerHTML=setup.stationSet?'<div class="set-box"><div class="tick done">✓</div><div><div class="set-text done">STATION SET</div><div class="subtitle">'+escapeHTML(setup.stationName)+' — X '+fmt(setup.sx,3)+' | Y '+fmt(setup.sy,3)+' | Z '+fmt(setup.sz,3)+'</div></div></div>':'<div class="set-box"><div class="tick">—</div><div class="set-text">STATION NOT SET</div></div>';}
+function renderOrientationSet(){var el=$("orientationSetBox");if(!el)return;el.innerHTML=setup.orientationSet?'<div class="set-box"><div class="tick done">✓</div><div><div class="set-text done">ORIENTATION SET</div><div class="subtitle">'+(setup.orientationMethod==='azimuth'?'AZIMUTH':'COORDINATES')+' — '+fmt(setup.azimuth,4)+'° | '+fmt(setup.orientationDistance,3)+' m</div></div></div>':'<div class="set-box"><div class="tick">—</div><div class="set-text">ORIENTATION NOT SET</div></div>';}
+function setStatus(id,ok){if(!id)return;id.textContent=ok?'✓ SET':'NOT SET';id.className=ok?'ok':'not-ok';}
+function updateAllUI(){var hs=$("headerStatus"),js=$("jobSummary"),jobSt=$("jobStatus"),stSt=$("stationStatus"),orSt=$("orientationStatus"),sms=$("stationMenuState"),mm=$("measureMenu"),ms=$("measureMenuState"),sm=$("stakeMenu"),ss=$("stakeMenuState"),pm=$("pointsMenuState");if(hs)hs.textContent=job.name||'NO JOB';if(js)js.innerHTML=job.name?'<div class="result-line"><span>Job</span><b>'+escapeHTML(job.name)+'</b></div><div class="result-line"><span>Points</span><b>'+points.length+'</b></div>':'<span class="not-ok">No Job defined</span>';setStatus(jobSt,!!job.name);setStatus(stSt,!!setup.stationSet);setStatus(orSt,!!setup.orientationSet);if(sms)sms.textContent=setup.stationSet?'✓ SET':'NOT SET';var ok=setupComplete();if(mm)mm.classList.toggle('locked',!ok);if(sm)sm.classList.toggle('locked',!ok);if(ms)ms.textContent=ok?'✓ READY':'🔒 SETUP REQUIRED';if(ss)ss.textContent=ok?'✓ READY':'🔒 SETUP REQUIRED';if(pm)pm.textContent=points.length+' POINT'+(points.length===1?'':'S');renderStationSet();renderOrientationSet();}
+function fmt(v,n){if(n==null)n=3;var x=Number(v);return isFinite(x)?x.toFixed(n):'-';}
+function escapeHTML(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function showToast(m){var t=$("toast");if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(window.miladToastTimer);window.miladToastTimer=setTimeout(function(){t.classList.remove('show');},1900);}
+window.saveJob=saveJob;window.setStation=setStation;window.setOrientation=setOrientation;window.changeOrientationMethod=changeOrientationMethod;window.openMeasure=openMeasure;window.openStake=openStake;window.saveCalculatedPoint=saveCalculatedPoint;window.editPoint=editPoint;window.deletePoint=deletePoint;window.clearAllPoints=clearAllPoints;window.updatePoint=updatePoint;window.loadStakePoint=loadStakePoint;window.calculateStake=calculateStake;window.calculatePoint=calculatePoint;window.exportPoints=exportPoints;
+function init(){loadData();if(job.name&&$("jobName"))$("jobName").value=job.name;if(setup.stationSet){$("stationName").value=setup.stationName||'ST01';$("sx").value=setup.sx==null?'':setup.sx;$("sy").value=setup.sy==null?'':setup.sy;$("sz").value=setup.sz==null?'':setup.sz;}$("orientMethod").value=setup.orientationMethod||'azimuth';changeOrientationMethod();if(setup.orientationMethod==='azimuth'&&finite(Number(setup.azimuth)))$("manualAz").value=setup.azimuth;var od=$("orientationDistance");if(od&&finite(Number(setup.orientationDistance)))od.value=setup.orientationDistance;if(setup.orientationMethod==='coordinates'){$("backName").value=setup.backName||'BS01';$("bx").value=setup.bx==null?'':setup.bx;$("by").value=setup.by==null?'':setup.by;$("bz").value=setup.bz==null?'':setup.bz;}updateAllUI();var h=(location.hash||'').replace(/^#/,'');if($(h))showPage(h);else showPage('main');}
+window.addEventListener('hashchange',function(){var h=(location.hash||'').replace(/^#/,'');if($(h))showPage(h);else showPage('main');});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>
