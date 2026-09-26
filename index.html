@@ -1,52 +1,523 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
+
+<meta name="theme-color" content="#202020">
+
 <title>index.html</title>
 
 <style>
-html,body{
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
     margin:0;
+    padding:0;
     width:100%;
-    height:100%;
-    background:#222;
+    min-height:100%;
 }
 
 body{
+    background:
+        radial-gradient(circle at center,#303030 0%,#171717 75%);
+    font-family:
+        "Courier New",
+        monospace;
+    color:#111;
     display:flex;
-    align-items:center;
     justify-content:center;
-    font-family:Arial;
+    align-items:center;
+    padding:12px;
 }
 
+/* =========================
+   DEVICE
+========================= */
+
 .device{
-    width:90%;
-    max-width:700px;
-    background:#789b70;
-    border:10px solid #444;
-    border-radius:20px;
-    padding:25px;
+    width:min(760px,100%);
+    background:#565656;
+    border-radius:30px;
+    padding:14px;
+    box-shadow:
+        0 15px 45px rgba(0,0,0,.65),
+        inset 0 0 0 3px #777,
+        inset 0 0 0 7px #414141;
+}
+
+/* =========================
+   GREEN BODY
+========================= */
+
+.body{
+    background:#78966f;
+    border-radius:23px;
+    padding:22px;
+    box-shadow:
+        inset 0 0 0 2px #9eb69a,
+        inset 0 0 25px rgba(0,0,0,.22);
+}
+
+/* =========================
+   SCREEN
+========================= */
+
+.screenFrame{
+    background:#858585;
+    border-radius:14px;
+    padding:12px;
+    box-shadow:
+        inset 0 0 0 2px #aaa,
+        0 4px 8px rgba(0,0,0,.35);
 }
 
 .screen{
-    background:#858b72;
-    border:8px solid #333;
-    min-height:300px;
-    padding:20px;
-    color:#111;
-    font-family:monospace;
+    position:relative;
+    min-height:620px;
+
+    background:
+        linear-gradient(
+            rgba(255,255,255,.035),
+            rgba(0,0,0,.025)
+        ),
+        #969b84;
+
+    border:11px solid #303030;
+
+    padding:24px 26px 100px;
+
+    box-shadow:
+        inset 0 0 18px rgba(0,0,0,.35);
+
+    overflow:hidden;
 }
 
-h1{
+/* =========================
+   DISPLAY
+========================= */
+
+.header{
     text-align:center;
+    font-weight:bold;
+    font-size:38px;
+    letter-spacing:4px;
+    margin-bottom:18px;
 }
 
-button{
-    padding:15px;
-    margin:5px;
-    font-size:18px;
+.subheader{
+    font-size:24px;
+    font-weight:bold;
+    margin-bottom:18px;
 }
+
+.smallHeader{
+    font-size:18px;
+    font-weight:bold;
+    border-bottom:2px solid #333;
+    padding-bottom:8px;
+    margin-bottom:12px;
+}
+
+.hidden{
+    display:none !important;
+}
+
+/* =========================
+   MAIN MENU
+========================= */
+
+.mainMenu{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.menuItem{
+    width:100%;
+    background:transparent;
+    border:0;
+    padding:8px 0;
+    text-align:left;
+
+    color:#111;
+
+    font-family:inherit;
+    font-size:21px;
+
+    cursor:pointer;
+}
+
+.menuItem:hover{
+    background:rgba(255,255,255,.08);
+}
+
+.menuItem:active{
+    background:#303030;
+    color:#eee;
+}
+
+/* =========================
+   DATA ROW
+========================= */
+
+.dataRow{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+
+    font-size:18px;
+    margin:9px 0;
+
+    border-bottom:1px dotted rgba(0,0,0,.35);
+    padding-bottom:4px;
+}
+
+.dataLabel{
+    font-weight:bold;
+}
+
+.dataValue{
+    text-align:right;
+    font-weight:bold;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.statusBox{
+    margin-top:16px;
+    padding:9px;
+
+    border:2px solid #333;
+
+    background:rgba(255,255,255,.12);
+
+    font-size:15px;
+    font-weight:bold;
+}
+
+/* =========================
+   FUNCTION KEYS
+========================= */
+
+.functionKeys{
+    position:absolute;
+
+    left:16px;
+    right:16px;
+    bottom:12px;
+
+    display:grid;
+    grid-template-columns:
+        repeat(6,1fr);
+
+    gap:5px;
+}
+
+.fkey{
+    min-height:43px;
+
+    border:2px solid #333;
+    border-radius:4px;
+
+    background:#aaa;
+
+    font-family:inherit;
+    font-weight:bold;
+    font-size:13px;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 2px 0 #222;
+}
+
+.fkey:active{
+    transform:translateY(2px);
+    box-shadow:none;
+    background:#333;
+    color:#fff;
+}
+
+/* =========================
+   PHYSICAL KEYS
+========================= */
+
+.hardware{
+    margin-top:14px;
+
+    display:grid;
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:7px;
+}
+
+.key{
+    min-height:43px;
+
+    background:#aaa;
+    border:2px solid #333;
+    border-radius:5px;
+
+    font-family:inherit;
+    font-weight:bold;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 3px 0 #222;
+}
+
+.key:active{
+    transform:translateY(3px);
+    box-shadow:none;
+}
+
+.key.green{
+    background:#527d50;
+    color:#fff;
+}
+
+.key.red{
+    background:#884d4d;
+    color:#fff;
+}
+
+.key.yellow{
+    background:#9b9155;
+}
+
+.key.wide{
+    grid-column:span 2;
+}
+
+/* =========================
+   LIST
+========================= */
+
+.list{
+    max-height:390px;
+    overflow-y:auto;
+    padding-right:4px;
+}
+
+.listItem{
+    border-bottom:2px solid rgba(0,0,0,.35);
+    padding:9px 3px;
+
+    font-size:15px;
+}
+
+.listItem strong{
+    font-size:17px;
+}
+
+/* =========================
+   INPUT
+========================= */
+
+.input{
+    width:100%;
+
+    background:#c2c6ac;
+
+    border:2px solid #333;
+
+    padding:9px;
+
+    font-family:inherit;
+    font-size:17px;
+
+    color:#111;
+
+    outline:none;
+}
+
+.input:focus{
+    background:#d0d4bb;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.formRow{
+    margin-bottom:12px;
+}
+
+.formLabel{
+    display:block;
+    margin-bottom:4px;
+    font-weight:bold;
+}
+
+/* =========================
+   GRID BUTTONS
+========================= */
+
+.buttonGrid{
+    display:grid;
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:8px;
+
+    margin-top:12px;
+}
+
+.action{
+    min-height:45px;
+
+    border:2px solid #333;
+
+    background:#aaa;
+
+    font-family:inherit;
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+.action:active{
+    background:#333;
+    color:#fff;
+}
+
+/* =========================
+   COORDINATE BOX
+========================= */
+
+.coordinateBox{
+    border:2px solid #333;
+    padding:10px;
+    margin-top:10px;
+    background:rgba(255,255,255,.08);
+}
+
+/* =========================
+   HOME LOGO
+========================= */
+
+.logo{
+    text-align:center;
+    margin-top:5px;
+    margin-bottom:20px;
+}
+
+.logoMain{
+    font-size:42px;
+    font-weight:bold;
+    letter-spacing:6px;
+}
+
+.logoSub{
+    font-size:14px;
+    margin-top:3px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:520px){
+
+    body{
+        padding:4px;
+    }
+
+    .device{
+        padding:7px;
+        border-radius:20px;
+    }
+
+    .body{
+        padding:10px;
+        border-radius:16px;
+    }
+
+    .screenFrame{
+        padding:7px;
+    }
+
+    .screen{
+        min-height:600px;
+        padding:
+            18px
+            18px
+            100px;
+
+        border-width:8px;
+    }
+
+    .header{
+        font-size:30px;
+        letter-spacing:3px;
+    }
+
+    .subheader{
+        font-size:21px;
+    }
+
+    .menuItem{
+        font-size:18px;
+    }
+
+    .dataRow{
+        font-size:15px;
+    }
+
+    .functionKeys{
+        left:8px;
+        right:8px;
+        bottom:8px;
+    }
+
+    .fkey{
+        min-height:39px;
+        font-size:11px;
+    }
+
+    .hardware{
+        gap:5px;
+    }
+
+    .key{
+        min-height:40px;
+        font-size:12px;
+    }
+
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar{
+    width:7px;
+}
+
+::-webkit-scrollbar-track{
+    background:#777;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#333;
+    border-radius:5px;
+}
+
 </style>
 </head>
 
@@ -54,20 +525,933 @@ button{
 
 <div class="device">
 
+<div class="body">
+
+<div class="screenFrame">
+
 <div class="screen">
 
-<h1>LEICA</h1>
+<!-- =====================================================
+     MAIN MENU
+===================================================== -->
 
-<h2>MAIN MENU</h2>
+<section id="page-main">
 
-<p>1 Q-Survey</p>
-<p>2 Prog</p>
-<p>3 Manage</p>
-<p>4 Transfer</p>
-<p>5 Setting</p>
-<p>6 Tools</p>
+<div class="logo">
 
-<button onclick="test()">TEST</button>
+<div class="logoMain">
+LEICA
+</div>
+
+<div class="logoSub">
+GEOSYSTEMS • TOTAL STATION SIMULATOR
+</div>
+
+</div>
+
+<div class="subheader">
+MAIN MENU
+</div>
+
+<div class="mainMenu">
+
+<button class="menuItem"
+onclick="showPage('survey')">
+1&nbsp;&nbsp; Q-Survey
+</button>
+
+<button class="menuItem"
+onclick="showPage('prog')">
+2&nbsp;&nbsp; Prog
+</button>
+
+<button class="menuItem"
+onclick="showPage('manage')">
+3&nbsp;&nbsp; Manage
+</button>
+
+<button class="menuItem"
+onclick="showPage('transfer')">
+4&nbsp;&nbsp; Transfer
+</button>
+
+<button class="menuItem"
+onclick="showPage('settings')">
+5&nbsp;&nbsp; Setting
+</button>
+
+<button class="menuItem"
+onclick="showPage('tools')">
+6&nbsp;&nbsp; Tools
+</button>
+
+</div>
+
+<div class="statusBox">
+JOB: <span id="mainJob">MILAD</span>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+PTS: <span id="mainPoints">0</span>
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     SURVEY
+===================================================== -->
+
+<section id="page-survey" class="hidden">
+
+<div class="subheader">
+Q-SURVEY
+</div>
+
+<div class="smallHeader">
+MEASUREMENT
+</div>
+
+<div class="dataRow">
+<span class="dataLabel">PtID</span>
+<span class="dataValue" id="surveyPt">1</span>
+</div>
+
+<div class="dataRow">
+<span class="dataLabel">Hz</span>
+<span class="dataValue" id="surveyHz">
+000°00'00"
+</span>
+</div>
+
+<div class="dataRow">
+<span class="dataLabel">V</span>
+<span class="dataValue" id="surveyV">
+090°00'00"
+</span>
+</div>
+
+<div class="dataRow">
+<span class="dataLabel">SD</span>
+<span class="dataValue" id="surveySD">
+---
+</span>
+</div>
+
+<div class="dataRow">
+<span class="dataLabel">HD</span>
+<span class="dataValue" id="surveyHD">
+---
+</span>
+</div>
+
+<div class="dataRow">
+<span class="dataLabel">dH</span>
+<span class="dataValue" id="surveyDH">
+---
+</span>
+</div>
+
+<div class="coordinateBox">
+
+<div class="dataRow">
+<span>E</span>
+<span class="dataValue" id="surveyE">---</span>
+</div>
+
+<div class="dataRow">
+<span>N</span>
+<span class="dataValue" id="surveyN">---</span>
+</div>
+
+<div class="dataRow">
+<span>Z</span>
+<span class="dataValue" id="surveyZ">---</span>
+</div>
+
+</div>
+
+<div class="statusBox">
+STATUS:
+<span id="surveyStatus">
+READY
+</span>
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="measure()">
+F1<br>MEAS
+</button>
+
+<button class="fkey"
+onclick="recordPoint()">
+F2<br>REC
+</button>
+
+<button class="fkey"
+onclick="nextPoint()">
+F3<br>PT+
+</button>
+
+<button class="fkey"
+onclick="setHzZero()">
+F4<br>Hz0
+</button>
+
+<button class="fkey"
+onclick="targetLock()">
+F5<br>LOCK
+</button>
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     PROGRAM
+===================================================== -->
+
+<section id="page-prog" class="hidden">
+
+<div class="subheader">
+PROGRAMS
+</div>
+
+<div class="mainMenu">
+
+<button class="menuItem"
+onclick="showPage('station')">
+1&nbsp;&nbsp; Station Setup
+</button>
+
+<button class="menuItem"
+onclick="showPage('backsight')">
+2&nbsp;&nbsp; Back Sight
+</button>
+
+<button class="menuItem"
+onclick="showPage('stakeout')">
+3&nbsp;&nbsp; Stake Out
+</button>
+
+<button class="menuItem"
+onclick="showPage('cogo')">
+4&nbsp;&nbsp; COGO
+</button>
+
+<button class="menuItem"
+onclick="message('Area & Volume program selected')">
+5&nbsp;&nbsp; Area & Volume
+</button>
+
+<button class="menuItem"
+onclick="message('Free Station program selected')">
+6&nbsp;&nbsp; Free Station
+</button>
+
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     STATION SETUP
+===================================================== -->
+
+<section id="page-station" class="hidden">
+
+<div class="subheader">
+STATION SETUP
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Station Point
+</label>
+
+<input
+id="stationPoint"
+class="input"
+value="ST1">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+East
+</label>
+
+<input
+id="stationE"
+class="input"
+type="number"
+value="1000.000">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+North
+</label>
+
+<input
+id="stationN"
+class="input"
+type="number"
+value="2000.000">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Elevation
+</label>
+
+<input
+id="stationZ"
+class="input"
+type="number"
+value="100.000">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Instrument Height
+</label>
+
+<input
+id="instrumentHeight"
+class="input"
+type="number"
+step="0.001"
+value="1.500">
+
+</div>
+
+<div class="buttonGrid">
+
+<button class="action"
+onclick="saveStation()">
+SET STATION
+</button>
+
+<button class="action"
+onclick="showPage('backsight')">
+BACKSIGHT
+</button>
+
+</div>
+
+<div class="statusBox"
+id="stationStatus">
+Station not set.
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="showPage('prog')">
+F1<br>BACK
+</button>
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     BACKSIGHT
+===================================================== -->
+
+<section id="page-backsight" class="hidden">
+
+<div class="subheader">
+BACK SIGHT
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Target Point
+</label>
+
+<input
+id="bsPoint"
+class="input"
+value="BS1">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Target East
+</label>
+
+<input
+id="bsE"
+class="input"
+type="number"
+value="1100.000">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Target North
+</label>
+
+<input
+id="bsN"
+class="input"
+type="number"
+value="2000.000">
+
+</div>
+
+<div class="buttonGrid">
+
+<button class="action"
+onclick="calculateBacksight()">
+CALC Hz
+</button>
+
+<button class="action"
+onclick="setBacksight()">
+SET Hz
+</button>
+
+</div>
+
+<div class="coordinateBox">
+
+<div class="dataRow">
+<span>Azimuth</span>
+<span class="dataValue"
+id="bsAzimuth">
+---
+</span>
+</div>
+
+<div class="dataRow">
+<span>Horizontal</span>
+<span class="dataValue"
+id="bsHorizontal">
+---
+</span>
+</div>
+
+</div>
+
+<div class="statusBox"
+id="bsStatus">
+READY
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="showPage('prog')">
+F1<br>BACK
+</button>
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     MANAGE
+===================================================== -->
+
+<section id="page-manage" class="hidden">
+
+<div class="subheader">
+MANAGE
+</div>
+
+<div class="smallHeader">
+JOB: <span id="manageJob">MILAD</span>
+</div>
+
+<div id="pointList"
+class="list">
+No points stored.
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="clearPoints()">
+F1<br>CLR
+</button>
+
+<button class="fkey"
+onclick="exportPoints()">
+F2<br>EXP
+</button>
+
+<button class="fkey"
+onclick="showPage('survey')">
+F3<br>SURV
+</button>
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     TRANSFER
+===================================================== -->
+
+<section id="page-transfer" class="hidden">
+
+<div class="subheader">
+TRANSFER
+</div>
+
+<div class="mainMenu">
+
+<button class="menuItem"
+onclick="exportPoints()">
+1&nbsp;&nbsp; Export Points
+</button>
+
+<button class="menuItem"
+onclick="importInfo()">
+2&nbsp;&nbsp; Import Data
+</button>
+
+<button class="menuItem"
+onclick="message('USB connection simulated')">
+3&nbsp;&nbsp; USB
+</button>
+
+<button class="menuItem"
+onclick="message('Bluetooth connection simulated')">
+4&nbsp;&nbsp; Bluetooth
+</button>
+
+<button class="menuItem"
+onclick="message('Data communication ready')">
+5&nbsp;&nbsp; Communication
+</button>
+
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     SETTINGS
+===================================================== -->
+
+<section id="page-settings" class="hidden">
+
+<div class="subheader">
+SETTING
+</div>
+
+<div class="mainMenu">
+
+<button class="menuItem"
+onclick="toggleUnits()">
+1&nbsp;&nbsp; Units
+</button>
+
+<button class="menuItem"
+onclick="togglePrism()">
+2&nbsp;&nbsp; Prism
+</button>
+
+<button class="menuItem"
+onclick="toggleAngle()">
+3&nbsp;&nbsp; Angle Format
+</button>
+
+<button class="menuItem"
+onclick="message('Display settings')">
+4&nbsp;&nbsp; Display
+</button>
+
+<button class="menuItem"
+onclick="message('EDM settings')">
+5&nbsp;&nbsp; EDM
+</button>
+
+</div>
+
+<div class="statusBox">
+
+DIST UNIT:
+<span id="unitDisplay">
+Meter
+</span>
+
+<br><br>
+
+PRISM:
+<span id="prismDisplay">
+PRISM
+</span>
+
+<br><br>
+
+ANGLE:
+<span id="angleDisplay">
+DMS
+</span>
+
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     TOOLS
+===================================================== -->
+
+<section id="page-tools" class="hidden">
+
+<div class="subheader">
+TOOLS
+</div>
+
+<div class="mainMenu">
+
+<button class="menuItem"
+onclick="message('Electronic level activated')">
+1&nbsp;&nbsp; Level
+</button>
+
+<button class="menuItem"
+onclick="toggleLaser()">
+2&nbsp;&nbsp; Laser
+</button>
+
+<button class="menuItem"
+onclick="message('Plummet activated')">
+3&nbsp;&nbsp; Plummet
+</button>
+
+<button class="menuItem"
+onclick="batteryInfo()">
+4&nbsp;&nbsp; Battery
+</button>
+
+<button class="menuItem"
+onclick="instrumentInfo()">
+5&nbsp;&nbsp; Instrument
+</button>
+
+</div>
+
+<div class="statusBox"
+id="toolStatus">
+READY
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     STAKE OUT
+===================================================== -->
+
+<section id="page-stakeout" class="hidden">
+
+<div class="subheader">
+STAKE OUT
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Point ID
+</label>
+
+<input
+id="stakeId"
+class="input"
+value="P1">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Target East
+</label>
+
+<input
+id="stakeE"
+class="input"
+type="number"
+value="1050">
+
+</div>
+
+<div class="formRow">
+
+<label class="formLabel">
+Target North
+</label>
+
+<input
+id="stakeN"
+class="input"
+type="number"
+value="2050">
+
+</div>
+
+<div class="buttonGrid">
+
+<button class="action"
+onclick="calculateStake()">
+CALCULATE
+</button>
+
+<button class="action"
+onclick="message('Stake Out measurement started')">
+MEASURE
+</button>
+
+</div>
+
+<div class="coordinateBox">
+
+<div class="dataRow">
+<span>dE</span>
+<span class="dataValue"
+id="stakeDE">
+---
+</span>
+</div>
+
+<div class="dataRow">
+<span>dN</span>
+<span class="dataValue"
+id="stakeDN">
+---
+</span>
+</div>
+
+<div class="dataRow">
+<span>Distance</span>
+<span class="dataValue"
+id="stakeDist">
+---
+</span>
+</div>
+
+<div class="dataRow">
+<span>Azimuth</span>
+<span class="dataValue"
+id="stakeAz">
+---
+</span>
+</div>
+
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="showPage('prog')">
+F1<br>BACK
+</button>
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     COGO
+===================================================== -->
+
+<section id="page-cogo" class="hidden">
+
+<div class="subheader">
+COGO
+</div>
+
+<div class="mainMenu">
+
+<button class="menuItem"
+onclick="cogoDistance()">
+1&nbsp;&nbsp; Distance
+</button>
+
+<button class="menuItem"
+onclick="cogoAzimuth()">
+2&nbsp;&nbsp; Azimuth
+</button>
+
+<button class="menuItem"
+onclick="cogoArea()">
+3&nbsp;&nbsp; Area
+</button>
+
+<button class="menuItem"
+onclick="message('Intersection calculation selected')">
+4&nbsp;&nbsp; Intersection
+</button>
+
+</div>
+
+<div class="statusBox"
+id="cogoStatus">
+COGO READY
+</div>
+
+<div class="functionKeys">
+
+<button class="fkey"
+onclick="showPage('prog')">
+F1<br>BACK
+</button>
+
+<button class="fkey"
+onclick="goHome()">
+F6<br>EXIT
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     HARDWARE FUNCTION KEYS
+===================================================== -->
+
+</div>
+
+<div class="hardware">
+
+<button class="key"
+onclick="goBack()">
+ESC
+</button>
+
+<button class="key"
+onclick="enterKey()">
+ENTER
+</button>
+
+<button class="key"
+onclick="measure()">
+MEAS
+</button>
+
+<button class="key"
+onclick="setHzZero()">
+Hz0
+</button>
+
+<button class="key"
+onclick="previousPoint()">
+▲
+</button>
+
+<button class="key"
+onclick="selectKey()">
+OK
+</button>
+
+<button class="key"
+onclick="nextPoint()">
+▼
+</button>
+
+<button class="key"
+onclick="targetLock()">
+LOCK
+</button>
+
+<button class="key green wide"
+onclick="measure()">
+DIST / MEASURE
+</button>
+
+<button class="key red"
+onclick="goHome()">
+EXIT
+</button>
+
+</div>
 
 </div>
 
@@ -75,13 +1459,1408 @@ button{
 
 <script>
 
-function test(){
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
 
-alert("MiladGeo is working!");
+let currentPage = "main";
+
+let pointNumber = 1;
+
+let points = [];
+
+let units = "Meter";
+
+let prism = "PRISM";
+
+let angleFormat = "DMS";
+
+let laser = false;
+
+let currentHz = 0;
+
+let currentV = 90;
+
+let station = {
+
+    id:"ST1",
+
+    E:1000,
+
+    N:2000,
+
+    Z:100,
+
+    HI:1.5
+
+};
+
+let backsight = {
+
+    id:"BS1",
+
+    E:1100,
+
+    N:2000,
+
+    azimuth:0
+
+};
+
+
+/* =========================================================
+   LOAD DATA
+========================================================= */
+
+function loadData(){
+
+    try{
+
+        const saved =
+            localStorage.getItem(
+                "milad_leica_points"
+            );
+
+        if(saved){
+
+            points =
+                JSON.parse(saved);
+
+        }
+
+        const savedStation =
+            localStorage.getItem(
+                "milad_leica_station"
+            );
+
+        if(savedStation){
+
+            station =
+                JSON.parse(savedStation);
+
+        }
+
+    }catch(e){
+
+        console.log(e);
+
+    }
+
+    updateCounters();
 
 }
+
+
+/* =========================================================
+   SAVE DATA
+========================================================= */
+
+function saveData(){
+
+    localStorage.setItem(
+        "milad_leica_points",
+        JSON.stringify(points)
+    );
+
+    localStorage.setItem(
+        "milad_leica_station",
+        JSON.stringify(station)
+    );
+
+    updateCounters();
+
+}
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+function showPage(page){
+
+    document
+        .querySelectorAll(
+            '[id^="page-"]'
+        )
+        .forEach(
+            el =>
+            el.classList.add("hidden")
+        );
+
+    const target =
+        document.getElementById(
+            "page-" + page
+        );
+
+    if(target){
+
+        target.classList.remove("hidden");
+
+        currentPage = page;
+
+    }
+
+    if(page === "manage"){
+
+        renderPoints();
+
+    }
+
+    if(page === "station"){
+
+        document.getElementById(
+            "stationPoint"
+        ).value = station.id;
+
+        document.getElementById(
+            "stationE"
+        ).value = station.E;
+
+        document.getElementById(
+            "stationN"
+        ).value = station.N;
+
+        document.getElementById(
+            "stationZ"
+        ).value = station.Z;
+
+        document.getElementById(
+            "instrumentHeight"
+        ).value = station.HI;
+
+    }
+
+}
+
+
+/* =========================================================
+   HOME
+========================================================= */
+
+function goHome(){
+
+    showPage("main");
+
+}
+
+
+/* =========================================================
+   BACK
+========================================================= */
+
+function goBack(){
+
+    if(currentPage === "main"){
+
+        return;
+
+    }
+
+    if(currentPage === "survey"){
+
+        goHome();
+
+    }else if(
+        ["station",
+         "backsight",
+         "stakeout",
+         "cogo"].includes(
+            currentPage
+        )
+    ){
+
+        showPage("prog");
+
+    }else{
+
+        goHome();
+
+    }
+
+}
+
+
+/* =========================================================
+   ENTER
+========================================================= */
+
+function enterKey(){
+
+    message(
+        "ENTER"
+    );
+
+}
+
+
+/* =========================================================
+   SELECT
+========================================================= */
+
+function selectKey(){
+
+    message(
+        "SELECTED"
+    );
+
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function message(text){
+
+    alert(text);
+
+}
+
+
+/* =========================================================
+   FORMAT NUMBER
+========================================================= */
+
+function fixed3(value){
+
+    return Number(value)
+        .toFixed(3);
+
+}
+
+
+/* =========================================================
+   FORMAT ANGLE
+========================================================= */
+
+function formatDMS(deg){
+
+    deg =
+        ((Number(deg) % 360) + 360)
+        % 360;
+
+    let d =
+        Math.floor(deg);
+
+    let mf =
+        (deg - d) * 60;
+
+    let m =
+        Math.floor(mf);
+
+    let s =
+        Math.round(
+            (mf - m) * 60
+        );
+
+    if(s >= 60){
+
+        s = 0;
+        m++;
+
+    }
+
+    if(m >= 60){
+
+        m = 0;
+        d++;
+
+    }
+
+    return String(d)
+        .padStart(3,"0")
+        + "°"
+        + String(m)
+            .padStart(2,"0")
+        + "'"
+        + String(s)
+            .padStart(2,"0")
+        + '"';
+
+}
+
+
+/* =========================================================
+   MEASUREMENT
+========================================================= */
+
+function measure(){
+
+    showPage("survey");
+
+    /* simulated EDM */
+
+    const SD =
+        20 +
+        Math.random() * 80;
+
+    const verticalAngle =
+        80 +
+        Math.random() * 20;
+
+    currentHz =
+        Math.random() * 360;
+
+    currentV =
+        verticalAngle;
+
+    const rad =
+        verticalAngle *
+        Math.PI / 180;
+
+    const HD =
+        SD *
+        Math.sin(rad);
+
+    const dH =
+        SD *
+        Math.cos(rad);
+
+    /* simulated coordinates */
+
+    const azRad =
+        currentHz *
+        Math.PI / 180;
+
+    const E =
+        Number(station.E) +
+        HD *
+        Math.sin(azRad);
+
+    const N =
+        Number(station.N) +
+        HD *
+        Math.cos(azRad);
+
+    const Z =
+        Number(station.Z) +
+        Number(station.HI) +
+        dH;
+
+    document.getElementById(
+        "surveyPt"
+    ).innerText =
+        pointNumber;
+
+    document.getElementById(
+        "surveyHz"
+    ).innerText =
+        angleFormat === "DMS"
+        ? formatDMS(currentHz)
+        : currentHz.toFixed(4) + "°";
+
+    document.getElementById(
+        "surveyV"
+    ).innerText =
+        angleFormat === "DMS"
+        ? formatDMS(currentV)
+        : currentV.toFixed(4) + "°";
+
+    document.getElementById(
+        "surveySD"
+    ).innerText =
+        fixed3(SD) + " m";
+
+    document.getElementById(
+        "surveyHD"
+    ).innerText =
+        fixed3(HD) + " m";
+
+    document.getElementById(
+        "surveyDH"
+    ).innerText =
+        fixed3(dH) + " m";
+
+    document.getElementById(
+        "surveyE"
+    ).innerText =
+        fixed3(E);
+
+    document.getElementById(
+        "surveyN"
+    ).innerText =
+        fixed3(N);
+
+    document.getElementById(
+        "surveyZ"
+    ).innerText =
+        fixed3(Z);
+
+    document.getElementById(
+        "surveyStatus"
+    ).innerText =
+        "MEASUREMENT OK";
+
+}
+
+
+/* =========================================================
+   RECORD POINT
+========================================================= */
+
+function recordPoint(){
+
+    const SD =
+        document.getElementById(
+            "surveySD"
+        ).innerText;
+
+    if(SD === "---"){
+
+        message(
+            "First perform MEAS."
+        );
+
+        return;
+
+    }
+
+    const point = {
+
+        id:
+            pointNumber,
+
+        E:
+            document.getElementById(
+                "surveyE"
+            ).innerText,
+
+        N:
+            document.getElementById(
+                "surveyN"
+            ).innerText,
+
+        Z:
+            document.getElementById(
+                "surveyZ"
+            ).innerText,
+
+        SD:
+            SD,
+
+        Hz:
+            document.getElementById(
+                "surveyHz"
+            ).innerText,
+
+        V:
+            document.getElementById(
+                "surveyV"
+            ).innerText,
+
+        time:
+            new Date()
+                .toLocaleTimeString()
+
+    };
+
+    /* replace existing same point */
+
+    points =
+        points.filter(
+            p =>
+            String(p.id)
+            !== String(point.id)
+        );
+
+    points.push(point);
+
+    saveData();
+
+    document.getElementById(
+        "surveyStatus"
+    ).innerText =
+        "POINT " +
+        pointNumber +
+        " STORED";
+
+}
+
+
+/* =========================================================
+   NEXT POINT
+========================================================= */
+
+function nextPoint(){
+
+    pointNumber++;
+
+    resetMeasurement();
+
+    document.getElementById(
+        "surveyPt"
+    ).innerText =
+        pointNumber;
+
+    document.getElementById(
+        "surveyStatus"
+    ).innerText =
+        "READY FOR P" +
+        pointNumber;
+
+}
+
+
+/* =========================================================
+   PREVIOUS POINT
+========================================================= */
+
+function previousPoint(){
+
+    if(pointNumber > 1){
+
+        pointNumber--;
+
+        document.getElementById(
+            "surveyPt"
+        ).innerText =
+            pointNumber;
+
+    }
+
+}
+
+
+/* =========================================================
+   RESET MEASUREMENT
+========================================================= */
+
+function resetMeasurement(){
+
+    [
+        "surveySD",
+        "surveyHD",
+        "surveyDH",
+        "surveyE",
+        "surveyN",
+        "surveyZ"
+    ]
+    .forEach(
+        id =>
+        document.getElementById(
+            id
+        ).innerText = "---"
+    );
+
+}
+
+
+/* =========================================================
+   ZERO HORIZONTAL ANGLE
+========================================================= */
+
+function setHzZero(){
+
+    currentHz = 0;
+
+    document.getElementById(
+        "surveyHz"
+    ).innerText =
+        formatDMS(0);
+
+    document.getElementById(
+        "surveyStatus"
+    ).innerText =
+        "Hz SET TO ZERO";
+
+}
+
+
+/* =========================================================
+   TARGET LOCK
+========================================================= */
+
+function targetLock(){
+
+    document.getElementById(
+        "surveyStatus"
+    ).innerText =
+        "TARGET LOCKED";
+
+}
+
+
+/* =========================================================
+   STATION SETUP
+========================================================= */
+
+function saveStation(){
+
+    station.id =
+        document.getElementById(
+            "stationPoint"
+        ).value || "ST1";
+
+    station.E =
+        Number(
+            document.getElementById(
+                "stationE"
+            ).value
+        ) || 0;
+
+    station.N =
+        Number(
+            document.getElementById(
+                "stationN"
+            ).value
+        ) || 0;
+
+    station.Z =
+        Number(
+            document.getElementById(
+                "stationZ"
+            ).value
+        ) || 0;
+
+    station.HI =
+        Number(
+            document.getElementById(
+                "instrumentHeight"
+            ).value
+        ) || 0;
+
+    saveData();
+
+    document.getElementById(
+        "stationStatus"
+    ).innerText =
+        "STATION " +
+        station.id +
+        " SET";
+
+}
+
+
+/* =========================================================
+   BACKSIGHT CALCULATION
+========================================================= */
+
+function calculateBacksight(){
+
+    const E =
+        Number(
+            document.getElementById(
+                "bsE"
+            ).value
+        );
+
+    const N =
+        Number(
+            document.getElementById(
+                "bsN"
+            ).value
+        );
+
+    const dE =
+        E - Number(station.E);
+
+    const dN =
+        N - Number(station.N);
+
+    const distance =
+        Math.sqrt(
+            dE*dE +
+            dN*dN
+        );
+
+    let az =
+        Math.atan2(
+            dE,
+            dN
+        ) *
+        180 / Math.PI;
+
+    if(az < 0){
+
+        az += 360;
+
+    }
+
+    backsight.E = E;
+    backsight.N = N;
+    backsight.azimuth = az;
+
+    document.getElementById(
+        "bsAzimuth"
+    ).innerText =
+        formatDMS(az);
+
+    document.getElementById(
+        "bsHorizontal"
+    ).innerText =
+        fixed3(distance) +
+        " m";
+
+    document.getElementById(
+        "bsStatus"
+    ).innerText =
+        "CALCULATION OK";
+
+}
+
+
+/* =========================================================
+   SET BACKSIGHT
+========================================================= */
+
+function setBacksight(){
+
+    if(
+        typeof backsight.azimuth !==
+        "number"
+    ){
+
+        message(
+            "Calculate backsight first."
+        );
+
+        return;
+
+    }
+
+    currentHz =
+        backsight.azimuth;
+
+    document.getElementById(
+        "bsStatus"
+    ).innerText =
+        "BACKSIGHT SET";
+
+}
+
+
+/* =========================================================
+   RENDER POINTS
+========================================================= */
+
+function renderPoints(){
+
+    const list =
+        document.getElementById(
+            "pointList"
+        );
+
+    document.getElementById(
+        "manageJob"
+    ).innerText =
+        "MILAD";
+
+    if(points.length === 0){
+
+        list.innerHTML =
+            "No points stored.";
+
+        return;
+
+    }
+
+    list.innerHTML = "";
+
+    points
+        .slice()
+        .sort(
+            (a,b) =>
+            Number(a.id) -
+            Number(b.id)
+        )
+        .forEach(
+            p => {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+                div.className =
+                    "listItem";
+
+                div.innerHTML =
+
+                    "<strong>P" +
+                    p.id +
+                    "</strong><br>" +
+
+                    "E = " +
+                    p.E +
+                    "<br>" +
+
+                    "N = " +
+                    p.N +
+                    "<br>" +
+
+                    "Z = " +
+                    p.Z +
+                    "<br>" +
+
+                    "SD = " +
+                    p.SD +
+                    "<br>" +
+
+                    "Hz = " +
+                    p.Hz;
+
+                list.appendChild(div);
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   CLEAR POINTS
+========================================================= */
+
+function clearPoints(){
+
+    if(points.length === 0){
+
+        message(
+            "No points to delete."
+        );
+
+        return;
+
+    }
+
+    if(
+        confirm(
+            "Delete all stored points?"
+        )
+    ){
+
+        points = [];
+
+        saveData();
+
+        renderPoints();
+
+    }
+
+}
+
+
+/* =========================================================
+   EXPORT
+========================================================= */
+
+function exportPoints(){
+
+    if(points.length === 0){
+
+        message(
+            "No points stored."
+        );
+
+        return;
+
+    }
+
+    let csv =
+        "Point,E,N,Z,SD,Hz,V,Time\n";
+
+    points.forEach(
+        p => {
+
+            csv +=
+                p.id + "," +
+                p.E + "," +
+                p.N + "," +
+                p.Z + "," +
+                p.SD + "," +
+                p.Hz + "," +
+                p.V + "," +
+                p.time +
+                "\n";
+
+        }
+    );
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                "text/csv;charset=utf-8;"
+            }
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+        "MILAD_LEICA_POINTS.csv";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* =========================================================
+   IMPORT INFO
+========================================================= */
+
+function importInfo(){
+
+    message(
+        "Import module is ready for connection to a real CSV/file workflow."
+    );
+
+}
+
+
+/* =========================================================
+   SETTINGS - UNITS
+========================================================= */
+
+function toggleUnits(){
+
+    if(units === "Meter"){
+
+        units = "Feet";
+
+    }else{
+
+        units = "Meter";
+
+    }
+
+    document.getElementById(
+        "unitDisplay"
+    ).innerText =
+        units;
+
+}
+
+
+/* =========================================================
+   SETTINGS - PRISM
+========================================================= */
+
+function togglePrism(){
+
+    if(prism === "PRISM"){
+
+        prism = "NO PRISM";
+
+    }else{
+
+        prism = "PRISM";
+
+    }
+
+    document.getElementById(
+        "prismDisplay"
+    ).innerText =
+        prism;
+
+}
+
+
+/* =========================================================
+   SETTINGS - ANGLE
+========================================================= */
+
+function toggleAngle(){
+
+    if(angleFormat === "DMS"){
+
+        angleFormat =
+            "DECIMAL";
+
+    }else{
+
+        angleFormat =
+            "DMS";
+
+    }
+
+    document.getElementById(
+        "angleDisplay"
+    ).innerText =
+        angleFormat;
+
+}
+
+
+/* =========================================================
+   TOOLS - LASER
+========================================================= */
+
+function toggleLaser(){
+
+    laser =
+        !laser;
+
+    document.getElementById(
+        "toolStatus"
+    ).innerText =
+        laser
+        ? "LASER ON"
+        : "LASER OFF";
+
+}
+
+
+/* =========================================================
+   BATTERY
+========================================================= */
+
+function batteryInfo(){
+
+    const battery =
+        Math.floor(
+            70 +
+            Math.random()*25
+        );
+
+    document.getElementById(
+        "toolStatus"
+    ).innerText =
+        "BATTERY " +
+        battery +
+        "%";
+
+}
+
+
+/* =========================================================
+   INSTRUMENT INFO
+========================================================= */
+
+function instrumentInfo(){
+
+    document.getElementById(
+        "toolStatus"
+    ).innerText =
+        "LEICA GEO SIMULATOR";
+
+}
+
+
+/* =========================================================
+   STAKE OUT
+========================================================= */
+
+function calculateStake(){
+
+    const targetE =
+        Number(
+            document.getElementById(
+                "stakeE"
+            ).value
+        );
+
+    const targetN =
+        Number(
+            document.getElementById(
+                "stakeN"
+            ).value
+        );
+
+    const dE =
+        targetE -
+        Number(station.E);
+
+    const dN =
+        targetN -
+        Number(station.N);
+
+    const distance =
+        Math.sqrt(
+            dE*dE +
+            dN*dN
+        );
+
+    let az =
+        Math.atan2(
+            dE,
+            dN
+        ) *
+        180 / Math.PI;
+
+    if(az < 0){
+
+        az += 360;
+
+    }
+
+    document.getElementById(
+        "stakeDE"
+    ).innerText =
+        fixed3(dE);
+
+    document.getElementById(
+        "stakeDN"
+    ).innerText =
+        fixed3(dN);
+
+    document.getElementById(
+        "stakeDist"
+    ).innerText =
+        fixed3(distance) +
+        " m";
+
+    document.getElementById(
+        "stakeAz"
+    ).innerText =
+        formatDMS(az);
+
+}
+
+
+/* =========================================================
+   COGO DISTANCE
+========================================================= */
+
+function cogoDistance(){
+
+    const e1 =
+        Number(
+            prompt(
+                "Point 1 East:",
+                "1000"
+            )
+        );
+
+    const n1 =
+        Number(
+            prompt(
+                "Point 1 North:",
+                "2000"
+            )
+        );
+
+    const e2 =
+        Number(
+            prompt(
+                "Point 2 East:",
+                "1050"
+            )
+        );
+
+    const n2 =
+        Number(
+            prompt(
+                "Point 2 North:",
+                "2050"
+            )
+        );
+
+    const d =
+        Math.sqrt(
+            (e2-e1)*(e2-e1) +
+            (n2-n1)*(n2-n1)
+        );
+
+    document.getElementById(
+        "cogoStatus"
+    ).innerText =
+        "DISTANCE = " +
+        fixed3(d) +
+        " m";
+
+}
+
+
+/* =========================================================
+   COGO AZIMUTH
+========================================================= */
+
+function cogoAzimuth(){
+
+    const e1 =
+        Number(
+            prompt(
+                "Point 1 East:",
+                "1000"
+            )
+        );
+
+    const n1 =
+        Number(
+            prompt(
+                "Point 1 North:",
+                "2000"
+            )
+        );
+
+    const e2 =
+        Number(
+            prompt(
+                "Point 2 East:",
+                "1050"
+            )
+        );
+
+    const n2 =
+        Number(
+            prompt(
+                "Point 2 North:",
+                "2050"
+            )
+        );
+
+    let az =
+        Math.atan2(
+            e2-e1,
+            n2-n1
+        )
+        * 180 / Math.PI;
+
+    if(az < 0){
+
+        az += 360;
+
+    }
+
+    document.getElementById(
+        "cogoStatus"
+    ).innerText =
+        "AZIMUTH = " +
+        formatDMS(az);
+
+}
+
+
+/* =========================================================
+   COGO AREA
+========================================================= */
+
+function cogoArea(){
+
+    if(points.length < 3){
+
+        message(
+            "At least 3 stored points are required."
+        );
+
+        return;
+
+    }
+
+    const pts =
+        points.map(
+            p => ({
+                x:Number(p.E),
+                y:Number(p.N)
+            })
+        );
+
+    let area = 0;
+
+    for(
+        let i=0;
+        i<pts.length;
+        i++
+    ){
+
+        const j =
+            (i+1) %
+            pts.length;
+
+        area +=
+            pts[i].x *
+            pts[j].y -
+            pts[j].x *
+            pts[i].y;
+
+    }
+
+    area =
+        Math.abs(area)/2;
+
+    document.getElementById(
+        "cogoStatus"
+    ).innerText =
+        "AREA = " +
+        fixed3(area) +
+        " m²";
+
+}
+
+
+/* =========================================================
+   COUNTERS
+========================================================= */
+
+function updateCounters(){
+
+    const count =
+        points.length;
+
+    const a =
+        document.getElementById(
+            "mainPoints"
+        );
+
+    if(a){
+
+        a.innerText =
+            count;
+
+    }
+
+}
+
+
+/* =========================================================
+   KEYBOARD SUPPORT
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(e){
+
+        if(e.key === "Escape"){
+
+            goBack();
+
+        }
+
+        if(e.key === "Enter"){
+
+            enterKey();
+
+        }
+
+        if(e.key === "m" ||
+           e.key === "M"){
+
+            measure();
+
+        }
+
+        if(e.key === "0"){
+
+            setHzZero();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+loadData();
+
+showPage("main");
 
 </script>
 
 </body>
-</html>
+    </html>
