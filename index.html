@@ -59,4 +59,1197 @@ body{
     border-radius:50%;
 
     background:
-        radial-gradient(circle at 35
+        radial-gradient(circle at 35% 30%,
+        #eeeeee 0 8%,
+        #888 15%,
+        #222 55%,
+        #aaa 65%,
+        #222 72%);
+
+    box-shadow:0 2px 5px #000;
+}
+
+.s1{top:8px;left:10px}
+.s2{top:8px;right:10px}
+.s3{bottom:8px;left:10px}
+.s4{bottom:8px;right:10px}
+
+/* ================= LEFT SCREEN ================= */
+
+.left{
+    position:absolute;
+    left:28px;
+    top:45px;
+    width:62%;
+    height:calc(100% - 80px);
+}
+
+.screen{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:570px;
+
+    background:#777b65;
+
+    border:10px solid #3e423a;
+    border-radius:5px;
+
+    box-shadow:
+        inset 0 0 25px #0009,
+        0 3px 5px #0005;
+
+    padding:25px;
+
+    color:#11150f;
+
+    font-family:"Courier New",monospace;
+
+    overflow:hidden;
+}
+
+.screen::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+
+    background:
+        repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 3px,
+            #ffffff05 4px
+        );
+}
+
+.screen-title{
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+    letter-spacing:3px;
+    margin-bottom:28px;
+}
+
+/* MAIN MENU */
+
+.menu{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+}
+
+.menu-item{
+    height:190px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    cursor:pointer;
+
+    font-size:21px;
+    font-weight:bold;
+
+    border:2px solid transparent;
+}
+
+.menu-item.active{
+    background:#171b16;
+    color:#d8dcc8;
+}
+
+.menu-icon{
+    width:85px;
+    height:75px;
+
+    border:2px solid #1e231c;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:40px;
+
+    margin-bottom:12px;
+}
+
+/* SURVEY SCREEN */
+
+.survey{
+    font-size:22px;
+    line-height:2;
+}
+
+.survey-title{
+    font-size:26px;
+    font-weight:bold;
+    border-bottom:2px solid #252a22;
+    padding-bottom:8px;
+    margin-bottom:12px;
+}
+
+.measure-box{
+    border:2px solid #252a22;
+    padding:12px 18px;
+}
+
+.help{
+    position:absolute;
+    bottom:15px;
+    left:25px;
+    font-size:16px;
+}
+
+/* SOFT KEYS */
+
+.softkeys{
+    position:absolute;
+    left:0;
+    bottom:0;
+
+    width:100%;
+    height:65px;
+
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+}
+
+.softkey{
+    width:95px;
+    height:48px;
+
+    border-radius:23px;
+
+    border:2px solid #77620a;
+
+    background:#f1c817;
+
+    box-shadow:
+        0 4px 0 #77620a,
+        0 5px 7px #0006;
+
+    font-weight:bold;
+    font-size:18px;
+
+    cursor:pointer;
+}
+
+.softkey:active{
+    transform:translateY(3px);
+    box-shadow:0 1px 0 #77620a;
+}
+
+/* ================= RIGHT PANEL ================= */
+
+.right{
+    position:absolute;
+    right:20px;
+    top:45px;
+
+    width:34%;
+    height:calc(100% - 65px);
+}
+
+/* BRAND */
+
+.brand{
+    height:70px;
+    text-align:center;
+
+    color:#d10c18;
+
+    font-style:italic;
+    font-weight:bold;
+
+    font-size:23px;
+}
+
+.brand-main{
+    font-size:38px;
+    line-height:35px;
+}
+
+/* KEYPAD */
+
+.keypad{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:13px 18px;
+
+    padding:0 20px;
+}
+
+.key{
+    position:relative;
+
+    height:62px;
+
+    border-radius:50%;
+
+    border:3px solid #a9aaa6;
+
+    background:
+        linear-gradient(#ffffff,#d8d8d8);
+
+    box-shadow:
+        0 5px 7px #0008;
+
+    font-size:23px;
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+.key small{
+    position:absolute;
+    top:4px;
+    left:0;
+    right:0;
+
+    font-size:12px;
+}
+
+.key span{
+    display:block;
+    margin-top:13px;
+}
+
+.key:active{
+    transform:translateY(3px);
+}
+
+/* ================= JOYSTICK ================= */
+
+.joystick-area{
+    width:100%;
+    display:flex;
+    justify-content:center;
+
+    margin-top:23px;
+}
+
+.joystick{
+    position:relative;
+
+    width:165px;
+    height:165px;
+
+    border-radius:50%;
+
+    border:8px solid #1a201e;
+
+    background:
+        radial-gradient(
+            circle,
+            #394340 0 35%,
+            #29302e 36% 68%,
+            #111615 69%
+        );
+
+    box-shadow:
+        0 8px 12px #0009;
+}
+
+.joy{
+    position:absolute;
+
+    background:#111615;
+    color:#fff;
+
+    border:0;
+
+    font-size:22px;
+
+    cursor:pointer;
+}
+
+.joy-up{
+    top:-28px;
+    left:60px;
+}
+
+.joy-down{
+    bottom:-28px;
+    left:60px;
+}
+
+.joy-left{
+    left:-28px;
+    top:60px;
+}
+
+.joy-right{
+    right:-28px;
+    top:60px;
+}
+
+.joy-center{
+    position:absolute;
+
+    left:53px;
+    top:53px;
+
+    width:43px;
+    height:43px;
+
+    border-radius:50%;
+
+    background:#26302d;
+
+    border:0;
+}
+
+/* ================= BOTTOM BUTTONS ================= */
+
+.bottom{
+    display:flex;
+    justify-content:center;
+    gap:25px;
+
+    margin-top:23px;
+}
+
+.esc{
+    width:58px;
+    height:58px;
+
+    border-radius:50%;
+
+    border:3px solid #222;
+
+    background:#eeeeee;
+
+    font-weight:bold;
+
+    box-shadow:0 5px 8px #0008;
+
+    cursor:pointer;
+}
+
+.enter{
+    width:76px;
+    height:58px;
+
+    border-radius:12px;
+
+    border:3px solid #8d1014;
+
+    background:#e21b22;
+
+    color:white;
+
+    font-size:30px;
+
+    box-shadow:0 5px 8px #0008;
+
+    cursor:pointer;
+}
+
+/* POWER */
+
+.power{
+    position:absolute;
+
+    right:5px;
+    bottom:10px;
+
+    width:70px;
+    height:70px;
+
+    border-radius:50%;
+
+    background:#d91e25;
+
+    border:7px solid #761217;
+
+    color:white;
+
+    font-size:29px;
+
+    box-shadow:0 5px 8px #0008;
+
+    cursor:pointer;
+}
+
+/* STATUS */
+
+.status{
+    position:absolute;
+
+    bottom:3px;
+    left:0;
+    right:0;
+
+    text-align:center;
+
+    color:#ddd;
+
+    font-size:12px;
+}
+
+/* TOAST */
+
+.toast{
+    position:fixed;
+
+    left:50%;
+    bottom:25px;
+
+    transform:translateX(-50%);
+
+    background:#111e;
+
+    color:white;
+
+    padding:12px 22px;
+
+    border-radius:10px;
+
+    display:none;
+
+    z-index:100;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:850px){
+
+    .device{
+        transform:scale(.62);
+        transform-origin:center;
+    }
+
+}
+
+@media(max-width:550px){
+
+    .device{
+        transform:scale(.43);
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="device">
+
+    <div class="screw s1"></div>
+    <div class="screw s2"></div>
+    <div class="screw s3"></div>
+    <div class="screw s4"></div>
+
+    <!-- LEFT -->
+
+    <div class="left">
+
+        <div class="screen" id="screen"></div>
+
+        <div class="softkeys">
+
+            <button class="softkey" onclick="softKey(1)">F1</button>
+            <button class="softkey" onclick="softKey(2)">F2</button>
+            <button class="softkey" onclick="softKey(3)">F3</button>
+            <button class="softkey" onclick="softKey(4)">F4</button>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+
+    <div class="right">
+
+        <div class="brand">
+
+            when it has to be <b>right</b><br>
+
+            <span class="brand-main">
+                Leica
+            </span>
+
+        </div>
+
+        <div class="keypad">
+
+            <button class="key" onclick="pressKey('7')">
+                <small>ABC</small>
+                <span>7</span>
+            </button>
+
+            <button class="key" onclick="pressKey('8')">
+                <small>DEF</small>
+                <span>8</span>
+            </button>
+
+            <button class="key" onclick="pressKey('9')">
+                <small>GHI</small>
+                <span>9</span>
+            </button>
+
+            <button class="key" onclick="pressKey('4')">
+                <small>JKL</small>
+                <span>4</span>
+            </button>
+
+            <button class="key" onclick="pressKey('5')">
+                <small>MNO</small>
+                <span>5</span>
+            </button>
+
+            <button class="key" onclick="pressKey('6')">
+                <small>PQR</small>
+                <span>6</span>
+            </button>
+
+            <button class="key" onclick="pressKey('1')">
+                <small>STU</small>
+                <span>1</span>
+            </button>
+
+            <button class="key" onclick="pressKey('2')">
+                <small>VWX</small>
+                <span>2</span>
+            </button>
+
+            <button class="key" onclick="pressKey('3')">
+                <small>YZ_</small>
+                <span>3</span>
+            </button>
+
+            <button class="key" onclick="pressKey('0')">
+                <small>/$%</small>
+                <span>0</span>
+            </button>
+
+            <button class="key" onclick="pressKey('.')">
+                <small>_@&amp;</small>
+                <span>.</span>
+            </button>
+
+            <button class="key" onclick="pressKey('+')">
+                <small>*?!</small>
+                <span>±</span>
+            </button>
+
+        </div>
+
+        <!-- JOYSTICK -->
+
+        <div class="joystick-area">
+
+            <div class="joystick">
+
+                <button class="joy joy-up"
+                        onclick="move('up')">▲</button>
+
+                <button class="joy joy-down"
+                        onclick="move('down')">▼</button>
+
+                <button class="joy joy-left"
+                        onclick="move('left')">◀</button>
+
+                <button class="joy joy-right"
+                        onclick="move('right')">▶</button>
+
+                <button class="joy-center"
+                        onclick="enterKey()"></button>
+
+            </div>
+
+        </div>
+
+        <div class="bottom">
+
+            <button class="esc"
+                    onclick="escapeKey()">
+                ESC
+            </button>
+
+            <button class="enter"
+                    onclick="enterKey()">
+                ↵
+            </button>
+
+        </div>
+
+        <button class="power"
+                onclick="powerButton()">
+            ⏻
+        </button>
+
+    </div>
+
+    <div class="status">
+        MiladGeo • Leica Total Station Simulator
+    </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* =========================================
+   DATA
+========================================= */
+
+let powered = true;
+
+let page = "main";
+
+let cursor = 0;
+
+let pointNumber = 1;
+
+let measurement = {
+
+    hz: 0,
+
+    v: 100,
+
+    sd: 10,
+
+    hd: 0,
+
+    vd: 0
+
+};
+
+
+/* =========================================
+   MAIN MENU
+========================================= */
+
+const menus = [
+
+    ["1 Q-Survey","◎"],
+
+    ["2 Prog","⌂"],
+
+    ["3 Manage","▣"],
+
+    ["4 Transfer","⇄"],
+
+    ["5 Setting","⚙"],
+
+    ["6 Tools","🔧"]
+
+];
+
+
+/* =========================================
+   SCREEN
+========================================= */
+
+function render(){
+
+    const screen =
+        document.getElementById("screen");
+
+    if(!powered){
+
+        screen.innerHTML = `
+
+            <div style="
+                height:100%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:32px;
+                font-weight:bold;
+            ">
+                POWER OFF
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    /* MAIN */
+
+    if(page === "main"){
+
+        screen.innerHTML = `
+
+            <div class="screen-title">
+                MAIN MENU
+            </div>
+
+            <div class="menu">
+
+                ${menus.map((item,index)=>`
+
+                    <div
+                        class="menu-item
+                        ${index === cursor ? "active" : ""}"
+
+                        onclick="openMenu(${index})"
+                    >
+
+                        <div class="menu-icon">
+                            ${item[1]}
+                        </div>
+
+                        <div>
+                            ${item[0]}
+                        </div>
+
+                    </div>
+
+                `).join("")}
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    /* SURVEY */
+
+    if(page === "survey"){
+
+        screen.innerHTML = `
+
+            <div class="survey">
+
+                <div class="survey-title">
+                    Q-SURVEY
+                </div>
+
+                <div class="measure-box">
+
+                    Hz :
+                    ${measurement.hz.toFixed(4)}
+                    gon
+
+                    <br>
+
+                    V :
+                    ${measurement.v.toFixed(4)}
+                    gon
+
+                    <br>
+
+                    SD :
+                    ${measurement.sd.toFixed(3)}
+                    m
+
+                    <br>
+
+                    HD :
+                    ${measurement.hd.toFixed(3)}
+                    m
+
+                    <br>
+
+                    VD :
+                    ${measurement.vd.toFixed(3)}
+                    m
+
+                    <br>
+
+                    Pt :
+                    ${pointNumber}
+
+                </div>
+
+            </div>
+
+            <div class="help">
+
+                F1 = MEAS &nbsp;&nbsp;
+                F2 = REC &nbsp;&nbsp;
+                ESC = BACK
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    /* OTHER MENUS */
+
+    let title = "";
+
+    if(page === "prog")
+        title = "PROGRAMS";
+
+    if(page === "manage")
+        title = "DATA MANAGEMENT";
+
+    if(page === "transfer")
+        title = "TRANSFER";
+
+    if(page === "setting")
+        title = "SETTINGS";
+
+    if(page === "tools")
+        title = "TOOLS";
+
+
+    screen.innerHTML = `
+
+        <div class="screen-title">
+            ${title}
+        </div>
+
+        <div style="
+            font-size:21px;
+            line-height:2;
+        ">
+
+            <b>MiladGeo</b>
+
+            <br><br>
+
+            Leica Style Simulator
+
+            <br>
+
+            Function Ready
+
+            <br><br>
+
+            Press ENTER
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================
+   OPEN MENU
+========================================= */
+
+function openMenu(index){
+
+    cursor = index;
+
+    switch(index){
+
+        case 0:
+            page = "survey";
+            break;
+
+        case 1:
+            page = "prog";
+            break;
+
+        case 2:
+            page = "manage";
+            break;
+
+        case 3:
+            page = "transfer";
+            break;
+
+        case 4:
+            page = "setting";
+            break;
+
+        case 5:
+            page = "tools";
+            break;
+
+    }
+
+    render();
+
+    showToast(menus[index][0] + " opened");
+
+}
+
+
+/* =========================================
+   BACK
+========================================= */
+
+function escapeKey(){
+
+    if(page !== "main"){
+
+        page = "main";
+
+        cursor = 0;
+
+        render();
+
+    }else{
+
+        showToast("Already in MAIN MENU");
+
+    }
+
+}
+
+
+/* =========================================
+   ENTER
+========================================= */
+
+function enterKey(){
+
+    if(page === "main"){
+
+        openMenu(cursor);
+
+    }
+
+    else if(page === "survey"){
+
+        measure();
+
+    }
+
+    else{
+
+        showToast("ENTER");
+
+    }
+
+}
+
+
+/* =========================================
+   SOFT KEYS
+========================================= */
+
+function softKey(number){
+
+    if(page === "survey" && number === 1){
+
+        measure();
+
+        return;
+
+    }
+
+    showToast("F" + number);
+
+}
+
+
+/* =========================================
+   MEASUREMENT
+========================================= */
+
+function measure(){
+
+    if(!powered)
+        return;
+
+
+    measurement.hz =
+        Math.random() * 400;
+
+
+    measurement.v =
+        90 + Math.random() * 40;
+
+
+    measurement.sd =
+        5 + Math.random() * 95;
+
+
+    const rad =
+        measurement.v / 200 * Math.PI;
+
+
+    measurement.hd =
+        measurement.sd * Math.cos(rad);
+
+
+    measurement.vd =
+        measurement.sd * Math.sin(rad);
+
+
+    pointNumber++;
+
+
+    render();
+
+
+    showToast(
+        "MEASUREMENT COMPLETE ✓"
+    );
+
+}
+
+
+/* =========================================
+   NUMBER KEYS
+========================================= */
+
+function pressKey(key){
+
+    if(page === "survey" && key === "0"){
+
+        measure();
+
+    }else{
+
+        showToast("KEY " + key);
+
+    }
+
+}
+
+
+/* =========================================
+   JOYSTICK
+========================================= */
+
+function move(direction){
+
+    if(page === "main"){
+
+        if(direction === "right")
+            cursor = (cursor + 1) % 6;
+
+        if(direction === "left")
+            cursor = (cursor + 5) % 6;
+
+        if(direction === "down")
+            cursor = (cursor + 3) % 6;
+
+        if(direction === "up")
+            cursor = (cursor + 3) % 6;
+
+        render();
+
+        return;
+
+    }
+
+
+    showToast(
+        "MOVE " + direction.toUpperCase()
+    );
+
+}
+
+
+/* =========================================
+   POWER
+========================================= */
+
+function powerButton(){
+
+    powered = !powered;
+
+    render();
+
+    showToast(
+        powered
+        ? "DEVICE ON"
+        : "DEVICE OFF"
+    );
+
+}
+
+
+/* =========================================
+   TOAST
+========================================= */
+
+function showToast(text){
+
+    const toast =
+        document.getElementById("toast");
+
+    toast.innerText = text;
+
+    toast.style.display = "block";
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer =
+        setTimeout(()=>{
+
+            toast.style.display = "none";
+
+        },1300);
+
+}
+
+
+/* =========================================
+   KEYBOARD SUPPORT
+========================================= */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key === "Escape"){
+
+            escapeKey();
+
+        }
+
+        else if(event.key === "Enter"){
+
+            enterKey();
+
+        }
+
+        else if(event.key === "ArrowUp"){
+
+            move("up");
+
+        }
+
+        else if(event.key === "ArrowDown"){
+
+            move("down");
+
+        }
+
+        else if(event.key === "ArrowLeft"){
+
+            move("left");
+
+        }
+
+        else if(event.key === "ArrowRight"){
+
+            move("right");
+
+        }
+
+        else if(
+            /^[0-9.]$/.test(event.key)
+        ){
+
+            pressKey(event.key);
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   START
+========================================= */
+
+render();
+
+</script>
+
+</body>
+</html>
