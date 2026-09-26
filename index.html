@@ -1,86 +1,62 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>index.html</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MiladGeo Leica Simulator</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#101318;color:#f5f7fa;font-family:Arial,sans-serif}
-.app{max-width:520px;margin:auto;padding:16px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-h1{font-size:21px;margin:0}.badge{font-size:11px;background:#26313d;padding:6px 9px;border-radius:20px}
-.card{background:#191e25;border:1px solid #2b333d;border-radius:16px;padding:14px;margin:10px 0}
-.title{font-size:13px;color:#aeb8c5;margin-bottom:10px;font-weight:bold}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}
-label{font-size:11px;color:#9ba6b4;display:block;margin-bottom:5px}
-input{width:100%;padding:12px;border-radius:10px;border:1px solid #39424e;background:#0f1318;color:white;font-size:16px}
-button{border:0;border-radius:11px;padding:13px;font-weight:bold;font-size:14px;cursor:pointer}
-.primary{width:100%;background:#3d8bfd;color:white}.secondary{background:#2a323d;color:white;width:100%}
-.result{font-size:14px;line-height:1.8}.point{padding:10px 0;border-bottom:1px solid #2a3038;display:flex;justify-content:space-between;gap:8px}
-.point:last-child{border-bottom:0}.muted{color:#9ba6b4;font-size:12px}.danger{color:#ff8d8d}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
-</style>
-</head>
-<body>
-<main class="app">
-<div class="top"><h1>Milad Surveyor Pro</h1><span class="badge">TOTAL STATION</span></div>
-
-<section class="card">
-<div class="title">STATION</div>
-<div class="grid">
-<div><label>X / Easting</label><input id="x" type="number" value="0"></div>
-<div><label>Y / Northing</label><input id="y" type="number" value="0"></div>
-<div class="full"><label>Z / Elevation</label><input id="z" type="number" value="0"></div>
-</div>
-</section>
-
-<section class="card">
-<div class="title">ORIENTATION</div>
-<div class="grid">
-<div><label>Azimuth (°)</label><input id="az" type="number" value="0" step="0.0001"></div>
-<div><label>Angle Unit</label><input value="DEGREE" disabled></div>
-</div>
-</section>
-
-<section class="card">
-<div class="title">OBSERVATION</div>
-<div class="grid">
-<div><label>Hz (°)</label><input id="hz" type="number" value="0" step="0.0001"></div>
-<div><label>V (°)</label><input id="v" type="number" value="90" step="0.0001"></div>
-<div><label>Slope Distance</label><input id="sd" type="number" value="0" step="0.001"></div>
-<div><label>Point No.</label><input id="pn" type="number" value="1"></div>
-</div>
-<button class="primary" id="measure" style="margin-top:12px">MEASURE / ثبت نقطه</button>
-<div id="out" class="result" style="margin-top:10px"></div>
-</section>
-
-<section class="card">
-<div class="title">POINTS</div>
-<div id="points"><div class="muted">هنوز نقطه‌ای ثبت نشده است.</div></div>
-<div class="actions">
-<button class="secondary" id="csv">CSV EXPORT</button>
-<button class="secondary" id="clear">CLEAR ALL</button>
-</div>
-</section>
-</main>
-<script>
-const $=id=>document.getElementById(id), points=[];
-function num(id){return Number($(id).value)||0}
-$("measure").onclick=()=>{
- const az=(num("az")+num("hz"))*Math.PI/180, v=num("v")*Math.PI/180, sd=num("sd");
- const hd=sd*Math.sin(v), e=num("x")+hd*Math.sin(az), n=num("y")+hd*Math.cos(az), z=num("z")+sd*Math.cos(v);
- const p={no:num("pn"),e,n,z};
- points.push(p); $("pn").value=p.no+1;
- $("out").innerHTML=`<b>P${p.no}</b> → E ${e.toFixed(3)} | N ${n.toFixed(3)} | Z ${z.toFixed(3)}`;
- render();
-};
-function render(){
- $("points").innerHTML=points.length?points.map(p=>`<div class="point"><b>P${p.no}</b><span>E ${p.e.toFixed(3)} · N ${p.n.toFixed(3)} · Z ${p.z.toFixed(3)}</span></div>`).join(""):"<div class='muted'>هنوز نقطه‌ای ثبت نشده است.</div>";
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
 }
-$("clear").onclick=()=>{points.length=0;render();$("out").textContent=""};
-$("csv").onclick=()=>{
- if(!points.length)return;
- let s="Point,Easting,Northing,Elevation\n"+points.map(p=>`${p.no},${p.e},${p.n},${p.z}`).join("\n");
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([s],{type:"text/csv"}));a.download="MiladSurveyor_points.csv";a.click();
-};
-</script>
-</body></html>
+
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#202522;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* ================= DEVICE ================= */
+
+.device{
+    position:relative;
+    width:1180px;
+    height:720px;
+    max-width:100vw;
+    max-height:100vh;
+
+    background:
+        linear-gradient(135deg,#9bbb91 0%,#769b70 45%,#668b61 100%);
+
+    border:8px solid #414641;
+    border-radius:18px;
+
+    box-shadow:
+        0 20px 50px #000b,
+        inset 0 0 30px #ffffff22;
+
+    overflow:hidden;
+}
+
+/* screws */
+
+.screw{
+    position:absolute;
+    width:27px;
+    height:27px;
+    border-radius:50%;
+
+    background:
+        radial-gradient(circle at 35
