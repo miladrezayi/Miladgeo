@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>MiladGeo Leica Simulator</title>
+
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:#222722}
+body{font-family:"Courier New",monospace;color:#11170f;overflow-x:hidden}
+button,input,select,a{font:inherit}a{text-decoration:none;color:inherit}
+
+.app{
+ width:100%;
+ max-width:100%;
+ min-height:100vh;
+ padding:7px;
+ background:linear-gradient(145deg,#c5cbbf,#7d8879 7%,#4b574b 13%,#222a22 18%,#171c17 82%,#4e594d 90%,#aab3a4);
+}
+.device{
+ width:100%;
+ min-height:calc(100vh - 14px);
+ padding:7px;
+ border:3px solid #394238;
+ border-radius:25px;
+ background:linear-gradient(145deg,#a9b89f,#70806b 18%,#4f5c4c 80%,#9eaa96);
+ box-shadow:inset 0 0 0 2px #c7d0bf,inset 0 0 20px #1d241d,0 4px 15px #000;
+}
+.screenFrame{
+ width:100%;
+ min-height:calc(100vh - 28px);
+ padding:7px;
+ background:#282d27;
+ border:4px solid #171b17;
+ box-shadow:inset 0 0 0 2px #555a51;
+}
+.screen{
+ width:100%;
+ min-height:calc(100vh - 42px);
+ padding:10px;
+ background:
+  repeating-linear-gradient(0deg,rgba(20,28,18,.025) 0 1px,transparent 1px 4px),
+  radial-gradient(ellipse at 50% 20%,rgba(230,235,215,.32),transparent 58%),
+  #aeb6a0;
+ border:2px solid #4e544a;
+ box-shadow:inset 0 0 22px rgba(20,25,18,.28);
+}
+
+.header{
+ display:flex;justify-content:space-between;align-items:center;
+ min-height:34px;padding:3px 2px 8px;
+ border-bottom:2px solid #4b5147;font-weight:bold;font-size:14px
+}
+.logo{letter-spacing:1px}.status{font-size:10px}
+
+.page{display:none}.page.active{display:block}
+.title{font-size:17px;font-weight:bold;padding:12px 0 7px;border-bottom:2px solid #4b5147;margin-bottom:10px}
+.subtitle{font-size:10px;margin:4px 0 9px;color:#414b3e}
+
+.card{
+ padding:9px;margin-bottom:9px;
+ border:2px solid #4d5349;
+ background:rgba(190,196,177,.38);
+ box-shadow:inset 0 0 9px rgba(255,255,255,.12)
+}
+.card-title{font-weight:bold;font-size:13px;margin-bottom:8px}
+
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.menu-btn{
+ min-width:0;min-height:66px;padding:8px;text-align:left;
+ border:2px solid #3d433b;border-radius:4px;
+ background:linear-gradient(#d3d6cb,#a9aea3);
+ color:#10160f;font-weight:bold;
+ box-shadow:inset 0 1px #f4f5ef,0 2px #20251f
+}
+.menu-btn.locked{opacity:.43}
+.menu-num{font-size:18px;margin-right:5px}
+.menu-state{display:block;margin:5px 0 0 25px;font-size:9px}
+
+.setup-status{display:grid;gap:3px}
+.setup-line{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px dotted #73796c;font-size:11px}
+.ok{color:#1b5e25;font-weight:bold}.not-ok{color:#596153}
+
+label{display:block;font-size:10px;margin:7px 0 3px}
+input,select{
+ width:100%;height:37px;padding:0 7px;
+ color:#11170f;background:#adb5a1;
+ border:2px solid #4a5147;border-radius:3px;
+ outline:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.16)
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.btn{
+ width:100%;min-height:38px;padding:6px;
+ color:#11170f;font-weight:bold;
+ background:linear-gradient(#d5d8ce,#a7ada1);
+ border:2px solid #3d433b;border-radius:4px;
+ box-shadow:inset 0 1px #f5f6ef,0 2px #20251f
+}
+.btn.primary{background:linear-gradient(#dfe2d8,#b5bbae)}
+.btn.danger{background:linear-gradient(#c6c6bc,#9ea298)}
+.btn.gray{background:#a6aba1}
+.back{margin-bottom:7px}
+
+.set-box{
+ display:flex;align-items:center;gap:7px;
+ padding:7px;margin-top:8px;border:2px solid #4d5349;
+ background:rgba(168,176,158,.4)
+}
+.tick{
+ flex:0 0 23px;width:23px;height:23px;border-radius:50%;
+ display:flex;align-items:center;justify-content:center;
+ border:2px solid #5a6255;color:#555d50
+}
+.tick.done{background:#3a713e;border-color:#1d4324;color:#eef4e9}
+.set-text{font-size:10px}.set-text.done{color:#1b5e25;font-weight:bold}
+
+.result{
+ padding:8px;margin-top:8px;border:2px solid #4b5147;
+ background:rgba(181,188,168,.35)
+}
+.result-line{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dotted #73796c;font-size:11px}
+.result-line:last-child{border-bottom:0}
+.result-label{color:#3d473a}.result-value{font-weight:bold;color:#162017;text-align:right}
+.az{text-align:center;font-size:20px;font-weight:bold;padding:6px;color:#172219}
+
+.point{
+ margin-bottom:7px;border:2px solid #4b5147;background:rgba(184,191,171,.4)
+}
+.point-head{display:flex;justify-content:space-between;gap:5px;padding:7px;background:rgba(100,111,94,.28)}
+.point-name{font-weight:bold}
+.point-body{padding:7px}
+.coord{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.coord div{padding:5px;text-align:center;background:rgba(130,140,120,.25)}
+.coord span{display:block;font-size:9px;color:#4d574a}.coord b{font-size:10px}
+.point-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.small-btn{min-height:32px;border:2px solid #42483f;background:linear-gradient(#d0d3c9,#a8ada2);font-weight:bold}
+.small-btn.delete{background:linear-gradient(#c2c2b8,#9fa198)}
+
+.empty{text-align:center;padding:22px 7px;border:2px dashed #687061;color:#535d50;font-size:11px}
+.footer{text-align:center;padding:8px 0 0;font-size:8px;color:#596354}
+
+.toast{
+ position:fixed;left:50%;bottom:15px;transform:translate(-50%,80px);
+ max-width:90%;padding:9px 13px;background:#3d493b;color:#f0f3e9;
+ border:2px solid #aeb8a3;border-radius:4px;opacity:0;transition:.2s;z-index:99;
+ font-size:11px;text-align:center
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media(max-width:380px){
+ .screen{padding:8px}.menu-grid{gap:5px}.menu-btn{min-height:61px;padding:6px}
+ .title{font-size:15px}.row3{gap:4px}.row{gap:5px}
+}
+
+/* NO-JS FALLBACK: hash targets still give visible SET feedback */
+body:has(#job-set:target) #jobFallbackTick{display:flex}
+body:has(#station-set:target) #stationFallbackTick{display:flex}
+body:has(#orientation-set:target) #orientationFallbackTick{display:flex}
+.fallback-tick{display:none;align-items:center;gap:8px;margin-top:8px;padding:8px;border:1px solid #6d7b66;background:#dfe8d9;color:#165b20;font-weight:800;border-radius:8px}
+
+
+.volume-surface{margin-top:10px;padding:10px;border:2px solid #59655a;border-radius:10px;background:rgba(255,255,255,.045)}
+.volume-surface-title{font-weight:900;font-size:16px;margin-bottom:7px}
+.volume-point{display:grid;grid-template-columns:42px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 30px;gap:6px;align-items:end;margin-bottom:7px;padding:8px;border:1px solid #667263;border-radius:9px;background:rgba(255,255,255,.06)}
+.volume-point .pt-label{font-weight:900;text-align:center;padding-bottom:10px}.volume-point input{min-width:0;width:100%;font-size:16px;padding:11px 8px;box-sizing:border-box;letter-spacing:-.2px}.volume-remove{min-height:34px!important;height:34px!important;width:30px!important;padding:2px!important;font-size:18px!important;font-weight:900;line-height:1}.volume-unit-row{display:flex;align-items:flex-end;justify-content:flex-end;margin-top:8px}.volume-unit-box{min-width:115px}.volume-unit-box input{text-align:center;font-weight:900}.volume-result{margin-top:10px;padding:14px;border:2px solid #35b96b;border-radius:10px;background:#e5efdf;color:#17351b}.volume-result .volume-value{font-size:25px;font-weight:900}.volume-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.volume-note{font-size:12px;line-height:1.55;margin-top:7px;opacity:.84}.volume-summary{margin-top:10px;padding:10px;border:1px solid #59655a;border-radius:9px}.volume-summary-row{padding:5px 0;border-bottom:1px dotted #697467}.volume-summary-row:last-child{border-bottom:0}@media(max-width:560px){.volume-point{grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 30px;gap:4px}.volume-point input{font-size:15px;padding:10px 6px}.volume-unit-row{justify-content:flex-start}.volume-unit-box{min-width:120px}}
+
+.area-point{display:grid;grid-template-columns:48px minmax(0,1.25fr) minmax(0,1.25fr) 30px;gap:6px;align-items:end;margin-bottom:7px;padding:8px;border:1px solid #667263;border-radius:9px;background:rgba(255,255,255,.06)}
+.area-point .pt-label{font-weight:900;text-align:center;padding-bottom:10px}.area-point input{min-width:0;width:100%;font-size:16px;padding:11px 9px;box-sizing:border-box;letter-spacing:-.2px;}.area-remove{min-height:34px!important;height:34px!important;width:30px!important;padding:2px!important;font-size:18px!important;font-weight:900;line-height:1}.area-export-card{margin-top:12px;padding:12px;border:2px solid #59655a;border-radius:10px;background:rgba(255,255,255,.06)}.area-export-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:8px}.export-btn{font-weight:900;font-size:13px;min-height:48px}.area-export-note{font-size:11px;line-height:1.5;margin-top:8px;opacity:.82}@media(max-width:560px){.area-export-grid{grid-template-columns:1fr}.export-btn{font-size:14px}}
+.area-result{margin-top:10px;padding:14px;border:2px solid #35b96b;border-radius:10px;background:#e5efdf;color:#17351b}.area-result .area-value{font-size:26px;font-weight:900}.area-result .area-unit{font-size:16px;font-weight:800}.area-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.export-choice-box{margin-top:10px;padding:14px;border:2px solid #1f9d55;border-radius:12px;background:rgba(30,70,45,.28);}
+.export-title{font-size:20px;font-weight:900;letter-spacing:.3px;margin-bottom:5px;}
+.export-help{font-size:15px;font-weight:700;margin-bottom:10px;}
+.export-format{font-size:17px!important;font-weight:800!important;min-height:48px;border:2px solid #35b96b!important;}
+.export-big{font-size:18px!important;font-weight:900!important;min-height:52px;padding:12px 16px!important;border:2px solid #9ff0bd!important;box-shadow:0 2px 0 rgba(0,0,0,.25);}
+</style>
+
+<style>
+.area-sketch-wrap{margin-top:12px;background:#d9ddd5;border:2px solid #5c665d;border-radius:8px;padding:8px}.area-sketch-title{font-weight:800;font-size:15px;margin-bottom:6px}.area-sketch{width:100%;height:250px;display:block;background:#eef0eb;border:1px solid #7b847b;border-radius:5px}.area-sketch-note{font-size:12px;margin-top:5px;opacity:.8}.area-sketch polygon{fill:rgba(50,90,55,.18);stroke:#263d2b;stroke-width:2}.area-sketch line{stroke:#263d2b;stroke-width:1}.area-sketch circle{fill:#3d6b46;stroke:#fff;stroke-width:1.5}.area-sketch text{font-family:Arial,sans-serif;font-weight:800;fill:#162019;font-size:12px}.area-sketch .axis{stroke:#899189;stroke-width:1;stroke-dasharray:4 4}
+</style>
+</head>
+
+<body>
+<div class="app"><div class="device"><div class="screenFrame"><div class="screen">
+
+<div class="header"><div class="logo">Q-SURVEY • MILADGEO</div><div id="headerStatus">NO JOB</div></div>
+
+<section id="main" class="page active">
+<div class="title">MAIN MENU</div>
+<div class="card"><div class="card-title">CURRENT JOB</div><div id="jobSummary">No Job</div>
+<a id="jobNavBtn" class="btn primary" href="#job" style="margin-top:8px">JOB / PROJECT</a></div>
+
+<div class="menu-grid">
+<a id="stationNavBtn" class="menu-btn" href="#station"><span class="menu-num">1</span>STATION<span id="stationMenuState" class="menu-state">NOT SET</span></a>
+<button id="measureMenu" class="menu-btn locked" onclick="openMeasure()"><span class="menu-num">2</span>MEASURE<span id="measureMenuState" class="menu-state">🔒 SETUP REQUIRED</span></button>
+<button id="stakeMenu" class="menu-btn locked" onclick="openStake()"><span class="menu-num">3</span>STAKE OUT<span id="stakeMenuState" class="menu-state">🔒 SETUP REQUIRED</span></button>
+<a class="menu-btn" href="#points"><span class="menu-num">4</span>POINTS<span id="pointsMenuState" class="menu-state">0 POINTS</span></a>
+<a class="menu-btn" href="#area"><span class="menu-num">5</span>AREA / POLYGON<span id="areaMenuState" class="menu-state">3+ POINTS</span></a>
+<a class="menu-btn" href="#volume"><span class="menu-num">6</span>VOLUME / EARTHWORK<span class="menu-state">CUT / FILL</span></a>
+</div>
+
+<div class="card" style="margin-top:9px"><div class="card-title">SETUP STATUS</div>
+<div class="setup-status">
+<div class="setup-line"><span>JOB</span><span id="jobStatus" class="not-ok">NOT SET</span></div>
+<div class="setup-line"><span>STATION</span><span id="stationStatus" class="not-ok">NOT SET</span></div>
+<div class="setup-line"><span>ORIENTATION</span><span id="orientationStatus" class="not-ok">NOT SET</span></div>
+</div></div>
+</section>
+
+<section id="job" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">JOB / PROJECT</div>
+<div class="card"><div class="card-title">CREATE / SELECT JOB</div>
+<label>Job Name</label><input id="jobName" placeholder="ROAD_1405">
+<button type="button" id="setJobBtn" class="btn primary" style="margin-top:9px" onclick="saveJob();return false;">✓ SET JOB</button></div>
+<div id="jobInfo"></div><div id="jobFallbackTick" class="fallback-tick">✓ JOB SET</div>
+</section>
+
+<section id="station" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">1 — STATION</div>
+<div class="card"><div class="card-title">STATION COORDINATES</div>
+<label>Station Point</label><input id="stationName" value="ST01">
+<div class="row3"><div><label>X</label><input id="sx" type="number" step="any"></div><div><label>Y</label><input id="sy" type="number" step="any"></div><div><label>Z</label><input id="sz" type="number" step="any"></div></div>
+<button type="button" id="setStationBtn" class="btn primary" style="margin-top:9px" onclick="setStation();return false;">✓ SET STATION</button><div id="stationSetBox"></div><div id="stationFallbackTick" class="fallback-tick">✓ STATION SET</div></div>
+
+<div class="card"><div class="card-title">ORIENTATION</div>
+<label>Orienting Method</label><select id="orientMethod"><option value="azimuth">AZIMUTH</option><option value="coordinates">COORDINATES</option></select>
+<div id="azimuthMode"><label>Azimuth °</label><input id="manualAz" type="number" step="any" placeholder="0 - 360"><label>Distance / Length m</label><input id="orientationDistance" type="number" step="any" min="0" placeholder="0.000"></div>
+<div id="coordinateMode" style="display:none"><label>Backsight Point</label><input id="backName" value="BS01"><div class="row3"><div><label>X</label><input id="bx" type="number" step="any"></div><div><label>Y</label><input id="by" type="number" step="any"></div><div><label>Z</label><input id="bz" type="number" step="any"></div></div></div>
+<button type="button" id="setOrientationBtn" class="btn primary" style="margin-top:9px" onclick="setOrientation();return false;">✓ SET ORIENTATION</button>
+<div id="orientationResult"></div><div id="orientationSetBox"></div><div id="orientationFallbackTick" class="fallback-tick">✓ ORIENTATION SET</div></div>
+</section>
+
+<section id="measure" class="page">
+<a class="btn gray back" href="#main" onclick="return goPage('main');">← MAIN MENU</a><div class="title">2 — MEASUREMENT</div>
+<div class="card"><div class="card-title">NEW POINT</div>
+<label>Point Number</label><input id="pointNo" readonly>
+<label>DP</label><input id="pointDP" placeholder="Description">
+<div class="row"><div><label>Distance / SD</label><input id="distance" type="number" step="any"></div><div><label>Azimuth Hz °</label><input id="pointAz" type="number" step="any"></div></div>
+<div class="row"><div><label>ΔZ / dH</label><input id="dz" type="number" step="any" value="0"></div><div><label>HI</label><input id="hi" type="number" step="any" value="0"></div></div>
+<button class="btn primary" style="margin-top:9px" onclick="calculatePoint()">MEAS / CALCULATE</button>
+<div id="pointResult"></div></div>
+</section>
+
+<section id="stake" class="page">
+<a class="btn gray back" href="#main" onclick="return goPage('main');">← MAIN MENU</a><div class="title">3 — STAKE OUT</div>
+<div class="card"><div class="card-title">STAKE OUT METHOD</div>
+<div class="row"><button type="button" id="stakeModePoint" class="btn primary" onclick="setStakeMode('point')">FROM POINT</button><button type="button" id="stakeModePolar" class="btn gray" onclick="setStakeMode('polar')">AZIMUTH + DISTANCE</button></div>
+<div id="stakePointMode">
+<label>Select Target Point</label><select id="stakeSelect" onchange="loadStakePoint()"><option value="">-- Select Point --</option></select><div id="stakeTarget"></div>
+<div class="card-title" style="margin-top:12px">CALCULATE FROM POINT COORDINATES</div>
+<div class="subtitle">Target X / Y / Z → calculate Azimuth, Distance and ΔZ from the occupied station.</div>
+<button class="btn primary" style="margin-top:8px" onclick="calculateStake()">CALCULATE AZIMUTH + DISTANCE</button>
+</div>
+<div id="stakePolarMode" style="display:none">
+<div class="card-title">ENTER AZIMUTH + DISTANCE</div>
+<div class="row"><div><label>Azimuth °</label><input id="stakeAzInput" type="number" step="any" placeholder="0–360"></div><div><label>Distance m</label><input id="stakeDistInput" type="number" step="any" placeholder="m"></div></div>
+<label>ΔZ / dH m</label><input id="stakeDzInput" type="number" step="any" value="0">
+<button class="btn primary" style="margin-top:8px" onclick="calculateStakePolar()">CALCULATE TARGET COORDINATES</button>
+</div></div>
+<div class="card"><div class="card-title">STAKE OUT RESULTS</div><div id="stakeResult"><div class="empty">Choose a method and calculate.</div></div></div>
+</section>
+
+<section id="points" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">4 — POINT LIST</div>
+<div class="card"><div class="card-title">JOB: <span id="pointsJobName">-</span></div>
+<div class="export-choice-box">
+<div class="export-title">📤 CHOOSE OUTPUT FILE TYPE</div>
+<div class="export-help">نوع فایل خروجی را انتخاب کن، سپس دکمه سبز EXPORT را بزن.</div>
+<label>FILE FORMAT</label>
+<select id="exportFormat" class="export-format">
+<option value="csv">CSV — Coordinates / Data</option>
+<option value="txt">TXT — Survey Point Code</option>
+<option value="kml">KML — Google Earth</option>
+<option value="kmz">KMZ — Google Earth (Compressed)</option>
+<option value="dxf">DXF — AutoCAD / CAD Survey</option>
+<option value="landxml">LandXML — Survey Points</option>
+<option value="json">JSON — Raw Project Data</option>
+<option value="code">CODE TXT — Point Code / DP</option>
+</select>
+<div class="btn-row"><button class="btn export-big" type="button" onclick="exportSelected()">⬇ EXPORT SELECTED FILE</button><button class="btn danger" type="button" onclick="clearAllPoints()">CLEAR ALL</button></div>
+</div>
+<div class="subtitle" style="margin-top:7px">KML uses X=Longitude and Y=Latitude. For projected survey coordinates, use a CRS conversion before Google Earth.</div>
+</div>
+<div id="pointsList"></div></section>
+
+<section id="area" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">5 — AREA / POLYGON</div>
+<div class="card"><div class="card-title">ENTER POINT COORDINATES</div>
+<div class="subtitle">حداقل ۳ نقطه وارد کن. برای ۴، ۵، ۶ و ... نقطه، با ADD POINT ادامه بده. مساحت بر اساس مختصات X/Y و به روش Shoelace محاسبه می‌شود.</div>
+<div id="areaPoints"></div>
+<div class="area-actions"><button type="button" class="btn gray" onclick="addAreaPoint();return false;">＋ ADD POINT</button><button type="button" class="btn primary" onclick="calculateArea();return false;">✓ CALCULATE AREA</button><button type="button" class="btn danger" onclick="clearAreaPoints();return false;">CLEAR</button></div>
+<div id="areaResult"></div></div>
+<div class="card"><div class="card-title">POINT COORDINATES</div><div id="areaCoordinateSummary" class="subtitle">مختصات X و Y نقاط واردشده اینجا نمایش داده می‌شود.</div>
+<div class="area-sketch-wrap"><div class="area-sketch-title">📐 SKETCH / CROQUIS</div><svg id="areaSketch" class="area-sketch" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid meet" aria-label="Polygon sketch"></svg><div class="area-sketch-note">شماتیک بر اساس مختصات X/Y نقاط واردشده نمایش داده می‌شود؛ اندازه و جهت آن صرفاً برای نمایش شکل است.</div></div>
+<div class="area-export-card"><div class="card-title">📤 EXPORT AREA / POLYGON</div><div class="subtitle">خروجی نقاط و پلیگون برای AutoCAD، Excel و Google Earth</div><div class="area-export-grid"><button type="button" class="btn export-btn" onclick="exportAreaDXF();return false;">DXF — AutoCAD</button><button type="button" class="btn export-btn" onclick="exportAreaExcel();return false;">EXCEL — XLS</button><button type="button" class="btn export-btn" onclick="exportAreaKML();return false;">KML — GOOGLE EARTH</button></div><div class="area-export-note">KML فعلاً X=Longitude و Y=Latitude است؛ برای UTM باید تبدیل UTM→WGS84 اضافه شود.</div></div></div>
+</section>
+
+<section id="volume" class="page">
+<a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">6 — VOLUME / EARTHWORK</div>
+
+<div class="card">
+<div class="card-title">SURFACE 1 / EXISTING</div>
+<div class="subtitle">مختصات سطح اول را وارد کن. حداقل ۳ نقطه لازم است؛ P1، P2، P3 و برای نقاط بیشتر ADD POINT را بزن.</div>
+<div id="volumeSurface1" class="volume-surface"></div>
+</div>
+
+<div class="card">
+<div class="card-title">SURFACE 2 / DESIGN</div>
+<div class="subtitle">حالا مختصات سطح دوم را با همان ترتیب نقاط وارد کن؛ P1 سطح اول ↔ P1 سطح دوم، P2 ↔ P2 و ...</div>
+<div id="volumeSurface2" class="volume-surface"></div>
+<div class="volume-unit-row"><div class="volume-unit-box"><label>UNIT</label><input value="m³" readonly></div></div>
+<div class="volume-actions"><button type="button" class="btn gray" onclick="addVolumePoint();return false;">＋ ADD POINT</button><button type="button" class="btn primary" onclick="calculateVolume();return false;">✓ CALCULATE VOLUME</button><button type="button" class="btn danger" onclick="clearVolumePoints();return false;">CLEAR</button></div>
+<div class="volume-note">حجم بین دو سطح بر اساس مثلث‌بندی نقاط متناظر محاسبه می‌شود. ترتیب نقاط دو سطح باید یکسان و دور تا دور محدوده باشد.</div>
+<div id="volumeResult"></div>
+</div>
+
+<div class="card"><div class="card-title">VOLUME POINT SUMMARY</div><div id="volumeCoordinateSummary" class="subtitle">مختصات دو سطح بعد از ورود اینجا نمایش داده می‌شود.</div></div>
+</section>
+
+<section id="edit" class="page">
+<a class="btn gray back" href="#points">← POINT LIST</a><div class="title">EDIT POINT</div>
+<div class="card"><input type="hidden" id="editId"><label>Point Number</label><input id="editNo"><label>DP</label><input id="editDP">
+<div class="row3"><div><label>X</label><input id="editX" type="number" step="any"></div><div><label>Y</label><input id="editY" type="number" step="any"></div><div><label>Z</label><input id="editZ" type="number" step="any"></div></div>
+<button class="btn primary" style="margin-top:9px" onclick="updatePoint()">✓ SAVE CHANGES</button></div></section>
+
+<div class="footer">LEICA STYLE • MILADGEO TOTAL STATION SIMULATOR</div>
+</div></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+var JOB_KEY="miladgeo_job_v3", SETUP_KEY="miladgeo_setup_v3", POINTS_KEY="miladgeo_points_v3";
+function $(id){return document.getElementById(id);}
+var job={name:"",created:""};
+var setup={stationSet:false,orientationSet:false,stationName:"",sx:null,sy:null,sz:null,orientationMethod:"azimuth",azimuth:null,orientationDistance:null,backName:"",bx:null,by:null,bz:null};
+var points=[]; var lastCalculatedPoint=null;
+function finite(v){return typeof v==='number' && isFinite(v);}
+function num(v){var n=parseFloat(v);return isFinite(n)?n:NaN;}
+function loadData(){try{var j=localStorage.getItem(JOB_KEY),s=localStorage.getItem(SETUP_KEY),p=localStorage.getItem(POINTS_KEY);if(j)job=JSON.parse(j);if(s)setup=JSON.parse(s);if(p)points=JSON.parse(p);if(!job||typeof job!=='object')job={name:"",created:""};if(!setup||typeof setup!=='object')setup={stationSet:false,orientationSet:false};if(!points||!Array.isArray(points))points=[];}catch(e){}}
+function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function showPage(id){var pages=document.querySelectorAll('.page'),i,target=$(id);if(!target)return false;for(i=0;i<pages.length;i++)pages[i].classList.remove('active');target.classList.add('active');try{window.scrollTo(0,0);}catch(e){}if(id==='points')refreshPoints();if(id==='stake')updateStakeSelect();if(id==='area')renderAreaPoints();if(id==='volume')renderVolumePoints();if(id==='main')updateAllUI();return false;}
+function goPage(id){try{history.replaceState(null,'','#'+id);}catch(e){}showPage(id);return false;}
+window.goPage=goPage;
+window.showPage=showPage;
+function saveJob(){var el=$("jobName"),n=el?el.value.replace(/^\s+|\s+$/g,''):'';if(!n){showToast('Enter Job Name');return false;}job.name=n;if(!job.created)job.created=new Date().toISOString();saveJSON(JOB_KEY,job);updateAllUI();showToast('JOB SET ✓');setTimeout(function(){goPage('main');showToast('MAIN MENU');},450);return false;}
+function setStation(){var x=num($("sx").value),y=num($("sy").value),z=num($("sz").value);if(!finite(x)||!finite(y)||!finite(z)){showToast('Enter Station X / Y / Z');return false;}setup.stationName=($("stationName").value||'ST01').replace(/^\s+|\s+$/g,'');setup.sx=x;setup.sy=y;setup.sz=z;setup.stationSet=true;setup.orientationSet=false;saveJSON(SETUP_KEY,setup);renderStationSet();renderOrientationSet();updateAllUI();showToast('STATION SET ✓');return false;}
+function changeOrientationMethod(){var m=$("orientMethod").value;$("azimuthMode").style.display=m==='azimuth'?'block':'none';$("coordinateMode").style.display=m==='coordinates'?'block':'none';}
+function normalizeAzimuth(a){a=a%360;if(a<0)a+=360;return a;}
+function calculateAzimuth(x1,y1,x2,y2){return normalizeAzimuth(Math.atan2(x2-x1,y2-y1)*180/Math.PI);}
+function setOrientation(){if(!setup.stationSet){showToast('Set Station first');return false;}var m=$("orientMethod").value,a,d=num($("orientationDistance").value);if(!finite(d)||d<0){showToast('Enter Orientation Distance / Length');return false;}if(m==='azimuth'){a=num($("manualAz").value);if(!finite(a)||a<0||a>=360){showToast('Enter Azimuth 0–360');return false;}}else{var x=num($("bx").value),y=num($("by").value),z=num($("bz").value);if(!finite(x)||!finite(y)||!finite(z)){showToast('Enter Backsight X / Y / Z');return false;}setup.bx=x;setup.by=y;setup.bz=z;setup.backName=($("backName").value||'BS01').replace(/^\s+|\s+$/g,'');a=calculateAzimuth(setup.sx,setup.sy,x,y);}setup.orientationMethod=m;setup.azimuth=normalizeAzimuth(a);setup.orientationDistance=d;setup.orientationSet=true;saveJSON(SETUP_KEY,setup);$("orientationResult").innerHTML='<div class="result"><div class="az">'+fmt(setup.azimuth,4)+'°</div><div class="result-line"><span>Length</span><b>'+fmt(d,3)+' m</b></div></div>';renderOrientationSet();updateAllUI();showToast('ORIENTATION SET ✓');setTimeout(function(){goPage('main');showToast('SETUP COMPLETE ✓');},550);return false;}
+function setupComplete(){return setup.stationSet===true&&setup.orientationSet===true;}
+function openMeasure(){if(!setupComplete()){showToast('Station & Orientation required');return false;}prepareNewPoint();showPage('measure');return false;}
+function openStake(){if(!setupComplete()){showToast('Station & Orientation required');return false;}showPage('stake');return false;}
+var areaPointCount=3;
+function areaRowHTML(i){return '<div class="area-point" data-area-row="'+i+'"><div class="pt-label">P'+i+'</div><div><label>X</label><input id="areaX'+i+'" type="number" step="any" placeholder="X"></div><div><label>Y</label><input id="areaY'+i+'" type="number" step="any" placeholder="Y"></div><button type="button" class="btn danger area-remove" onclick="removeAreaPoint('+i+');return false;">×</button></div>'; }
+function renderAreaPoints(){var box=$("areaPoints");if(!box)return;var out='',i;for(i=1;i<=areaPointCount;i++)out+=areaRowHTML(i);box.innerHTML=out;updateAreaCoordinateSummary();}
+function addAreaPoint(){areaPointCount++;renderAreaPoints();var el=$("areaX"+areaPointCount);if(el)el.focus();showToast('Point '+areaPointCount+' added');return false;}
+function removeAreaPoint(i){if(areaPointCount<=3){showToast('Minimum 3 points required');return false;}var xs=[],ys=[],j;for(j=1;j<=areaPointCount;j++){if(j===i)continue;xs.push($("areaX"+j)?$("areaX"+j).value:'');ys.push($("areaY"+j)?$("areaY"+j).value:'');}areaPointCount--;renderAreaPoints();for(j=1;j<=areaPointCount;j++){if($("areaX"+j))$("areaX"+j).value=xs[j-1]||'';if($("areaY"+j))$("areaY"+j).value=ys[j-1]||'';}updateAreaCoordinateSummary();return false;}
+function getAreaPoints(){var a=[],i,x,y;for(i=1;i<=areaPointCount;i++){x=num($("areaX"+i).value);y=num($("areaY"+i).value);if(!finite(x)||!finite(y)){showToast('Enter X and Y for P'+i);return null;}a.push({no:i,x:x,y:y});}return a;}
+function updateAreaCoordinateSummary(){var box=$("areaCoordinateSummary");if(!box)return;var rows=[],i,x,y;for(i=1;i<=areaPointCount;i++){x=$("areaX"+i);y=$("areaY"+i);if(x&&y&&(x.value!==''||y.value!=='')){rows.push('<b>P'+i+'</b> → X '+escapeHTML(x.value||'-')+' | Y '+escapeHTML(y.value||'-'));}}box.innerHTML=rows.length?rows.join('<br>'):'مختصات X و Y نقاط واردشده اینجا نمایش داده می‌شود.';drawAreaSketch();}
+function drawAreaSketch(){var svg=$("areaSketch");if(!svg)return;var pts=[],i,x,y;for(i=1;i<=areaPointCount;i++){x=$("areaX"+i);y=$("areaY"+i);if(x&&y&&x.value!==''&&y.value!==''&&finite(num(x.value))&&finite(num(y.value)))pts.push({no:i,x:num(x.value),y:num(y.value)});}if(!pts.length){svg.innerHTML='<text x="300" y="125" text-anchor="middle" fill="#555" font-size="14">مختصات را وارد کنید</text>';return;}var minX=pts[0].x,maxX=pts[0].x,minY=pts[0].y,maxY=pts[0].y;for(i=1;i<pts.length;i++){if(pts[i].x<minX)minX=pts[i].x;if(pts[i].x>maxX)maxX=pts[i].x;if(pts[i].y<minY)minY=pts[i].y;if(pts[i].y>maxY)maxY=pts[i].y;}var pad=30,w=540,h=190,rx=maxX-minX||1,ry=maxY-minY||1,scale=Math.min((w-2*pad)/rx,(h-2*pad)/ry),offX=300-(minX+maxX)*scale/2,offY=125+(minY+maxY)*scale/2;function sx(v){return offX+v*scale;}function sy(v){return offY-v*scale;}var out='<line class="axis" x1="30" y1="125" x2="570" y2="125"></line><line class="axis" x1="300" y1="20" x2="300" y2="230"></line>';if(pts.length>=2){var poly='';for(i=0;i<pts.length;i++)poly+=sx(pts[i].x)+','+sy(pts[i].y)+' ';if(pts.length>=3)out+='<polygon points="'+poly+'"></polygon>';else out+='<polyline points="'+poly+'" fill="none" stroke="#263d2b" stroke-width="2"></polyline>';}for(i=0;i<pts.length;i++){var px=sx(pts[i].x),py=sy(pts[i].y);out+='<circle cx="'+px+'" cy="'+py+'" r="6"></circle><text x="'+(px+9)+'" y="'+(py-8)+'">P'+pts[i].no+'</text>';}svg.innerHTML=out;}
+function calculateArea(){var a=getAreaPoints();if(!a)return false;var sum=0,per=0,i,j,dx,dy;for(i=0;i<a.length;i++){j=(i+1)%a.length;sum+=a[i].x*a[j].y-a[j].x*a[i].y;dx=a[j].x-a[i].x;dy=a[j].y-a[i].y;per+=Math.sqrt(dx*dx+dy*dy);}var area=Math.abs(sum)/2;var r=$("areaResult");r.innerHTML='<div class="area-result"><div>POLYGON AREA</div><div class="area-value">'+fmt(area,3)+' <span class="area-unit">m²</span></div><div class="result-line"><span>Points</span><b>'+a.length+'</b></div><div class="result-line"><span>Perimeter</span><b>'+fmt(per,3)+' m</b></div></div>';updateAreaCoordinateSummary();showToast('AREA CALCULATED ✓');return false;}
+function areaFileName(ext){var job=(setup&&setup.job?setup.job:'Area_Polygon').replace(/[^a-z0-9_-]+/gi,'_');return job+'_AREA.'+ext;}
+function downloadTextFile(name,text,mime){var blob=new Blob([text],{type:mime||'text/plain;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
+function exportAreaDXF(){var a=getAreaPoints();if(!a)return false;var out=['0','SECTION','2','HEADER','0','ENDSEC','0','SECTION','2','ENTITIES'];for(var i=0;i<a.length;i++){var j=(i+1)%a.length;out.push('0','LINE','8','AREA','10',String(a[i].x),'20',String(a[i].y),'30','0','11',String(a[j].x),'21',String(a[j].y),'31','0');out.push('0','POINT','8','POINTS','10',String(a[i].x),'20',String(a[i].y),'30','0');}out.push('0','ENDSEC','0','EOF');downloadTextFile(areaFileName('dxf'),out.join('\r\n')+'\r\n','application/dxf');showToast('DXF exported ✓');return false;}
+function exportAreaExcel(){var a=getAreaPoints();if(!a)return false;var sum=0,per=0,rows='';for(var i=0;i<a.length;i++){var j=(i+1)%a.length,dx=a[j].x-a[i].x,dy=a[j].y-a[i].y,len=Math.sqrt(dx*dx+dy*dy),az=Math.atan2(dx,dy)*180/Math.PI;if(az<0)az+=360;sum+=a[i].x*a[j].y-a[j].x*a[i].y;per+=len;rows+='<tr><td>P'+a[i].no+'</td><td>'+a[i].x+'</td><td>'+a[i].y+'</td><td>'+len.toFixed(3)+'</td><td>'+az.toFixed(3)+'</td></tr>';}var area=Math.abs(sum)/2;var html='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Area"><Table><Row><Cell><Data ss:Type="String">Point</Data></Cell><Cell><Data ss:Type="String">X</Data></Cell><Cell><Data ss:Type="String">Y</Data></Cell><Cell><Data ss:Type="String">Side Length</Data></Cell><Cell><Data ss:Type="String">Azimuth</Data></Cell></Row>'+rows+'<Row><Cell><Data ss:Type="String">AREA</Data></Cell><Cell><Data ss:Type="Number">'+area+'</Data></Cell><Cell><Data ss:Type="String">m2</Data></Cell></Row><Row><Cell><Data ss:Type="String">PERIMETER</Data></Cell><Cell><Data ss:Type="Number">'+per+'</Data></Cell><Cell><Data ss:Type="String">m</Data></Cell></Row></Table></Worksheet></Workbook>';downloadTextFile(areaFileName('xls'),html,'application/vnd.ms-excel');showToast('Excel exported ✓');return false;}
+function utmToLatLon(easting,northing,zone,northern){
+ var a=6378137.0, eccSquared=0.00669438, k0=0.9996;
+ var eccPrimeSquared=eccSquared/(1-eccSquared);
+ var e1=(1-Math.sqrt(1-eccSquared))/(1+Math.sqrt(1-eccSquared));
+ var x=easting-500000.0, y=northing;
+ if(!northern)y-=10000000.0;
+ var longOrigin=(zone-1)*6-180+3;
+ var M=y/k0;
+ var mu=M/(a*(1-eccSquared/4-3*eccSquared*eccSquared/64-5*Math.pow(eccSquared,3)/256));
+ var phi1Rad=mu+(3*e1/2-27*Math.pow(e1,3)/32)*Math.sin(2*mu)+(21*e1*e1/16-55*Math.pow(e1,4)/32)*Math.sin(4*mu)+(151*Math.pow(e1,3)/96)*Math.sin(6*mu)+(1097*Math.pow(e1,4)/512)*Math.sin(8*mu);
+ var N1=a/Math.sqrt(1-eccSquared*Math.sin(phi1Rad)*Math.sin(phi1Rad));
+ var T1=Math.tan(phi1Rad)*Math.tan(phi1Rad);
+ var C1=eccPrimeSquared*Math.cos(phi1Rad)*Math.cos(phi1Rad);
+ var R1=a*(1-eccSquared)/Math.pow(1-eccSquared*Math.sin(phi1Rad)*Math.sin(phi1Rad),1.5);
+ var D=x/(N1*k0);
+ var lat=phi1Rad-(N1*Math.tan(phi1Rad)/R1)*(D*D/2-(5+3*T1+10*C1-4*C1*C1-9*eccPrimeSquared)*Math.pow(D,4)/24+(61+90*T1+298*C1+45*T1*T1-252*eccPrimeSquared-3*C1*C1)*Math.pow(D,6)/720);
+ var lon=(D-(1+2*T1+C1)*Math.pow(D,3)/6+(5-2*C1+28*T1-3*C1*C1+8*eccPrimeSquared+24*T1*T1)*Math.pow(D,5)/120)/Math.cos(phi1Rad);
+ lat=lat*180/Math.PI; lon=longOrigin+lon*180/Math.PI;
+ return {lat:lat,lon:lon};
+}
+function exportAreaKML(){
+ var a=getAreaPoints();if(!a)return false;
+ var geographic=true,i;
+ for(i=0;i<a.length;i++){if(Math.abs(a[i].x)>180||Math.abs(a[i].y)>90){geographic=false;break;}}
+ var geoPts=[];
+ if(geographic){
+   for(i=0;i<a.length;i++)geoPts.push({no:a[i].no,x:a[i].x,y:a[i].y});
+ }else{
+   var zone=window.prompt('مختصات X/Y بزرگ هستند و احتمالاً UTM هستند.\nشماره زون UTM را وارد کنید (مثلاً 39):','39');
+   if(zone===null)return false;
+   zone=parseInt(zone,10);
+   if(!isFinite(zone)||zone<1||zone>60){showToast('UTM Zone must be 1–60');return false;}
+   var northern=window.confirm('آیا مختصات در نیمکره شمالی است؟\nOK = شمالی / Cancel = جنوبی');
+   /*
+      در نقشه‌برداری، بعضی دستگاه‌ها X را Northing و Y را Easting
+      ذخیره می‌کنند؛ در حالی که بعضی نرم‌افزارها X=Easting و Y=Northing.
+      هر دو حالت را خودکار تشخیص می‌دهیم تا خطای بی‌دلیل نگیریم.
+   */
+   var normal=true,swapped=true;
+   for(i=0;i<a.length;i++){
+     if(a[i].x<100000||a[i].x>900000||a[i].y<0||a[i].y>10000000)normal=false;
+     if(a[i].y<100000||a[i].y>900000||a[i].x<0||a[i].x>10000000)swapped=false;
+   }
+   var mode=normal?'EN':(swapped?'NE':null);
+   if(!mode){
+     showToast('UTM: X/Y range invalid — Easting 100000–900000, Northing 0–10000000');
+     return false;
+   }
+   for(i=0;i<a.length;i++){
+     var e=mode==='EN'?a[i].x:a[i].y;
+     var n=mode==='EN'?a[i].y:a[i].x;
+     var ll=utmToLatLon(e,n,zone,northern);
+     geoPts.push({no:a[i].no,x:ll.lon,y:ll.lat});
+   }
+ }
+ var coords='';
+ for(i=0;i<geoPts.length;i++)coords+=geoPts[i].x.toFixed(8)+','+geoPts[i].y.toFixed(8)+',0 ';
+ coords+=geoPts[0].x.toFixed(8)+','+geoPts[0].y.toFixed(8)+',0';
+ var name=(job&&job.name?job.name:'MILADGEO_AREA');
+ var kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>'+escapeHTML(name)+' AREA</name><Placemark><name>AREA POLYGON</name><Style><LineStyle><width>3</width></LineStyle><PolyStyle><fill>0.35</fill><outline>1</outline></PolyStyle></Style><Polygon><outerBoundaryIs><LinearRing><coordinates>'+coords+'</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark></Document></kml>';
+ downloadTextFile(areaFileName('kml'),kml,'application/vnd.google-earth.kml+xml;charset=utf-8');
+ showToast('KML exported ✓');return false;
+}
+var volumePointCount=3;
+
+function volumeRowHTML(surface,i){
+  return '<div class="volume-point" data-volume-surface="'+surface+'" data-volume-row="'+i+'">'+
+    '<div class="pt-label">P'+i+'</div>'+
+    '<div><label>X</label><input id="vol'+surface+'X'+i+'" type="number" step="any" placeholder="X"></div>'+
+    '<div><label>Y</label><input id="vol'+surface+'Y'+i+'" type="number" step="any" placeholder="Y"></div>'+
+    '<div><label>Z</label><input id="vol'+surface+'Z'+i+'" type="number" step="any" placeholder="Z"></div>'+
+    '<button type="button" class="btn danger volume-remove" onclick="removeVolumePoint('+i+');return false;">×</button></div>';
+}
+
+function renderVolumePoints(){
+  var b1=$("volumeSurface1"),b2=$("volumeSurface2"),o1='',o2='',i;
+  if(!b1||!b2)return;
+  for(i=1;i<=volumePointCount;i++){o1+=volumeRowHTML(1,i);o2+=volumeRowHTML(2,i);}
+  b1.innerHTML=o1;b2.innerHTML=o2;
+  updateVolumeCoordinateSummary();
+}
+
+function addVolumePoint(){
+  volumePointCount++;
+  renderVolumePoints();
+  var el=$("vol1X"+volumePointCount);
+  if(el)el.focus();
+  showToast('Point '+volumePointCount+' added to both surfaces');
+  return false;
+}
+
+function removeVolumePoint(i){
+  if(volumePointCount<=3){showToast('Minimum 3 points required');return false;}
+  var vals1=[],vals2=[],j;
+  for(j=1;j<=volumePointCount;j++){
+    if(j===i)continue;
+    vals1.push({x:$("vol1X"+j)?.value||'',y:$("vol1Y"+j)?.value||'',z:$("vol1Z"+j)?.value||''});
+    vals2.push({x:$("vol2X"+j)?.value||'',y:$("vol2Y"+j)?.value||'',z:$("vol2Z"+j)?.value||''});
+  }
+  volumePointCount--;
+  renderVolumePoints();
+  for(j=1;j<=volumePointCount;j++){
+    $("vol1X"+j).value=vals1[j-1].x;$("vol1Y"+j).value=vals1[j-1].y;$("vol1Z"+j).value=vals1[j-1].z;
+    $("vol2X"+j).value=vals2[j-1].x;$("vol2Y"+j).value=vals2[j-1].y;$("vol2Z"+j).value=vals2[j-1].z;
+  }
+  updateVolumeCoordinateSummary();
+  return false;
+}
+
+function getVolumeSurface(surface){
+  var a=[],i,x,y,z;
+  for(i=1;i<=volumePointCount;i++){
+    x=num($("vol"+surface+"X"+i).value);
+    y=num($("vol"+surface+"Y"+i).value);
+    z=num($("vol"+surface+"Z"+i).value);
+    if(!finite(x)||!finite(y)||!finite(z)){
+      showToast('Enter X, Y and Z for Surface '+surface+' P'+i);
+      return null;
+    }
+    a.push({no:i,x:x,y:y,z:z});
+  }
+  return a;
+}
+
+function triangleArea(a,b,c){
+  return Math.abs((b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y))/2;
+}
+
+function updateVolumeCoordinateSummary(){
+  var box=$("volumeCoordinateSummary");if(!box)return;
+  var s1=[],s2=[],i,x,y,z;
+  for(i=1;i<=volumePointCount;i++){
+    x=$("vol1X"+i);y=$("vol1Y"+i);z=$("vol1Z"+i);
+    if(x&&y&&z&&(x.value!==''||y.value!==''||z.value!==''))s1.push('<div class="volume-summary-row"><b>S1 P'+i+'</b> → X '+escapeHTML(x.value||'-')+' | Y '+escapeHTML(y.value||'-')+' | Z '+escapeHTML(z.value||'-')+'</div>');
+    x=$("vol2X"+i);y=$("vol2Y"+i);z=$("vol2Z"+i);
+    if(x&&y&&z&&(x.value!==''||y.value!==''||z.value!==''))s2.push('<div class="volume-summary-row"><b>S2 P'+i+'</b> → X '+escapeHTML(x.value||'-')+' | Y '+escapeHTML(y.value||'-')+' | Z '+escapeHTML(z.value||'-')+'</div>');
+  }
+  box.innerHTML='<b>SURFACE 1 / EXISTING</b>'+ (s1.length?'<div class="volume-summary">'+s1.join('')+'</div>':'<div class="subtitle">—</div>')+
+    '<br><b>SURFACE 2 / DESIGN</b>'+ (s2.length?'<div class="volume-summary">'+s2.join('')+'</div>':'<div class="subtitle">—</div>');
+}
+
+function calculateVolume(){
+  var s1=getVolumeSurface(1),s2=getVolumeSurface(2);
+  if(!s1||!s2)return false;
+  if(s1.length!==s2.length){showToast('Both surfaces must have the same number of points');return false;}
+
+  var totalCut=0,totalFill=0,totalVol=0,planArea1=0,planArea2=0,i;
+  for(i=1;i<s1.length-1;i++){
+    var a1=triangleArea(s1[0],s1[i],s1[i+1]);
+    var a2=triangleArea(s2[0],s2[i],s2[i+1]);
+    var area=(a1+a2)/2;
+    var d1=s2[0].z-s1[0].z,d2=s2[i].z-s1[i].z,d3=s2[i+1].z-s1[i+1].z;
+    var avg=(d1+d2+d3)/3;
+    totalVol+=area*Math.abs(avg);
+    if(avg>0)totalCut+=area*avg;
+    else if(avg<0)totalFill+=area*(-avg);
+    planArea1+=a1;planArea2+=a2;
+  }
+  var net=totalCut-totalFill;
+  var r=$("volumeResult");
+  r.innerHTML='<div class="volume-result"><div>EARTHWORK VOLUME</div>'+
+    '<div class="volume-value">'+fmt(totalVol,3)+' <span class="area-unit">m³</span></div>'+
+    '<div class="result-line"><span>AVERAGE PLAN AREA</span><b>'+fmt((planArea1+planArea2)/2,3)+' m²</b></div>'+
+    '<div class="result-line"><span>CUT / SURFACE 2 ABOVE</span><b>'+fmt(totalCut,3)+' m³</b></div>'+
+    '<div class="result-line"><span>FILL / SURFACE 2 BELOW</span><b>'+fmt(totalFill,3)+' m³</b></div>'+
+    '<div class="result-line"><span>NET (CUT − FILL)</span><b>'+fmt(net,3)+' m³</b></div></div>';
+  updateVolumeCoordinateSummary();
+  showToast('VOLUME CALCULATED ✓');
+  return false;
+}
+
+function clearVolumePoints(){
+  volumePointCount=3;
+  renderVolumePoints();
+  if($("volumeResult"))$("volumeResult").innerHTML='';
+  showToast('Both surfaces cleared');
+  return false;
+}
+function init(){loadData();if(job.name&&$("jobName"))$("jobName").value=job.name;if(setup.stationSet){$("stationName").value=setup.stationName||'ST01';$("sx").value=setup.sx==null?'':setup.sx;$("sy").value=setup.sy==null?'':setup.sy;$("sz").value=setup.sz==null?'':setup.sz;}$("orientMethod").value=setup.orientationMethod||'azimuth';changeOrientationMethod();if(setup.orientationMethod==='azimuth'&&finite(Number(setup.azimuth)))$("manualAz").value=setup.azimuth;var od=$("orientationDistance");if(od&&finite(Number(setup.orientationDistance)))od.value=setup.orientationDistance;if(setup.orientationMethod==='coordinates'){$("backName").value=setup.backName||'BS01';$("bx").value=setup.bx==null?'':setup.bx;$("by").value=setup.by==null?'':setup.by;$("bz").value=setup.bz==null?'':setup.bz;}updateAllUI();renderAreaPoints();renderVolumePoints();var h=(location.hash||'').replace(/^#/,'');if($(h))showPage(h);else showPage('main');}
+window.addEventListener('hashchange',function(){var h=(location.hash||'').replace(/^#/,'');if($(h))showPage(h);else showPage('main');});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>
