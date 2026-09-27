@@ -1,4 +1,4 @@
-name: Build MiladGeo APK
+name: Build Geomatic Pro
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
     paths:
       - '**/*.html'
       - '**/*.jpg'
+      - '**/*.png'
       - '.github/workflows/build-apk.yml'
 
 jobs:
@@ -33,7 +34,7 @@ jobs:
           mkdir -p app/src/main/assets
           mkdir -p app/src/main/res/drawable
 
-          cp index.html app/src/main/assets/index.html
+          cp index109.html app/src/main/assets/index.html
           cp miladgeo-icon.jpg app/src/main/res/drawable/miladgeo_icon.jpg
 
           cat > settings.gradle <<'EOF'
@@ -53,7 +54,7 @@ jobs:
               }
           }
 
-          rootProject.name = "MiladGeo"
+          rootProject.name = "GeomaticPro"
           include(":app")
           EOF
 
@@ -90,7 +91,7 @@ jobs:
 
               <application
                   android:allowBackup="true"
-                  android:label="MiladGeo"
+                  android:label="Geomatic Pro"
                   android:icon="@drawable/miladgeo_icon"
                   android:roundIcon="@drawable/miladgeo_icon"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
@@ -149,14 +150,17 @@ jobs:
 
                   webView.setWebViewClient(new WebViewClient() {
                       @Override
-                      public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                      public boolean shouldOverrideUrlLoading(
+                              WebView view, String url) {
+
                           if (url.startsWith("http://") ||
                               url.startsWith("https://") ||
                               url.startsWith("tg://") ||
                               url.startsWith("mailto:")) {
 
                               try {
-                                  Intent intent = new Intent(Intent.ACTION_VIEW);
+                                  Intent intent =
+                                      new Intent(Intent.ACTION_VIEW);
                                   intent.setData(Uri.parse(url));
                                   startActivity(intent);
                                   return true;
@@ -169,7 +173,8 @@ jobs:
                       }
                   });
 
-                  webView.loadUrl("file:///android_asset/index.html");
+                  webView.loadUrl(
+                      "file:///android_asset/index.html");
               }
 
               @Override
@@ -183,11 +188,12 @@ jobs:
           }
           EOF
 
-      - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Build Release AAB
+        run: |
+          gradle bundleRelease --stacktrace
 
-      - name: Upload APK
+      - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Geomatic-Pro-GooglePlay-AAB
+          path: app/build/outputs/bundle/release/app-release.aab
