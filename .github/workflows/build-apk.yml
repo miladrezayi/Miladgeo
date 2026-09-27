@@ -16,16 +16,16 @@ jobs:
 
     steps:
 
-      # --------------------------------
+      # ==============================
       # 1. دریافت پروژه
-      # --------------------------------
+      # ==============================
       - name: Checkout
         uses: actions/checkout@v4
 
 
-      # --------------------------------
-      # 2. Java
-      # --------------------------------
+      # ==============================
+      # 2. Java 17
+      # ==============================
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -33,18 +33,18 @@ jobs:
           java-version: '17'
 
 
-      # --------------------------------
+      # ==============================
       # 3. Gradle
-      # --------------------------------
+      # ==============================
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
 
 
-      # --------------------------------
-      # 4. ساخت ساختار Android
-      # --------------------------------
+      # ==============================
+      # 4. ساخت پوشه‌های Android
+      # ==============================
       - name: Create Android project
         run: |
 
@@ -53,156 +53,17 @@ jobs:
           mkdir -p app/src/main/res/drawable
 
 
-          # فایل اصلی برنامه
-          cp index109.html app/src/main/assets/index.html
+          # ==================================
+          # نسخه چندزبانه برنامه
+          # ==================================
+
+          cp index109_multilang.html \
+             app/src/main/assets/index.html
 
 
+          # ==================================
           # آیکون برنامه
+          # ==================================
+
           cp miladgeo-icon.jpg \
-             app/src/main/res/drawable/miladgeo_icon.jpg
-
-
-      # --------------------------------
-      # 5. settings.gradle
-      # --------------------------------
-      - name: Create settings.gradle
-        run: |
-
-          cat > settings.gradle <<'EOF'
-
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-
-          dependencyResolutionManagement {
-              repositoriesMode.set(
-                  RepositoriesMode.FAIL_ON_PROJECT_REPOS
-              )
-
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-
-          rootProject.name = "GeomaticPro"
-
-          include(":app")
-
-          EOF
-
-
-      # --------------------------------
-      # 6. build.gradle
-      # --------------------------------
-      - name: Create root build.gradle
-        run: |
-
-          cat > build.gradle <<'EOF'
-
-          plugins {
-              id 'com.android.application' version '8.7.3' apply false
-          }
-
-          EOF
-
-
-      # --------------------------------
-      # 7. Android build.gradle
-      # --------------------------------
-      - name: Create app build.gradle
-        run: |
-
-          cat > app/build.gradle <<'EOF'
-
-          plugins {
-              id 'com.android.application'
-          }
-
-          android {
-
-              namespace 'com.miladgeo.app'
-
-              compileSdk 36
-
-
-              defaultConfig {
-
-                  applicationId 'com.miladgeo.app'
-
-                  minSdk 23
-
-                  targetSdk 36
-
-                  versionCode 1
-
-                  versionName '1.0'
-              }
-
-
-              buildTypes {
-
-                  release {
-
-                      minifyEnabled false
-
-                      shrinkResources false
-                  }
-              }
-          }
-
-          EOF
-
-
-      # --------------------------------
-      # 8. AndroidManifest
-      # --------------------------------
-      - name: Create AndroidManifest.xml
-        run: |
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-
-          <?xml version="1.0" encoding="utf-8"?>
-
-          <manifest
-              xmlns:android="http://schemas.android.com/apk/res/android">
-
-              <uses-permission
-                  android:name="android.permission.INTERNET" />
-
-
-              <application
-
-                  android:allowBackup="true"
-
-                  android:label="Geomatic Pro"
-
-                  android:icon="@drawable/miladgeo_icon"
-
-                  android:roundIcon="@drawable/miladgeo_icon"
-
-                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
-
-                  android:usesCleartextTraffic="true">
-
-
-                  <activity
-
-                      android:name=".MainActivity"
-
-                      android:screenOrientation="portrait"
-
-                      android:exported="true">
-
-
-                      <intent-filter>
-
-                          <action
-                              android:name="android.intent.action.MAIN" />
-
-                          <category
-                              android:name="android.intent.category
+             app/src/main/res/drawable/milad
