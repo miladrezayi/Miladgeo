@@ -45,7 +45,7 @@ jobs:
           mkdir -p app/src/main/assets
           mkdir -p app/src/main/res/drawable
 
-          cp index111.html app/src/main/assets/index.html
+          cp index112.html app/src/main/assets/index.html
           cp miladgeo-icon.jpg app/src/main/res/drawable/miladgeo_icon.jpg
 
           cat > settings.gradle <<'EOF'
