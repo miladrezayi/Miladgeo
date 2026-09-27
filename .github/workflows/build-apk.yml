@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '**/*.html'
+      - '**/*.jpg'
       - '.github/workflows/build-apk.yml'
 
 jobs:
@@ -30,8 +31,10 @@ jobs:
         run: |
           mkdir -p app/src/main/java/com/miladgeo/app
           mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/drawable
 
           cp index.html app/src/main/assets/index.html
+          cp miladgeo-icon.jpg app/src/main/res/drawable/miladgeo_icon.jpg
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
@@ -88,6 +91,8 @@ jobs:
               <application
                   android:allowBackup="true"
                   android:label="MiladGeo"
+                  android:icon="@drawable/miladgeo_icon"
+                  android:roundIcon="@drawable/miladgeo_icon"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
                   android:usesCleartextTraffic="true">
 
