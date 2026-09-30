@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" name="viewport"/>
-<title>MILADGEOBOT V219 • JOB NAME</title>
+<title>MILADGEOBOT V215 • JOB NAME</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;width:100%;min-height:100%;background:#222722}
@@ -629,8 +629,8 @@ function browserSaveBlob(name,blob,tg){
  }
 }
 function downloadTextFile(name,text,mime){return saveBlobFile(name,new Blob([text],{type:mime||'text/plain;charset=utf-8'}));}
-function exportAreaDXF(){var a=getAreaPoints();if(!a)return false;var out=['0','SECTION','2','HEADER','0','ENDSEC','0','SECTION','2','ENTITIES'];for(var i=0;i<a.length;i++){var j=(i+1)%a.length;out.push('0','LINE','8','AREA','10',String(a[i].x),'20',String(a[i].y),'30','0','11',String(a[j].x),'21',String(a[j].y),'31','0');out.push('0','POINT','8','POINTS','10',String(a[i].x),'20',String(a[i].y),'30','0');}out.push('0','ENDSEC','0','EOF');downloadTextFile(areaFileName('dxf'),out.join('\r\n')+'\r\n','application/dxf');return false;}
-function exportAreaExcel(){var a=getAreaPoints();if(!a)return false;var sum=0,per=0,rows='';for(var i=0;i<a.length;i++){var j=(i+1)%a.length,dx=a[j].x-a[i].x,dy=a[j].y-a[i].y,len=Math.sqrt(dx*dx+dy*dy),az=Math.atan2(dx,dy)*180/Math.PI;if(az<0)az+=360;sum+=a[i].x*a[j].y-a[j].x*a[i].y;per+=len;rows+='<tr><td>P'+a[i].no+'</td><td>'+a[i].x+'</td><td>'+a[i].y+'</td><td>'+len.toFixed(3)+'</td><td>'+az.toFixed(3)+'</td></tr>';}var area=Math.abs(sum)/2;var html='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Area"><Table><Row><Cell><Data ss:Type="String">Point</Data></Cell><Cell><Data ss:Type="String">X</Data></Cell><Cell><Data ss:Type="String">Y</Data></Cell><Cell><Data ss:Type="String">Side Length</Data></Cell><Cell><Data ss:Type="String">Azimuth</Data></Cell></Row>'+rows+'<Row><Cell><Data ss:Type="String">AREA</Data></Cell><Cell><Data ss:Type="Number">'+area+'</Data></Cell><Cell><Data ss:Type="String">m2</Data></Cell></Row><Row><Cell><Data ss:Type="String">PERIMETER</Data></Cell><Cell><Data ss:Type="Number">'+per+'</Data></Cell><Cell><Data ss:Type="String">m</Data></Cell></Row></Table></Worksheet></Workbook>';downloadTextFile(areaFileName('xls'),html,'application/vnd.ms-excel');return false;}
+function exportAreaDXF(){var a=getAreaPoints();if(!a)return false;var out=['0','SECTION','2','HEADER','0','ENDSEC','0','SECTION','2','ENTITIES'];for(var i=0;i<a.length;i++){var j=(i+1)%a.length;out.push('0','LINE','8','AREA','10',String(a[i].x),'20',String(a[i].y),'30','0','11',String(a[j].x),'21',String(a[j].y),'31','0');out.push('0','POINT','8','POINTS','10',String(a[i].x),'20',String(a[i].y),'30','0');}out.push('0','ENDSEC','0','EOF');saveBlobLikeMenu17(areaFileName('dxf'),new Blob([out.join('\r\n')+'\r\n'],{type:'application/dxf'}));return false;}
+function exportAreaExcel(){var a=getAreaPoints();if(!a)return false;var sum=0,per=0,rows='';for(var i=0;i<a.length;i++){var j=(i+1)%a.length,dx=a[j].x-a[i].x,dy=a[j].y-a[i].y,len=Math.sqrt(dx*dx+dy*dy),az=Math.atan2(dx,dy)*180/Math.PI;if(az<0)az+=360;sum+=a[i].x*a[j].y-a[j].x*a[i].y;per+=len;rows+='<tr><td>P'+a[i].no+'</td><td>'+a[i].x+'</td><td>'+a[i].y+'</td><td>'+len.toFixed(3)+'</td><td>'+az.toFixed(3)+'</td></tr>';}var area=Math.abs(sum)/2;var html='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Area"><Table><Row><Cell><Data ss:Type="String">Point</Data></Cell><Cell><Data ss:Type="String">X</Data></Cell><Cell><Data ss:Type="String">Y</Data></Cell><Cell><Data ss:Type="String">Side Length</Data></Cell><Cell><Data ss:Type="String">Azimuth</Data></Cell></Row>'+rows+'<Row><Cell><Data ss:Type="String">AREA</Data></Cell><Cell><Data ss:Type="Number">'+area+'</Data></Cell><Cell><Data ss:Type="String">m2</Data></Cell></Row><Row><Cell><Data ss:Type="String">PERIMETER</Data></Cell><Cell><Data ss:Type="Number">'+per+'</Data></Cell><Cell><Data ss:Type="String">m</Data></Cell></Row></Table></Worksheet></Workbook>';saveBlobLikeMenu17(areaFileName('xls'),new Blob([html],{type:'application/vnd.ms-excel'}));return false;}
 function utmToLatLon(easting,northing,zone,northern){
  var a=6378137.0, eccSquared=0.00669438, k0=0.9996;
  var eccPrimeSquared=eccSquared/(1-eccSquared);
@@ -691,7 +691,7 @@ function exportAreaKML(){
  coords+=geoPts[0].x.toFixed(8)+','+geoPts[0].y.toFixed(8)+',0';
  var name=(job&&job.name?job.name:'MILADGEO_AREA');
  var kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>'+escapeHTML(name)+' AREA</name><Placemark><name>AREA POLYGON</name><Style><LineStyle><width>3</width></LineStyle><PolyStyle><fill>0.35</fill><outline>1</outline></PolyStyle></Style><Polygon><outerBoundaryIs><LinearRing><coordinates>'+coords+'</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark></Document></kml>';
- downloadTextFile(areaFileName('kml'),kml,'application/vnd.google-earth.kml+xml;charset=utf-8');
+ saveBlobLikeMenu17(areaFileName('kml'),new Blob([kml],{type:'application/vnd.google-earth.kml+xml;charset=utf-8'}));
  return false;
 }
 function clearAreaPoints(){areaPointCount=3;renderAreaPoints();var r=$("areaResult");if(r)r.innerHTML='';showToast('Area points cleared');return false;}
@@ -1403,6 +1403,13 @@ function nextQuiz(){
 function startTraining(){return openTrainingMode('surveyLearn');}
 function trainingNext(){return nextQuiz();}
 function trainingPrev(){return trainingHome();}
+function saveBlobLikeMenu17(name,blob){
+ try{
+  if(window.AndroidBridge&&typeof window.AndroidBridge.saveFile==='function'&&typeof directSaveBlob==='function')return directSaveBlob(name,blob);
+  if(window.miladgeoNative&&typeof window.miladgeoNative.saveFile==='function'&&typeof directSaveBlob==='function')return directSaveBlob(name,blob);
+ }catch(e){console.error('Menu17-style export bridge failed',e);}
+ return saveBlobFile(name,blob);
+}
 function directSaveBlob(name,blob){
  name=String(name||'MILADGEO_EXPORT.bin').replace(/[\\/:*?"<>|]+/g,'_');
  try{
@@ -1486,12 +1493,12 @@ function exportJobSelected(){
 function exportCSV(){
  var csv='Point,DP,X,Y,Z,Distance,Azimuth\n',i,p;
  for(i=0;i<points.length;i++){p=points[i];csv+='"'+csvSafe(p.no)+'","'+csvSafe(p.dp||'')+'",'+p.x+','+p.y+','+p.z+','+(p.distance==null?'':p.distance)+','+(p.azimuth==null?'':p.azimuth)+(i===points.length-1?'':'\n');}
- downloadText(sanitizeFileName(job.name)+'_POINTS.csv','\ufeff'+csv,'text/csv;charset=utf-8');return false;
+ saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.csv',new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));return false;
 }
 function exportTXT(){
  var txt='JOB\t'+job.name+'\nPOINT\tDP\tX\tY\tZ\tDISTANCE\tAZIMUTH\n',i,p;
  for(i=0;i<points.length;i++){p=points[i];txt+=String(p.no||'')+'\t'+String(p.dp||'')+'\t'+p.x+'\t'+p.y+'\t'+p.z+'\t'+(p.distance==null?'':p.distance)+'\t'+(p.azimuth==null?'':p.azimuth)+'\n';}
- downloadText(sanitizeFileName(job.name)+'_POINTS.txt',txt,'text/plain;charset=utf-8');return false;
+ saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.txt',new Blob([txt],{type:'text/plain;charset=utf-8'}));return false;
 }
 function xmlSafe(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
 function exportKML(){
@@ -1547,13 +1554,13 @@ function exportDXF(){
   d+='0\nTEXT\n8\nPOINT_LABELS\n10\n'+dxfNum(p.x)+'\n20\n'+dxfNum(p.y)+'\n30\n'+dxfNum(p.z)+'\n40\n2.5\n1\n'+String(p.no||'').replace(/\r?\n/g,' ')+'\n';
  }
  d+='0\nENDSEC\n0\nEOF\n';
- downloadText(sanitizeFileName(job.name)+'_POINTS.dxf',d,'application/dxf;charset=utf-8');return false;
+ saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.dxf',new Blob([d],{type:'application/dxf;charset=utf-8'}));return false;
 }
 function exportLandXML(){
  var x='<?xml version="1.0" encoding="UTF-8"?>\n<LandXML version="1.2" date="'+new Date().toISOString().slice(0,10)+'" time="'+new Date().toTimeString().slice(0,8)+'" xmlns="http://www.landxml.org/schema/LandXML-1.2" language="English" readOnly="false"><Project name="'+xmlSafe(job.name)+'"/><CgPoints>\n',i,p;
  for(i=0;i<points.length;i++){p=points[i];x+='<CgPoint name="'+xmlSafe(p.no)+'" oID="'+xmlSafe(p.no)+'" desc="'+xmlSafe(p.dp||'')+'">'+p.y+' '+p.x+' '+p.z+'</CgPoint>\n';}
  x+='</CgPoints></LandXML>';
- downloadText(sanitizeFileName(job.name)+'_POINTS.xml',x,'application/xml;charset=utf-8');return false;
+ saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.xml',new Blob([x],{type:'application/xml;charset=utf-8'}));return false;
 }
 function crc32(bytes){
  var table=crc32.table,crc=0xFFFFFFFF,i,j;
@@ -1598,11 +1605,11 @@ function exportKMZ(){
 function exportCodeTXT(){
  var txt='POINT\tDP\tX\tY\tZ\n',i,p;
  for(i=0;i<points.length;i++){p=points[i];txt+=String(p.no||'')+'\t'+String(p.dp||'')+'\t'+p.x+'\t'+p.y+'\t'+p.z+'\n';}
- downloadText(sanitizeFileName(job.name)+'_POINT_CODE.txt',txt,'text/plain;charset=utf-8');return false;
+ saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINT_CODE.txt',new Blob([txt],{type:'text/plain;charset=utf-8'}));return false;
 }
 function exportJSON(){
  var payload={job:job,station:setup,points:points};
- downloadText(sanitizeFileName(job.name)+'_POINTS.json',JSON.stringify(payload,null,2),'application/json;charset=utf-8');return false;
+ saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.json',new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}));return false;
 }
 
 /* ===== V5 POINT TEXT IMPORT / FIELD EXPORT ===== */
@@ -1709,8 +1716,8 @@ function v5BuildDelimited(delim,mode){
  for(i=0;i<points.length;i++){p=points[i];var no=String(p.no||''),e=Number(p.x),n=Number(p.y),z=Number(p.z);if(mode==='pnezd')out.push([no,n.toFixed(4),e.toFixed(4),z.toFixed(4),String(p.dp||'')]);else out.push([no,e.toFixed(4),n.toFixed(4),z.toFixed(4),String(p.dp||'')]);}
  return out.map(function(a){return a.map(function(v){var s=String(v);if(delim===','&&/[",\n]/.test(s))s='"'+s.replace(/"/g,'""')+'"';return s;}).join(delim);}).join('\r\n')+'\r\n';
 }
-function exportPointsXLSX(){if(!points.length){showToast('No points to export');return false;}if(typeof XLSX==='undefined'){showToast('Excel engine unavailable');return false;}var rows=points.map(function(p){return {Point:p.no||'',Easting:Number(p.x),Northing:Number(p.y),Elevation:Number(p.z),Description:p.dp||'',Distance:p.distance==null?'':Number(p.distance),Azimuth:p.azimuth==null?'':Number(p.azimuth)};}),ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Points');XLSX.writeFile(wb,sanitizeFileName(job.name)+'_POINTS.xlsx');showToast('XLSX آماده شد ✓');return false;}
-function exportPointsXLS(){if(!points.length){showToast('No points to export');return false;}if(typeof XLSX==='undefined'){showToast('Excel engine unavailable');return false;}var rows=points.map(function(p){return {Point:p.no||'',Easting:Number(p.x),Northing:Number(p.y),Elevation:Number(p.z),Description:p.dp||'',Distance:p.distance==null?'':Number(p.distance),Azimuth:p.azimuth==null?'':Number(p.azimuth)};}),ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Points');try{XLSX.writeFile(wb,sanitizeFileName(job.name)+'_POINTS.xls',{bookType:'xls'});showToast('XLS آماده شد ✓');}catch(e){showToast('XLS مستقیم پشتیبانی نشد؛ XLSX را استفاده کن');}return false;}
+function exportPointsXLSX(){if(!points.length){showToast('No points to export');return false;}if(typeof XLSX==='undefined'){showToast('Excel engine unavailable');return false;}try{var rows=points.map(function(p){return {Point:p.no||'',Easting:Number(p.x),Northing:Number(p.y),Elevation:Number(p.z),Description:p.dp||'',Distance:p.distance==null?'':Number(p.distance),Azimuth:p.azimuth==null?'':Number(p.azimuth)};}),ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Points');var out=XLSX.write(wb,{bookType:'xlsx',type:'array'});saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));showToast('XLSX آماده شد ✓');}catch(e){console.error('XLSX_EXPORT',e);showToast('ساخت XLSX ناموفق بود');}return false;}
+function exportPointsXLS(){if(!points.length){showToast('No points to export');return false;}if(typeof XLSX==='undefined'){showToast('Excel engine unavailable');return false;}try{var rows=points.map(function(p){return {Point:p.no||'',Easting:Number(p.x),Northing:Number(p.y),Elevation:Number(p.z),Description:p.dp||'',Distance:p.distance==null?'':Number(p.distance),Azimuth:p.azimuth==null?'':Number(p.azimuth)};}),ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Points');var out=XLSX.write(wb,{bookType:'xls',type:'array'});saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.xls',new Blob([out],{type:'application/vnd.ms-excel'}));showToast('XLS آماده شد ✓');}catch(e){console.error('XLS_EXPORT',e);showToast('ساخت XLS ناموفق بود؛ XLSX را استفاده کن');}return false;}
 function exportGeoJSON(){if(!points.length){showToast('No points to export');return false;}var features=points.map(function(p){return {type:'Feature',properties:{Point:p.no||'',Description:p.dp||'',Z:Number(p.z)||0},geometry:{type:'Point',coordinates:[Number(p.x),Number(p.y),Number(p.z)||0]}};}),geo={type:'FeatureCollection',name:job.name||'MiladGeo Points',features:features};downloadText(sanitizeFileName(job.name)+'_POINTS.geojson',JSON.stringify(geo,null,2),'application/geo+json;charset=utf-8');showToast('GeoJSON آماده شد ✓');return false;}
 function printPointsPDF(){
  if(!points.length){showToast('No points to export');return false;}
@@ -1740,7 +1747,7 @@ function v5ExportFormat(mode){
  else if(mode==='csv'){txt='Point,Easting,Northing,Elevation,Description\r\n'+v5BuildDelimited(',','penzd');file=name+'_PENZD.csv';mime='text/csv;charset=utf-8';}
  else if(mode==='leica_ascii'){txt='Point,Easting,Northing,Height,Code\r\n'+v5BuildDelimited(',','penzd');file=name+'_LEICA_ASCII.csv';mime='text/csv;charset=utf-8';}
  else return false;
- downloadText(file,'\ufeff'+txt,mime);showToast(mode.toUpperCase()+' export ready ✓');return false;
+ saveBlobLikeMenu17(file,new Blob(['\ufeff'+txt],{type:mime||'text/plain;charset=utf-8'}));showToast(mode.toUpperCase()+' export ready ✓');return false;
 }
 
 function exportPoints(){return exportCSV();}
@@ -1856,43 +1863,25 @@ function downloadPointListPDFFromPoints(arr,title){
   arr.forEach(function(p){html+='<tr><td>'+escapeHTML(p.no||'')+'</td><td>'+escapeHTML(p.dp||'-')+'</td><td>'+escapeHTML(String(p.x))+'</td><td>'+escapeHTML(String(p.y))+'</td><td>'+escapeHTML(String(p.z))+'</td></tr>';});
   html+='</tbody></table>';
   layer.innerHTML=html;
+  function openM17PDF(){
+   var printHtml='<!doctype html><html><head><meta charset="utf-8"><title>'+escapeHTML(title||'MILADGEO POINT LIST')+'</title><style>'+style.textContent+'</style></head><body>'+layer.outerHTML+'</body></html>';
+   if(typeof window.miladgeoM17PrintHtml==='function'){
+    window.miladgeoM17PrintHtml(printHtml,'MiladGeo - Point List');
+    return true;
+   }
+   try{window.focus();window.print();return true;}catch(e){showToast('چاپ توسط مرورگر پشتیبانی نشد');return false;}
+  }
   $('pointPdfCloseBtn').onclick=function(){layer.remove();style.remove();};
-  $('pointPdfPrintBtn').onclick=function(){try{window.focus();window.print();}catch(e){showToast('چاپ توسط مرورگر پشتیبانی نشد');}};
-  $('pointPdfDirectBtn').onclick=function(){
-   try{
-    var pageW=595,pageH=842,margin=32,rowH=15,rowsPerPage=Math.max(1,Math.floor((pageH-margin*2-82)/rowH)),pages=Math.ceil(arr.length/rowsPerPage),objs=[null,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'],kids=[];
-    function obj(body){objs.push(body);return objs.length-1;} function safe(v){return pdfEsc(v);}
-    for(var pg=0;pg<pages;pg++){
-     var from=pg*rowsPerPage,to=Math.min(arr.length,from+rowsPerPage),stream='';
-     function txt(x,y,size,str,font){stream+='BT /'+(font||'F1')+' '+size+' Tf '+x+' '+y+' Td ('+safe(str)+') Tj ET\n';}
-     txt(margin,pageH-margin-14,14,title||'MILADGEO POINT LIST','F2');
-     txt(margin,pageH-margin-30,8,'Job: '+((job&&job.name)||'NO JOB')+'   Points: '+arr.length+'   Page '+(pg+1)+' / '+pages);
-     var y=pageH-margin-58;txt(margin,y,8,'NO');txt(margin+48,y,8,'DP');txt(margin+150,y,8,'X');txt(margin+280,y,8,'Y');txt(margin+410,y,8,'Z');y-=16;
-     for(var ii=from;ii<to;ii++){var pp=arr[ii]||{};txt(margin,y,8,String(pp.no||''));txt(margin+48,y,8,String(pp.dp||'-').slice(0,16));txt(margin+150,y,8,String(pp.x));txt(margin+280,y,8,String(pp.y));txt(margin+410,y,8,String(pp.z));y-=rowH;}
-     var content=obj('<< /Length '+stream.length+' >>\nstream\n'+stream+'endstream');
-     var page=obj('<< /Type /Page /Parent 0 0 R /MediaBox [0 0 '+pageW+' '+pageH+'] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents '+content+' 0 R >>');kids.push(page);
-    }
-    var pagesObj=obj('<< /Type /Pages /Kids ['+kids.map(function(n){return n+' 0 R';}).join(' ')+'] /Count '+pages+' >>');
-    for(var kk=0;kk<kids.length;kk++){var idx=kids[kk];objs[idx]=objs[idx].replace('/Parent 0 0 R','/Parent '+pagesObj+' 0 R');}
-    var root=obj('<< /Type /Catalog /Pages '+pagesObj+' 0 R >>');
-    var offsets=[0],pdf='%PDF-1.4\n';
-    for(var oi=1;oi<objs.length;oi++){offsets[oi]=pdf.length;pdf+=oi+' 0 obj\n'+objs[oi]+'\nendobj\n';}
-    var xref=pdf.length;pdf+='xref\n0 '+objs.length+'\n0000000000 65535 f \n';
-    for(oi=1;oi<objs.length;oi++)pdf+=String(offsets[oi]).padStart(10,'0')+' 00000 n \n';
-    pdf+='trailer\n<< /Size '+objs.length+' /Root '+root+' 0 R >>\nstartxref\n'+xref+'\n%%EOF';
-    var blob=new Blob([pdf],{type:'application/pdf'}),name=sanitizeFileName((job&&job.name)||'MILADGEO')+'_POINT_LIST.pdf';
-    /* V84 FIX: direct PDF must use the same Telegram-aware file downloader.
-       Blob <a download> clicks are unreliable inside Telegram Mini App WebView. */
-    saveBlobFile(name,blob);
-   }catch(e){console.error('DIRECT_POINT_PDF',e);showToast('ساخت PDF مستقیم ناموفق بود؛ از «چاپ / ذخیره PDF» استفاده کن');}
-  };
+  /* V164: Both PDF buttons use exactly the Menu 17 native print/PDF delivery path.
+     No Blob/download bridge is used for POINT or EXCEL PDF reports. */
+  $('pointPdfPrintBtn').onclick=function(){openM17PDF();};
+  $('pointPdfDirectBtn').onclick=function(){openM17PDF();};
   var cleanup=function(){if(layer.parentNode)layer.remove();if(style.parentNode)style.remove();};
   window.addEventListener('afterprint',function(){setTimeout(cleanup,500);},{once:true});
-  showToast('لیست نقاط آماده است — چاپ یا ذخیره PDF را بزن ✓');
+  showToast('گزارش آماده است — همان مسیر PDF منوی ۱۷ را استفاده می‌کند ✓');
  }catch(e){console.error('POINT_PDF_VIEW',e);showToast('خطا در آماده‌سازی PDF نقاط');}
  return false;
 }
-
 function downloadImportedDXF(){return exportDXF();}
 function downloadImportedKML(){return exportKML();}
 function downloadImportedCSV(){return exportCSV();}
@@ -1948,7 +1937,7 @@ function parseDXF(text){
 }
 function cadBounds(ents){var xs=[],ys=[];ents.forEach(function(e){e.pts.forEach(function(p){if(Number.isFinite(p.x)&&Number.isFinite(p.y)){xs.push(p.x);ys.push(p.y);}})});if(!xs.length)return null;var minX=Math.min.apply(null,xs),maxX=Math.max.apply(null,xs),minY=Math.min.apply(null,ys),maxY=Math.max.apply(null,ys);if(minX===maxX){minX-=1;maxX+=1;}if(minY===maxY){minY-=1;maxY+=1;}return {minX:minX,maxX:maxX,minY:minY,maxY:maxY};}
 function cadSVG(ents,view){var b=cadBounds(ents);if(!b)return '';var W=800,H=520,pad=35,sx=(W-2*pad)/(b.maxX-b.minX),sy=(H-2*pad)/(b.maxY-b.minY),sc=Math.min(sx,sy);function X(x){return pad+(x-b.minX)*sc;}function Y(y){return H-pad-(y-b.minY)*sc;}var svg='<rect x="0" y="0" width="800" height="520" fill="#eef0eb"/>';ents.forEach(function(e){if(e.type==='POINT'){e.pts.forEach(function(p){svg+='<circle cx="'+X(p.x)+'" cy="'+Y(p.y)+'" r="3" fill="#1e5b2a"/>';});}else if(e.pts.length>=2){var pts=e.pts.map(function(p){return X(p.x)+','+Y(p.y);}).join(' ');if(e.type==='LINE')svg+='<line x1="'+X(e.pts[0].x)+'" y1="'+Y(e.pts[0].y)+'" x2="'+X(e.pts[1].x)+'" y2="'+Y(e.pts[1].y)+'" stroke="#1d3b22" stroke-width="1.5"/>';else svg+='<polyline points="'+pts+(e.closed?' '+X(e.pts[0].x)+','+Y(e.pts[0].y):'')+'" fill="none" stroke="#1d3b22" stroke-width="1.5"/>';}});return svg;}
-function loadCADForPDF(){var f=$("cadFile")&&$("cadFile").files[0];if(!f){showToast('Choose a CAD file');return false;}if(/\.dwg$/i.test(f.name)){if(window.loadDWGInViewer){window.loadDWGInViewer(f);return false;}$("cadStatus").textContent='DWG engine is loading…';showToast('DWG engine loading');return false;}var r=new FileReader();r.onload=function(){cadEntities=parseDXF(r.result);if(!cadEntities.length){$("cadStatus").textContent='DXF entity قابل نمایش پیدا نشد.';return;}$("cadPreview").innerHTML=cadSVG(cadEntities);$("cadStatus").textContent='Loaded: '+cadEntities.length+' entities — READY TO PRINT';showToast('DXF loaded ✓');};r.readAsText(f);return false;}
+function loadCADForPDF(){var f=$("cadFile")&&$("cadFile").files[0];if(!f){showToast('Choose a CAD file');return false;}if(/\.dwg$/i.test(f.name)){ $("cadStatus").textContent='DWG: تبدیل مستقیم در مرورگر این نسخه پشتیبانی نمی‌شود؛ فایل DXF را انتخاب کن.';showToast('DWG needs a CAD parser');return false;}var r=new FileReader();r.onload=function(){cadEntities=parseDXF(r.result);if(!cadEntities.length){$("cadStatus").textContent='DXF entity قابل نمایش پیدا نشد.';return;}$("cadPreview").innerHTML=cadSVG(cadEntities);$("cadStatus").textContent='Loaded: '+cadEntities.length+' entities — READY TO PRINT';showToast('DXF loaded ✓');};r.readAsText(f);return false;}
 function cadPrintCanvas(ents){
  var c=document.createElement('canvas'),W=1600,H=1040,pad=70,b=cadBounds(ents);
  c.width=W;c.height=H;var ctx=c.getContext('2d');
@@ -2621,12 +2610,12 @@ html.desktop-windows .job-nav-wrap .job-nav{
 <section class="page" id="cadpdf">
 <a class="btn gray back" href="#main">← MAIN MENU</a><div class="title">8 — DXF → PDF</div>
 <div class="card"><div class="card-title">🗺️ CAD DRAWING TO PRINTABLE PDF</div>
-<div class="subtitle">DXF مثل قبل برای PDF خوانده و چاپ می‌شود. برای DWG، فایل را انتخاب کن و LOAD / PREVIEW را بزن تا موتور DWG نقشه را در صفحه CAD سیاه نمایش دهد.</div>
+<div class="subtitle">DXF را انتخاب کن تا خطوط، پلی‌لاین‌ها و نقاط خوانده شوند و نقشه در صفحه چاپ آماده شود. DWG برای تبدیل مستقیم به PDF به موتور DWG نیاز دارد و در نسخه مرورگری فعلاً پیام پشتیبانی نمایش داده می‌شود.</div>
 <label>CAD FILE</label><input accept=".dxf,.dwg,text/plain,application/acad" id="cadFile" type="file"/>
 <div class="row"><div><label>Paper</label><select id="pdfPaper"><option value="A4">A4</option><option value="A3">A3</option><option value="A2">A2</option><option value="A1">A1</option></select></div><div><label>Orientation</label><select id="pdfOrient"><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select></div></div>
 <div class="row"><div><label>Scale</label><select id="pdfScale"><option value="fit">FIT TO PAGE</option><option value="1000">1 : 1000</option><option value="500">1 : 500</option><option value="250">1 : 250</option><option value="100">1 : 100</option><option value="50">1 : 50</option></select></div><div><label>Title</label><input id="pdfTitle" placeholder="MILADGEO SURVEY MAP"/></div></div>
 <div class="btn-row"><button class="btn primary" onclick="loadCADForPDF();return false;" type="button">✓ LOAD / PREVIEW</button><button class="btn" onclick="printCADPDF();return false;" type="button">🖨 PRINT / SAVE PDF</button></div><div class="btn-row" style="margin-top:8px"><button class="btn primary" onclick="downloadCADPointListPDF();return false;" type="button">📋 POINT LIST PDF</button><button class="btn gray" onclick="downloadCADPointListCSV();return false;" type="button">⬇ POINT LIST CSV</button></div>
-<div class="out" id="cadStatus" style="margin-top:9px">فایل DXF یا DWG را انتخاب کن.</div>
+<div class="out" id="cadStatus" style="margin-top:9px">فایل DXF را انتخاب کن.</div>
 <div class="area-sketch-wrap" style="margin-top:10px"><div class="area-sketch-title">MAP PREVIEW</div><svg class="area-sketch" id="cadPreview" preserveaspectratio="xMidYMid meet" viewbox="0 0 800 520"></svg></div>
 </div>
 </section>
@@ -4055,6 +4044,8 @@ function clearAreaExcel(){
       return true;
     }catch(e){console.error('M17 browser print',e);return false;}
   }
+  /* Public bridge for other MiladGeo menus: reuse the exact Menu 17 print/PDF delivery path. */
+  window.miladgeoM17PrintHtml=function(html,title){return m17PrintHtml(html,title);};
   function m17PrintGoogleEarth(){
     /* v173: A4-fit satellite PDF with the current drawing overlay on top of the map. */
     if(!mapEl||!tilesEl){showToast('نقشه ماهواره‌ای آماده نیست');return false;}
@@ -4498,32 +4489,7 @@ function m19Print(){
  var profileRows=prof.map(function(r){return '<tr><td>'+esc(r.point)+'</td><td>'+fmt(r.dist)+'</td><td>'+fmt(r.chainage)+'</td><td>'+fmt(r.rl)+'</td><td>'+((r.delta>0?'+':'')+fmt(r.delta))+'</td></tr>'}).join('');
  var html='<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>'+esc(job)+'</title><style>'+
  '@page{size:A4 landscape;margin:9mm}html,body{margin:0;padding:0;background:#fff;color:#111}body{font-family:Arial,Tahoma,sans-serif;font-size:10px;line-height:1.5}'+
- '.page{width:100%;box-sizing:border-box}.head{border:2px solid #3f4e43;border-radius:8px;padding:9px;margin-bottom:7px}.title{text-align:center;font-size:20px;font-weight:900;color:#17351b}.sub{text-align:center;font-size:10px;margin-top:2px}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.meta div{border:1px solid #777;border-radius:5px;padding:5px;background:#f3f5f1}.meta b{display:block;font-size:11px;margin-top:2px}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0}.sumitem{border:1px solid #777;padding:5px;text-align:center;border-radius:5px;background:#f6f7f5}.sumitem b{display:block;font-size:12px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:6px 0}.kpi{border:1px solid #777;padding:5px;text-align:center;border-radius:5px;background:#f6f7f5}.kpi b{display:block;font-size:12px}.control{border:2px solid #555;border-radius:6px;padding:6px;margin:6px 0;background:#f5f6f3}.ok{border-color:#36733e;background:#e9f4ea}.warn{border-color:#a87516;background:#fff5d9}.section-title{font-weight:900;font-size:13px;margin:7px 0 4px}.profile{border:1px solid #687168;border-radius:7px;padding:4px;background:#f7f8f5}.profile-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:5px}.profile-table th,.profile-table td{border:1px solid #666;padding:3px;text-align:center}.profile-table th{background:#e1e6df;font-weight:900}table{width:100%;border-collapse:collapse;font-size:8.5px}th,td{border:1px solid #555;padding:3px;text-align:center}th{background:#e1e6df;font-weight:900}.sum td{background:#dce7d8;font-weight:900}.sign{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px}.sign div{border-top:1px solid #777;text-align:center;padding-top:5px;min-height:22px}.foot{margin-top:7px;font-size:8px;text-align:center;color:#555}@media print{button{display:none!important}}</style>
-<style id="dwg-viewer-css">
-#dwgViewerOverlay{position:fixed;inset:0;z-index:999999;background:#050505;display:none;flex-direction:column;color:#fff;font-family:Arial,Tahoma,sans-serif}
-#dwgViewerOverlay.open{display:flex}
-.dwg-toolbar{height:52px;min-height:52px;background:#101010;border-bottom:1px solid #333;display:flex;align-items:center;gap:7px;padding:7px 9px;box-sizing:border-box}
-.dwg-toolbar button{border:1px solid #444;background:#1b1b1b;color:#fff;border-radius:7px;padding:8px 11px;font-weight:800;font-size:13px}
-.dwg-toolbar .dwg-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ddd;font-size:13px}
-#dwgViewerCanvas{position:relative;flex:1;overflow:hidden;background:#050505;touch-action:none;display:flex;align-items:center;justify-content:center}
-#dwgViewerStage{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
-#dwgViewerStage svg{display:block;background:#050505;overflow:visible}
-#dwgViewerStage svg *{vector-effect:non-scaling-stroke}
-.dwg-help{height:28px;min-height:28px;border-top:1px solid #222;background:#0b0b0b;color:#999;text-align:center;font-size:11px;line-height:28px}
-</style>
-</head><body>
-<div id="dwgViewerOverlay" aria-label="DWG viewer">
-  <div class="dwg-toolbar">
-    <button type="button" onclick="dwgViewerZoom(-1)">−</button>
-    <button type="button" onclick="dwgViewerZoom(1)">+</button>
-    <button type="button" onclick="dwgViewerFit()">FIT</button>
-    <div class="dwg-name" id="dwgViewerName">DWG</div>
-    <button type="button" onclick="dwgViewerClose()">✕</button>
-  </div>
-  <div id="dwgViewerCanvas"><div id="dwgViewerStage"></div></div>
-  <div class="dwg-help">DWG VIEW • LibreDWG • Local processing • FIT / + / −</div>
-</div>
-<div class="page">'+
+ '.page{width:100%;box-sizing:border-box}.head{border:2px solid #3f4e43;border-radius:8px;padding:9px;margin-bottom:7px}.title{text-align:center;font-size:20px;font-weight:900;color:#17351b}.sub{text-align:center;font-size:10px;margin-top:2px}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.meta div{border:1px solid #777;border-radius:5px;padding:5px;background:#f3f5f1}.meta b{display:block;font-size:11px;margin-top:2px}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0}.sumitem{border:1px solid #777;padding:5px;text-align:center;border-radius:5px;background:#f6f7f5}.sumitem b{display:block;font-size:12px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:6px 0}.kpi{border:1px solid #777;padding:5px;text-align:center;border-radius:5px;background:#f6f7f5}.kpi b{display:block;font-size:12px}.control{border:2px solid #555;border-radius:6px;padding:6px;margin:6px 0;background:#f5f6f3}.ok{border-color:#36733e;background:#e9f4ea}.warn{border-color:#a87516;background:#fff5d9}.section-title{font-weight:900;font-size:13px;margin:7px 0 4px}.profile{border:1px solid #687168;border-radius:7px;padding:4px;background:#f7f8f5}.profile-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:5px}.profile-table th,.profile-table td{border:1px solid #666;padding:3px;text-align:center}.profile-table th{background:#e1e6df;font-weight:900}table{width:100%;border-collapse:collapse;font-size:8.5px}th,td{border:1px solid #555;padding:3px;text-align:center}th{background:#e1e6df;font-weight:900}.sum td{background:#dce7d8;font-weight:900}.sign{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px}.sign div{border-top:1px solid #777;text-align:center;padding-top:5px;min-height:22px}.foot{margin-top:7px;font-size:8px;text-align:center;color:#555}@media print{button{display:none!important}}</style></head><body><div class="page">'+
  '<div class="head"><div class="title">گزارش نهایی حرفه‌ای ترازیابی</div><div class="sub">MiladGeo — دفتر محاسبات، کنترل ارتفاع و پروفیل طولی</div><div class="meta"><div>نام پروژه<b>'+esc(m19.meta.project||'—')+'</b></div><div>نام عملیات<b>'+esc(m19.meta.operation||'—')+'</b></div><div>نقطه شروع<b>'+esc(m19.meta.startPoint||'—')+'</b></div><div>نقطه پایان<b>'+esc(endPoint||'—')+'</b></div><div>تاریخ<b>'+esc(m19.meta.date||'—')+'</b></div><div>اپراتور<b>'+esc(m19.meta.operator||'—')+'</b></div><div>RL شروع<b>'+fmt(first)+' m</b></div><div>RL پایان<b>'+fmt(last)+' m</b></div></div></div>'+
  '<div class="summary"><div class="sumitem">تعداد قرائت‌ها<b>'+m19.rows.length+'</b></div><div class="sumitem">تعداد TP<b>'+tp+'</b></div><div class="sumitem">Σ B.S<b>'+fmt(bs)+' m</b></div><div class="sumitem">Σ I.S<b>'+fmt(isv)+' m</b></div><div class="sumitem">Σ F.S<b>'+fmt(fs)+' m</b></div></div>'+
  '<div class="kpis"><div class="kpi">کمترین RL<b>'+fmt(minRL)+' m</b></div><div class="kpi">بیشترین RL<b>'+fmt(maxRL)+' m</b></div><div class="kpi">طول کل پروفیل<b>'+fmt(totalDist)+' m</b></div></div>'+
@@ -4560,66 +4526,6 @@ function m19ExportCSV(){
 }
 window.m19Mode=m19Mode;window.m19AddRow=m19AddRow;window.m19ProfessionalReport=m19RenderReport;window.m19RemoveRow=m19RemoveRow;window.m19ClearBook=m19ClearBook;window.m19Guide=m19Guide;window.m19CalcLoop=m19CalcLoop;window.m19Print=m19Print;window.m19CopyTable=m19CopyTable;window.m19ExportCSV=m19ExportCSV;
 m19Mode('book');
-})();
-</script>
-
-<script type="module" id="dwg-engine-runtime">
-(function(){
-  let dwgEnginePromise=null, dwgScale=1, dwgX=0, dwgY=0, dwgBaseW=800, dwgBaseH=600;
-  function setStatus(t){var e=document.getElementById('cadStatus');if(e)e.textContent=t;}
-  function stage(){return document.getElementById('dwgViewerStage');}
-  function canvas(){return document.getElementById('dwgViewerCanvas');}
-  function apply(){var st=stage();if(st)st.style.transform='translate('+dwgX+'px,'+dwgY+'px) scale('+dwgScale+')';}
-  function measure(){var st=stage(),svg=st&&st.querySelector('svg');if(!svg)return;var vb=svg.viewBox&&svg.viewBox.baseVal;if(vb&&vb.width&&vb.height){dwgBaseW=vb.width;dwgBaseH=vb.height;}else{dwgBaseW=svg.getBoundingClientRect().width||800;dwgBaseH=svg.getBoundingClientRect().height||600;}}
-  window.dwgViewerFit=function(){var c=canvas();if(!c)return;measure();var pad=18,cw=Math.max(1,c.clientWidth-pad*2),ch=Math.max(1,c.clientHeight-pad*2);dwgScale=Math.min(cw/dwgBaseW,ch/dwgBaseH);if(!isFinite(dwgScale)||dwgScale<=0)dwgScale=1;dwgX=(c.clientWidth-dwgBaseW*dwgScale)/2;dwgY=(c.clientHeight-dwgBaseH*dwgScale)/2;apply();};
-  window.dwgViewerZoom=function(dir){var c=canvas();if(!c)return;var old=dwgScale;dwgScale=Math.max(0.05,Math.min(40,old*(dir>0?1.25:0.8)));var cx=c.clientWidth/2,cy=c.clientHeight/2;dwgX=cx-(cx-dwgX)*(dwgScale/old);dwgY=cy-(cy-dwgY)*(dwgScale/old);apply();};
-  window.dwgViewerClose=function(){var o=document.getElementById('dwgViewerOverlay');if(o)o.classList.remove('open');};
-  async function getEngine(){
-    if(!dwgEnginePromise){dwgEnginePromise=(async()=>{
-      setStatus('DWG engine loading…');
-      var mod, wasmBase;
-      try{
-        /* Android APK: keep the LibreDWG wrapper and its raw WASM runtime in
-           the packaged assets/dwg/ folders. Browser HTTPS: use the pinned CDN
-           package. A local file:// page cannot reliably import an HTTPS ES module,
-           so Chrome testing should use the GitHub Pages/HTTPS copy. */
-        if(location.protocol==='file:' || location.protocol==='app:'){
-          mod=await import('./dwg/dist/libredwg-web.js');
-          wasmBase='./dwg/wasm/';
-        }else{
-          var base='https://cdn.jsdelivr.net/npm/@mlightcad/libredwg-web@0.7.14/';
-          mod=await import(base+'dist/libredwg-web.js');
-          wasmBase=base+'wasm/';
-        }
-      }catch(e){console.error(e);throw new Error('DWG engine files could not be loaded: '+(e&&e.message||e));}
-      if(!mod || !mod.LibreDwg) throw new Error('LibreDWG wrapper was not found.');
-      var lib=await mod.LibreDwg.create(wasmBase);
-      if(!lib) throw new Error('LibreDWG WASM engine could not be initialized.');
-      return {lib:lib,type:(mod.Dwg_File_Type&&mod.Dwg_File_Type.DWG!==undefined)?mod.Dwg_File_Type.DWG:1};
-    })();}
-    return await dwgEnginePromise;
-  }
-  window.loadDWGInViewer=async function(file){
-    var overlay=document.getElementById('dwgViewerOverlay'),name=document.getElementById('dwgViewerName'),st=stage();
-    try{
-      overlay.classList.add('open');name.textContent=file.name+' • loading…';st.innerHTML='<div style="color:#aaa;padding:30px;font-size:14px">Loading DWG engine…</div>';setStatus('DWG: reading '+file.name+'…');
-      var engine=await getEngine(),libredwg=engine.lib,buf=await file.arrayBuffer();name.textContent=file.name+' • parsing…';
-      var dwg=libredwg.dwg_read_data(buf,engine.type);if(!dwg)throw new Error('DWG parser returned no data.');
-      var db=libredwg.convert(dwg),svgText=libredwg.dwg_to_svg(db);libredwg.dwg_free(dwg);
-      if(!svgText)throw new Error('No drawable geometry was produced.');
-      st.innerHTML=svgText;var svg=st.querySelector('svg');if(!svg)throw new Error('DWG SVG renderer returned no SVG.');
-      svg.setAttribute('preserveAspectRatio','xMidYMid meet');svg.style.background='#050505';
-      svg.querySelectorAll('line,polyline,polygon,path,circle,ellipse').forEach(function(el){var fill=(el.getAttribute('fill')||'').toLowerCase(),stroke=(el.getAttribute('stroke')||'').toLowerCase();if(!stroke||stroke==='black'||stroke==='#000'||stroke==='#000000')el.setAttribute('stroke','#e9eee8');if(fill==='black'||fill==='#000'||fill==='#000000')el.setAttribute('fill','none');});
-      svg.querySelectorAll('text,tspan').forEach(function(el){var fill=(el.getAttribute('fill')||'').toLowerCase();if(!fill||fill==='black'||fill==='#000'||fill==='#000000')el.setAttribute('fill','#e9eee8');});
-      name.textContent=file.name+' • READY';setStatus('DWG loaded ✓ — viewer ready');requestAnimationFrame(function(){dwgViewerFit();});
-    }catch(err){console.error('DWG load failed',err);name.textContent=file.name+' • ERROR';st.innerHTML='<div style="color:#ffb4b4;padding:28px;line-height:1.7;font-size:14px">DWG could not be displayed.<br><small>'+String(err&&err.message||err)+'</small></div>';setStatus('DWG ERROR: '+String(err&&err.message||err));}
-    return false;
-  };
-  let p1=null,lastMid=null,lastDist=0;
-  document.addEventListener('touchstart',function(e){if(!document.getElementById('dwgViewerOverlay')?.classList.contains('open'))return;if(e.touches.length===1){p1={x:e.touches[0].clientX,y:e.touches[0].clientY};}else if(e.touches.length>=2){p1={x:e.touches[0].clientX,y:e.touches[0].clientY};var b=e.touches[1];lastMid={x:(p1.x+b.clientX)/2,y:(p1.y+b.clientY)/2};lastDist=Math.hypot(p1.x-b.clientX,p1.y-b.clientY);}},{passive:true});
-  document.addEventListener('touchmove',function(e){if(!document.getElementById('dwgViewerOverlay')?.classList.contains('open'))return;if(e.touches.length===1&&p1){var x=e.touches[0].clientX,y=e.touches[0].clientY;dwgX+=x-p1.x;dwgY+=y-p1.y;p1={x:x,y:y};apply();}else if(e.touches.length>=2){var a=e.touches[0],b=e.touches[1],mid={x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2},dist=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(lastDist>0){var old=dwgScale;dwgScale=Math.max(0.05,Math.min(40,old*(dist/lastDist)));dwgX+=mid.x-lastMid.x;dwgY+=mid.y-lastMid.y;var cx=mid.x,cy=mid.y;dwgX=cx-(cx-dwgX)*(dwgScale/old);dwgY=cy-(cy-dwgY)*(dwgScale/old);}lastMid=mid;lastDist=dist;apply();}},{passive:true});
-  document.addEventListener('touchend',function(){p1=lastMid=null;lastDist=0;},{passive:true});
-  window.addEventListener('resize',function(){var o=document.getElementById('dwgViewerOverlay');if(o&&o.classList.contains('open'))dwgViewerFit();});
 })();
 </script>
 </body>
