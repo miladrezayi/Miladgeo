@@ -1,0 +1,582 @@
+name: Build MiladGeo V348 Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index348.html'
+      - '.github/workflows/build-apk348.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > geomatic-pro-upload.jks
+          test -s geomatic-pro-upload.jks
+
+      - name: Create Android project
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          mkdir -p app/src/main/java/com/miladgeo/app
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/drawable
+
+          cp index348.html app/src/main/assets/index.html
+
+          curl -L --fail https://raw.githubusercontent.com/miladrezayi/Miladgeo/main/miladgeo-icon.jpg \
+            -o app/src/main/res/drawable/miladgeo_icon.jpg
+          test -s app/src/main/res/drawable/miladgeo_icon.jpg
+
+          cat > settings.gradle <<'GRADLE'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "MiladGeoV348"
+          include(":app")
+          GRADLE
+
+          cat > build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          GRADLE
+
+          cat > gradle.properties <<'GRADLE'
+          android.suppressUnsupportedCompileSdk=36
+          GRADLE
+
+          cat > app/build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.miladgeo.app'
+              compileSdk 36
+
+              defaultConfig {
+                  applicationId 'com.miladgeo.app'
+                  minSdk 23
+                  targetSdk 36
+                  versionCode 71
+                  versionName '71.0'
+              }
+
+              signingConfigs {
+                  release {
+                      storeFile rootProject.file("geomatic-pro-upload.jks")
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias "geometric-upload"
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                      shrinkResources false
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          GRADLE
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF_MANIFEST'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+              <application
+                  android:allowBackup="true"
+                  android:label="MiladGeo"
+                  android:icon="@drawable/miladgeo_icon"
+                  android:roundIcon="@drawable/miladgeo_icon"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:usesCleartextTraffic="true">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="portrait">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF_MANIFEST
+
+          cat > app/src/main/java/com/miladgeo/app/MainActivity.java <<'EOF_JAVA'
+          package com.miladgeo.app;
+
+          import android.Manifest;
+          import android.app.Activity;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.location.LocationManager;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.print.PrintAttributes;
+          import android.print.PrintManager;
+          import android.graphics.Canvas;
+          import android.graphics.pdf.PdfDocument;
+          import android.util.Base64;
+          import android.webkit.GeolocationPermissions;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebResourceRequest;
+          import android.view.View;
+          import java.io.OutputStream;
+          import java.io.File;
+          import java.io.FileInputStream;
+          import java.io.FileOutputStream;
+          import java.io.InputStream;
+          import java.io.ByteArrayOutputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import org.json.JSONObject;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+              private ValueCallback<Uri[]> filePathCallback;
+              private static final int FILE_CHOOSER_REQUEST = 1001;
+              private static final int SAVE_FILE_REQUEST = 1002;
+              private static final int LOCATION_PERMISSION_REQUEST = 1003;
+              private byte[] pendingSaveBytes;
+              private byte[] pendingPdfBytes;
+              private String pendingPdfName;
+              private String pendingGeoOrigin;
+              private GeolocationPermissions.Callback pendingGeoCallback;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  webView = new WebView(this);
+                  setContentView(webView);
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setAllowFileAccessFromFileURLs(true);
+                  settings.setAllowUniversalAccessFromFileURLs(true);
+                  settings.setGeolocationEnabled(true);
+
+                  webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+                  webView.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                          return openExternalIfNeeded(url);
+                      }
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          return openExternalIfNeeded(request == null || request.getUrl() == null ? null : request.getUrl().toString());
+                      }
+                  });
+
+                  webView.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public void onGeolocationPermissionsShowPrompt(final String origin, final GeolocationPermissions.Callback callback) {
+                          if (android.os.Build.VERSION.SDK_INT < 23 ||
+                              checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                              checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                              callback.invoke(origin, true, false);
+                          } else {
+                              pendingGeoOrigin = origin;
+                              pendingGeoCallback = callback;
+                              requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+                          }
+                      }
+
+                      @Override
+                      public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                          if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                          filePathCallback = callback;
+                          try {
+                              Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                              intent.addCategory(Intent.CATEGORY_OPENABLE);
+                              intent.setType("*/*");
+                              intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE);
+                              startActivityForResult(intent, FILE_CHOOSER_REQUEST);
+                              return true;
+                          } catch (Exception e) {
+                              filePathCallback = null;
+                              return false;
+                          }
+                      }
+                  });
+
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+
+              private boolean openExternalIfNeeded(String url) {
+                  try {
+                      if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+                          startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                          return true;
+                      }
+                  } catch (Exception ignored) {}
+                  return false;
+              }
+
+              public class AndroidBridge {
+                  @JavascriptInterface
+                  public boolean saveFile(final String name, final String mime, final String base64) {
+                      try {
+                          pendingSaveBytes = Base64.decode(base64, Base64.DEFAULT);
+                          Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                          intent.addCategory(Intent.CATEGORY_OPENABLE);
+                          intent.setType(mime == null || mime.isEmpty() ? "application/octet-stream" : mime);
+                          intent.putExtra(Intent.EXTRA_TITLE, name == null || name.isEmpty() ? "MILADGEO_EXPORT" : name);
+                          startActivityForResult(intent, SAVE_FILE_REQUEST);
+                          return true;
+                      } catch (Exception e) {
+                          pendingSaveBytes = null;
+                          return false;
+                      }
+                  }
+
+                  @JavascriptInterface
+                  public void openExternalUrl(final String urlString) {
+                      runOnUiThread(() -> {
+                          try {
+                              if (urlString != null && !urlString.isEmpty()) startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlString)));
+                          } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void downloadBinary(final String urlString) {
+                      new Thread(() -> {
+                          HttpURLConnection conn = null;
+                          try {
+                              URL url = new URL(urlString);
+                              conn = (HttpURLConnection) url.openConnection();
+                              conn.setRequestMethod("GET");
+                              conn.setConnectTimeout(20000);
+                              conn.setReadTimeout(60000);
+                              conn.setUseCaches(false);
+                              conn.setRequestProperty("Accept", "application/octet-stream,*/*");
+                              int code = conn.getResponseCode();
+                              InputStream in = code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream();
+                              ByteArrayOutputStream out = new ByteArrayOutputStream();
+                              if (in != null) {
+                                  byte[] buf = new byte[8192];
+                                  int n;
+                                  while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                                  in.close();
+                              }
+                              byte[] bytes = out.toByteArray();
+                              final boolean ok = code >= 200 && code < 300;
+                              final String b64 = ok ? Base64.encodeToString(bytes, Base64.NO_WRAP) : "";
+                              final String err = ok ? "" : new String(bytes, "UTF-8");
+                              final String ct = conn.getContentType() == null ? "" : conn.getContentType();
+                              final String js = "window.m4NativeDEMResult(" + ok + "," + code + "," + JSONObject.quote(b64) + "," + JSONObject.quote(ct) + "," + JSONObject.quote(err) + ");";
+                              runOnUiThread(() -> webView.evaluateJavascript(js, null));
+                          } catch (Exception e) {
+                              final String js = "window.m4NativeDEMResult(false,0,\"\",\"\", " + JSONObject.quote(e.toString()) + ");";
+                              runOnUiThread(() -> webView.evaluateJavascript(js, null));
+                          } finally {
+                              if (conn != null) conn.disconnect();
+                          }
+                      }).start();
+                  }
+
+                  @JavascriptInterface
+                  public void requestLocationPermission() {
+                      runOnUiThread(() -> {
+                          try {
+                              if (android.os.Build.VERSION.SDK_INT < 23 ||
+                                  checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                                  checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                  webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(true)", null);
+                              } else {
+                                  requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+                              }
+                          } catch (Exception e) {
+                              webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(false)", null);
+                          }
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void refreshPage() {
+                      runOnUiThread(() -> {
+                          try { webView.reload(); } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public boolean isLocationEnabled() {
+                      try {
+                          LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                          if (lm == null) return false;
+                          if (android.os.Build.VERSION.SDK_INT >= 28) return lm.isLocationEnabled();
+                          return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                      } catch (Exception e) {
+                          return false;
+                      }
+                  }
+
+                  @JavascriptInterface
+                  public void openLocationSettings() {
+                      runOnUiThread(() -> {
+                          try { startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)); } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void printHtml(final String html) {
+                      runOnUiThread(() -> {
+                          try {
+                              WebView printView = new WebView(MainActivity.this);
+                              printView.getSettings().setJavaScriptEnabled(false);
+                              printView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);
+                              PrintManager printManager = (PrintManager) getSystemService(PRINT_SERVICE);
+                              printManager.print(
+                                  "MiladGeo",
+                                  printView.createPrintDocumentAdapter("MiladGeo"),
+                                  new PrintAttributes.Builder()
+                                      .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                                      .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                                      .build());
+                          } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void savePdf(final String html, final String fileName) {
+                      runOnUiThread(() -> {
+                          try {
+                              final WebView pdfView = new WebView(MainActivity.this);
+                              pdfView.getSettings().setJavaScriptEnabled(true);
+                              pdfView.getSettings().setDomStorageEnabled(true);
+                              pdfView.setWebViewClient(new WebViewClient() {
+                                  @Override
+                                  public void onPageFinished(WebView view, String url) {
+                                      view.postDelayed(() -> createPdfBytes(pdfView, fileName), 450);
+                                  }
+                              });
+                              pdfView.loadDataWithBaseURL("file:///android_asset/", html == null ? "" : html, "text/html", "UTF-8", null);
+                          } catch (Exception e) {
+                              webView.evaluateJavascript("window.showToast&&showToast('ساخت PDF ناموفق بود')", null);
+                          }
+                      });
+                  }
+
+                  private void createPdfBytes(final WebView pdfView, final String fileName) {
+                      PdfDocument document = null;
+                      File temp = null;
+                      try {
+                          final int pageW = 595, pageH = 842, renderW = 1080;
+                          int widthSpec = View.MeasureSpec.makeMeasureSpec(renderW, View.MeasureSpec.EXACTLY);
+                          int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+                          pdfView.measure(widthSpec, heightSpec);
+                          int contentH = Math.max(pdfView.getMeasuredHeight(), 1);
+                          pdfView.layout(0, 0, renderW, contentH);
+                          float scale = pageW / (float) renderW;
+                          int sliceH = Math.max(1, Math.round(pageH / scale));
+                          int pageCount = Math.max(1, (contentH + sliceH - 1) / sliceH);
+                          document = new PdfDocument();
+                          for (int i = 0; i < pageCount; i++) {
+                              PdfDocument.PageInfo info = new PdfDocument.PageInfo.Builder(pageW, pageH, i + 1).create();
+                              PdfDocument.Page page = document.startPage(info);
+                              Canvas canvas = page.getCanvas();
+                              canvas.save();
+                              canvas.clipRect(0, 0, pageW, pageH);
+                              canvas.scale(scale, scale);
+                              canvas.translate(0, -(i * sliceH));
+                              pdfView.draw(canvas);
+                              canvas.restore();
+                              document.finishPage(page);
+                          }
+                          temp = new File(getCacheDir(), "miladgeo_export_" + System.currentTimeMillis() + ".pdf");
+                          FileOutputStream out = new FileOutputStream(temp);
+                          document.writeTo(out);
+                          out.flush();
+                          out.close();
+                          document.close();
+                          document = null;
+
+                          FileInputStream in = new FileInputStream(temp);
+                          ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                          byte[] buf = new byte[8192];
+                          int n;
+                          while ((n = in.read(buf)) != -1) bytes.write(buf, 0, n);
+                          in.close();
+
+                          pendingPdfBytes = bytes.toByteArray();
+                          pendingPdfName = (fileName == null || fileName.isEmpty()) ? "MiladGeo_Profile.pdf" : fileName;
+                          Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                          intent.addCategory(Intent.CATEGORY_OPENABLE);
+                          intent.setType("application/pdf");
+                          intent.putExtra(Intent.EXTRA_TITLE, pendingPdfName);
+                          startActivityForResult(intent, SAVE_FILE_REQUEST + 1);
+
+                          try { temp.delete(); } catch (Exception ignored) {}
+                          try { pdfView.destroy(); } catch (Exception ignored) {}
+                      } catch (Exception e) {
+                          try { if (document != null) document.close(); } catch (Exception ignored) {}
+                          try { if (temp != null) temp.delete(); } catch (Exception ignored) {}
+                          try { pdfView.destroy(); } catch (Exception ignored) {}
+                          webView.evaluateJavascript("window.showToast&&showToast('ساخت PDF ناموفق بود')", null);
+                      }
+                  }
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode == LOCATION_PERMISSION_REQUEST) {
+                      boolean granted = android.os.Build.VERSION.SDK_INT < 23 ||
+                          checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                          checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+
+                      if (pendingGeoCallback != null && pendingGeoOrigin != null) {
+                          pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
+                          pendingGeoCallback = null;
+                          pendingGeoOrigin = null;
+                      }
+                      webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(" + granted + ")", null);
+                  }
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode == FILE_CHOOSER_REQUEST) {
+                      if (filePathCallback == null) return;
+                      Uri[] results = null;
+                      if (resultCode == RESULT_OK && data != null) {
+                          if (data.getClipData() != null) {
+                              int count = data.getClipData().getItemCount();
+                              results = new Uri[count];
+                              for (int i = 0; i < count; i++) results[i] = data.getClipData().getItemAt(i).getUri();
+                          } else if (data.getData() != null) {
+                              results = new Uri[]{data.getData()};
+                          }
+                      }
+                      filePathCallback.onReceiveValue(results);
+                      filePathCallback = null;
+                      return;
+                  }
+
+                  if (requestCode == SAVE_FILE_REQUEST + 1) {
+                      if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingPdfBytes != null) {
+                          try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                              if (out != null) {
+                                  out.write(pendingPdfBytes);
+                                  out.flush();
+                              }
+                          } catch (Exception ignored) {}
+                      }
+                      pendingPdfBytes = null;
+                      pendingPdfName = null;
+                      return;
+                  }
+
+                  if (requestCode == SAVE_FILE_REQUEST) {
+                      if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingSaveBytes != null) {
+                          try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                              if (out != null) {
+                                  out.write(pendingSaveBytes);
+                                  out.flush();
+                              }
+                          } catch (Exception ignored) {}
+                      }
+                      pendingSaveBytes = null;
+                  }
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView.canGoBack()) webView.goBack();
+                  else super.onBackPressed();
+              }
+          }
+          EOF_JAVA
+
+      - name: Verify generated project
+        run: |
+          set -e
+          test -s index348.html
+          test -s app/src/main/assets/index.html
+          test -s app/src/main/res/drawable/miladgeo_icon.jpg
+          test -s app/src/main/AndroidManifest.xml
+          test -s app/src/main/java/com/miladgeo/app/MainActivity.java
+          test -s geomatic-pro-upload.jks
+          cmp -s index348.html app/src/main/assets/index.html
+
+      - name: Build Release APK and AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          gradle assembleRelease bundleRelease --stacktrace
+
+      - name: Verify APK
+        run: |
+          test -s app/build/outputs/apk/release/app-release.apk
+          ls -lh app/build/outputs/apk/release/app-release.apk
+
+      - name: Verify AAB
+        run: |
+          test -s app/build/outputs/bundle/release/app-release.aab
+          ls -lh app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiladGeo-V348-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Google Play AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiladGeo-V348-GooglePlay-AAB
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
