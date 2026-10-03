@@ -1,11 +1,11 @@
-name: Build MiladGeo V482 Android APK
+name: Build MiladGeo V486 Android APK
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'index482.html'
-      - '.github/workflows/build-apk482.yml'
+      - 'index486.html'
+      - '.github/workflows/build-apk486.yml'
 
 jobs:
   build:
@@ -38,7 +38,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           mkdir -p app/src/main/java/com/miladgeo/app app/src/main/assets app/src/main/res/drawable
-          cp index482.html app/src/main/assets/index.html
+          cp index486.html app/src/main/assets/index.html
           curl -L --fail https://raw.githubusercontent.com/miladrezayi/Miladgeo/main/miladgeo-icon.jpg -o app/src/main/res/drawable/miladgeo_icon.jpg
           test -s app/src/main/res/drawable/miladgeo_icon.jpg
           curl -L --fail https://raw.githubusercontent.com/miladrezayi/Miladgeo/main/.github/workflows/build-apk380.yml -o /tmp/build-apk380.yml
@@ -55,7 +55,7 @@ jobs:
           cat > settings.gradle <<'GRADLE'
           pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
           dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
-          rootProject.name = "MiladGeoV482"
+          rootProject.name = "MiladGeoV486"
           include(":app")
           GRADLE
 
@@ -70,7 +70,7 @@ jobs:
           cat > app/build.gradle <<'GRADLE'
           plugins { id 'com.android.application' }
           android { namespace 'com.miladgeo.app'; compileSdk 36
-            defaultConfig { applicationId 'com.miladgeo.app'; minSdk 23; targetSdk 36; versionCode 182; versionName '182.0' }
+            defaultConfig { applicationId 'com.miladgeo.app'; minSdk 23; targetSdk 36; versionCode 186; versionName '186.0' }
             signingConfigs { release { storeFile rootProject.file("geomatic-pro-upload.jks"); storePassword System.getenv("KEYSTORE_PASSWORD"); keyAlias "geometric-upload"; keyPassword System.getenv("KEY_PASSWORD") } }
             buildTypes { release { minifyEnabled false; shrinkResources false; signingConfig signingConfigs.release } }
           }
@@ -92,12 +92,12 @@ jobs:
       - name: Verify generated project
         run: |
           set -e
-          test -s index482.html
+          test -s index486.html
           test -s app/src/main/assets/index.html
           test -s app/src/main/java/com/miladgeo/app/MainActivity.java
           test -s app/src/main/res/drawable/miladgeo_icon.jpg
           test -s geomatic-pro-upload.jks
-          cmp -s index482.html app/src/main/assets/index.html
+          cmp -s index486.html app/src/main/assets/index.html
 
       - name: Build Release APK and AAB
         env:
@@ -114,7 +114,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-V482-APK
+          name: MiladGeo-V486-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -122,7 +122,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-V482-GooglePlay-AAB
+          name: MiladGeo-V486-GooglePlay-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
