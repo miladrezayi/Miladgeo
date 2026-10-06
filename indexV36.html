@@ -110,19 +110,17 @@ body.leica-portrait .mode-gate-screen{display:none}
 
 /* V39 LANDSCAPE FINAL: LCD LEFT / F1-F4 BELOW LCD / CONTROL CONSOLE RIGHT */
 @media (orientation: landscape){
-  html,body{width:100%;height:100%;min-height:0;overflow:hidden;}
+  html,body{width:100%;height:100%;min-height:100%;overflow:hidden;}
   body{padding:0;display:block;}
   body.leica-landscape .device{
-    /* V36-36: fit the Leica into its parent iframe/card, not the phone viewport.
-       This is intentionally limited to LANDSCAPE. Portrait rules remain untouched. */
-    width:100%;max-width:100%;height:calc(100% - 64px);min-height:0;
-    margin:32px auto;box-sizing:border-box;border:0;border-radius:0;padding:5px 8px;
+    width:100vw;max-width:none;height:100vh;min-height:0;
+    margin:0;border:0;border-radius:0;padding:7px 10px;
     display:flex;flex-direction:column;overflow:hidden;
   }
   body.leica-landscape .header{height:24px;flex:0 0 24px;font-size:16px;}
   body.leica-landscape .panel{
     display:grid!important;
-    grid-template-columns:minmax(0,1fr) minmax(300px,350px);
+    grid-template-columns:minmax(0,1fr) 350px;
     grid-template-rows:minmax(0,1fr) auto auto;
     column-gap:10px;row-gap:5px;align-items:stretch;
     flex:1 1 auto;min-height:0;
@@ -918,5 +916,54 @@ function lcdRow(label, value, active=false, arrow='') {
   .lower-console .nav .nleft,.lower-console .nav .nright{font-size:22px!important}
   .lower-console .side-controls{margin-top:13px!important}
   .lower-console .side-controls button{height:30px!important;font-size:8px!important}
+}
+
+/* V36 FINAL LANDSCAPE FIT INSIDE HOST FRAME: portrait untouched */
+@media (orientation: landscape){
+  html,body{width:100%;height:100%;min-width:0;min-height:0;overflow:hidden!important;}
+  body.leica-landscape{padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;}
+  body.leica-landscape .device{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:calc(100% - 60px)!important;
+    max-height:calc(100% - 60px)!important;
+    min-height:0!important;
+    margin:30px 0!important;
+    padding:6px 8px!important;
+    border-width:3px!important;
+    border-radius:12px!important;
+    box-shadow:0 8px 22px #0008!important;
+    overflow:hidden!important;
+  }
+  body.leica-landscape .header{height:18px!important;flex:0 0 18px!important;font-size:11px!important;letter-spacing:1px!important;}
+  body.leica-landscape .panel{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    grid-template-columns:minmax(0,1fr) minmax(190px,36%)!important;
+    gap:6px!important;
+  }
+  body.leica-landscape .lcd-frame{min-width:0!important;min-height:0!important;padding:3px!important;border-width:3px!important;}
+  body.leica-landscape .lcd{min-width:0!important;min-height:0!important;padding:5px!important;}
+  body.leica-landscape .screen{min-width:0!important;min-height:0!important;padding:6px!important;}
+  body.leica-landscape .screen-body{min-width:0!important;overflow:hidden!important;}
+  body.leica-landscape .item{min-width:0!important;font-size:10px!important;min-height:28px!important;padding:4px 6px!important;}
+  body.leica-landscape .softkeys{height:30px!important;gap:3px!important;}
+  body.leica-landscape .softkeys button{height:24px!important;font-size:8px!important;border-radius:5px!important;}
+  body.leica-landscape .softkey-caption{font-size:5px!important;min-height:5px!important;}
+  body.leica-landscape .main-menu-bar{height:21px!important;padding:1px 4px!important;}
+  body.leica-landscape .main-menu-actions button{height:16px!important;min-width:28px!important;font-size:6px!important;padding:0 3px!important;}
+  body.leica-landscape .lower-console{min-width:0!important;width:100%!important;gap:4px!important;}
+  body.leica-landscape .lower-console .keypad{min-width:0!important;height:132px!important;min-height:132px!important;flex-basis:132px!important;padding:3px!important;gap:2px!important;}
+  body.leica-landscape .lower-console .num{min-width:0!important;font-size:11px!important;border-radius:5px!important;}
+  body.leica-landscape .lower-console .num small{font-size:4px!important;}
+  body.leica-landscape .lower-console .right{height:84px!important;min-height:84px!important;grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr)!important;gap:3px!important;}
+  body.leica-landscape .lower-console .nav-wrap{width:76px!important;height:84px!important;}
+  body.leica-landscape .lower-console .nav{width:76px!important;height:76px!important;border-width:3px!important;}
+  body.leica-landscape .lower-console .nav button{font-size:14px!important;}
+  body.leica-landscape .lower-console .nav .ok{width:36px!important;height:36px!important;font-size:9px!important;}
+  body.leica-landscape .lower-console .side-controls button{height:31px!important;font-size:6px!important;border-radius:5px!important;}
 }
 </style>
