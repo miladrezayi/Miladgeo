@@ -1,0 +1,676 @@
+name: Build Leica 02 Android APK 008
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'indexleica008.html'
+      - '.github/workflows/build-leica008.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > geomatic-pro-upload.jks
+          test -s geomatic-pro-upload.jks
+
+      - name: Create Android project
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+
+          mkdir -p app/src/main/java/com/miladgeo/leica02
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/drawable
+
+          cp indexleica008.html app/src/main/assets/index.html
+
+          # Compact embedded TS02 icon keeps this workflow below GitHub's 500 KB limit.
+          cat > /tmp/leica_ts02_icon.b64 <<'EOF_ICON'
+          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
+          +X/z/9k=
+          EOF_ICON
+          base64 --decode /tmp/leica_ts02_icon.b64 > app/src/main/res/drawable/leica_ts02_icon.jpg
+          test -s app/src/main/res/drawable/leica_ts02_icon.jpg
+
+          cat > settings.gradle <<'GRADLE'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "Leica02"
+          include(":app")
+          GRADLE
+
+          cat > build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          GRADLE
+
+          cat > gradle.properties <<'GRADLE'
+          android.suppressUnsupportedCompileSdk=36
+          GRADLE
+
+          cat > app/build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.miladgeo.leica02'
+              compileSdk 36
+
+              defaultConfig {
+                  applicationId 'com.miladgeo.leica02'
+                  minSdk 23
+                  targetSdk 36
+                  versionCode 8
+                  versionName '0.8'
+              }
+
+              signingConfigs {
+                  release {
+                      storeFile rootProject.file("geomatic-pro-upload.jks")
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias "geometric-upload"
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                      shrinkResources false
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          GRADLE
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF_MANIFEST'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+              <application
+                  android:allowBackup="true"
+                  android:label="leica 02"
+                  android:icon="@drawable/leica_ts02_icon"
+                  android:roundIcon="@drawable/leica_ts02_icon"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:usesCleartextTraffic="true">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="unspecified"
+                      android:configChanges="orientation|screenSize|keyboardHidden">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF_MANIFEST
+
+          cat > app/src/main/java/com/miladgeo/leica02/MainActivity.java <<'EOF_JAVA'
+          package com.miladgeo.leica02;
+
+          import android.Manifest;
+          import android.app.Activity;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.content.pm.ActivityInfo;
+          import android.location.LocationManager;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.util.Base64;
+          import android.webkit.GeolocationPermissions;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.print.PrintAttributes;
+          import android.print.PrintManager;
+
+          import java.io.ByteArrayInputStream;
+          import java.io.ByteArrayOutputStream;
+          import java.io.OutputStream;
+          import java.util.ArrayList;
+          import java.util.HashMap;
+          import java.util.zip.ZipEntry;
+          import java.util.zip.ZipInputStream;
+
+          import org.json.JSONArray;
+          import org.xmlpull.v1.XmlPullParser;
+          import android.util.Xml;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+              private ValueCallback<Uri[]> filePathCallback;
+              private static final int FILE_CHOOSER_REQUEST = 1001;
+              private static final int SAVE_FILE_REQUEST = 1002;
+              private static final int LOCATION_PERMISSION_REQUEST = 1003;
+              private byte[] pendingSaveBytes;
+              private String pendingGeoOrigin;
+              private GeolocationPermissions.Callback pendingGeoCallback;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  webView = new WebView(this);
+                  setContentView(webView);
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setAllowFileAccessFromFileURLs(true);
+                  settings.setAllowUniversalAccessFromFileURLs(true);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  settings.setGeolocationEnabled(true);
+
+                  webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+                  webView.setWebViewClient(new WebViewClient());
+
+                  webView.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public void onGeolocationPermissionsShowPrompt(
+                              final String origin,
+                              final GeolocationPermissions.Callback callback) {
+                          if (android.os.Build.VERSION.SDK_INT < 23 ||
+                              checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                              checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                              callback.invoke(origin, true, false);
+                          } else {
+                              pendingGeoOrigin = origin;
+                              pendingGeoCallback = callback;
+                              requestPermissions(
+                                  new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                                  LOCATION_PERMISSION_REQUEST);
+                          }
+                      }
+
+                      @Override
+                      public boolean onShowFileChooser(
+                              WebView view,
+                              ValueCallback<Uri[]> callback,
+                              FileChooserParams params) {
+                          if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                          filePathCallback = callback;
+                          try {
+                              Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                              intent.addCategory(Intent.CATEGORY_OPENABLE);
+                              intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                              intent.setType("*/*");
+                              intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,
+                                  params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE);
+                              startActivityForResult(intent, FILE_CHOOSER_REQUEST);
+                              return true;
+                          } catch (Exception e) {
+                              filePathCallback = null;
+                              return false;
+                          }
+                      }
+                  });
+
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+
+              public class AndroidBridge {
+                  @JavascriptInterface
+                  public boolean saveFile(final String name, final String mime, final String base64) {
+                      try {
+                          pendingSaveBytes = Base64.decode(base64, Base64.DEFAULT);
+                          runOnUiThread(() -> {
+                              try {
+                                  Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                                  intent.addCategory(Intent.CATEGORY_OPENABLE);
+                                  intent.setType(mime == null || mime.isEmpty()
+                                      ? "application/octet-stream" : mime);
+                                  intent.putExtra(Intent.EXTRA_TITLE,
+                                      name == null || name.isEmpty() ? "LEICA02_EXPORT" : name);
+                                  startActivityForResult(intent, SAVE_FILE_REQUEST);
+                              } catch (Exception e) {
+                                  pendingSaveBytes = null;
+                              }
+                          });
+                          return true;
+                      } catch (Exception e) {
+                          pendingSaveBytes = null;
+                          return false;
+                      }
+                  }
+
+                  @JavascriptInterface
+                  public void requestLocationPermission() {
+                      runOnUiThread(() -> {
+                          try {
+                              if (android.os.Build.VERSION.SDK_INT < 23 ||
+                                  checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                                  checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                  webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(true)", null);
+                              } else {
+                                  requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+                              }
+                          } catch (Exception e) {
+                              webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(false)", null);
+                          }
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public boolean isLocationEnabled() {
+                      try {
+                          LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                          if (lm == null) return false;
+                          if (android.os.Build.VERSION.SDK_INT >= 28) return lm.isLocationEnabled();
+                          return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                                 lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                      } catch (Exception e) {
+                          return false;
+                      }
+                  }
+
+                  @JavascriptInterface
+                  public void openLocationSettings() {
+                      runOnUiThread(() -> {
+                          try {
+                              startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                          } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void setLandscape() {
+                      runOnUiThread(() -> setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
+                  }
+
+                  @JavascriptInterface
+                  public void setPortrait() {
+                      runOnUiThread(() -> setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+                  }
+
+                  @JavascriptInterface
+                  public void exitLeica() {
+                      runOnUiThread(() -> finish());
+                  }
+
+                  @JavascriptInterface
+                  public void printHtml(final String html) {
+                      runOnUiThread(() -> {
+                          try {
+                              WebView printView = new WebView(MainActivity.this);
+                              printView.getSettings().setJavaScriptEnabled(false);
+                              printView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);
+                              PrintManager printManager = (PrintManager) getSystemService(PRINT_SERVICE);
+                              printManager.print(
+                                  "Leica 02",
+                                  printView.createPrintDocumentAdapter("Leica 02"),
+                                  new PrintAttributes.Builder()
+                                      .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                                      .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                                      .build()
+                              );
+                          } catch (Exception ignored) {}
+                      });
+                  }
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode == LOCATION_PERMISSION_REQUEST) {
+                      boolean granted = android.os.Build.VERSION.SDK_INT < 23 ||
+                          checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                          checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+
+                      if (pendingGeoCallback != null && pendingGeoOrigin != null) {
+                          pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
+                          pendingGeoCallback = null;
+                          pendingGeoOrigin = null;
+                      }
+
+                      final boolean ok = granted;
+                      webView.evaluateJavascript(
+                          "window.onNativeLocationPermission && window.onNativeLocationPermission(" + ok + ")",
+                          null
+                      );
+                  }
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+
+                  if (requestCode == FILE_CHOOSER_REQUEST) {
+                      if (filePathCallback == null) return;
+                      Uri[] results = null;
+
+                      if (resultCode == RESULT_OK && data != null) {
+                          try {
+                              if (data.getData() != null) {
+                                  getContentResolver().takePersistableUriPermission(
+                                      data.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                              }
+                          } catch (Exception ignored) {}
+
+                          if (data.getClipData() != null) {
+                              int count = data.getClipData().getItemCount();
+                              results = new Uri[count];
+                              for (int i = 0; i < count; i++) {
+                                  results[i] = data.getClipData().getItemAt(i).getUri();
+                              }
+                          } else if (data.getData() != null) {
+                              results = new Uri[]{data.getData()};
+                          }
+                      }
+
+                      filePathCallback.onReceiveValue(results);
+                      filePathCallback = null;
+                      return;
+                  }
+
+                  if (requestCode == SAVE_FILE_REQUEST) {
+                      if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingSaveBytes != null) {
+                          try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                              if (out != null) {
+                                  out.write(pendingSaveBytes);
+                                  out.flush();
+                              }
+                          } catch (Exception ignored) {}
+                      }
+                      pendingSaveBytes = null;
+                  }
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+          }
+          EOF_JAVA
+
+      - name: Verify source files and Android package
+        run: |
+          set -e
+          test -s indexleica008.html
+          test -s app/src/main/assets/index.html
+          test -s app/src/main/res/drawable/leica_ts02_icon.jpg
+          test -s app/src/main/AndroidManifest.xml
+          test -s app/src/main/java/com/miladgeo/leica02/MainActivity.java
+          test -s geomatic-pro-upload.jks
+          cmp -s indexleica008.html app/src/main/assets/index.html
+          grep -q 'applicationId .com.miladgeo.leica02.' app/build.gradle
+          grep -q 'versionCode 8' app/build.gradle
+          grep -q 'android:label="leica 02"' app/src/main/AndroidManifest.xml
+          grep -q 'class MainActivity' app/src/main/java/com/miladgeo/leica02/MainActivity.java
+          grep -q 'saveFile' app/src/main/java/com/miladgeo/leica02/MainActivity.java
+          grep -q 'setLandscape' app/src/main/java/com/miladgeo/leica02/MainActivity.java
+          grep -q 'setPortrait' app/src/main/java/com/miladgeo/leica02/MainActivity.java
+          grep -q 'exitLeica' app/src/main/java/com/miladgeo/leica02/MainActivity.java
+
+      - name: Build Release APK and AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+          gradle assembleRelease bundleRelease --stacktrace
+
+      - name: Verify APK and AAB
+        run: |
+          set -e
+          test -s app/build/outputs/apk/release/app-release.apk
+          test -s app/build/outputs/bundle/release/app-release.aab
+          ls -lh app/build/outputs/apk/release/app-release.apk
+          ls -lh app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Leica-02-008-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Google Play AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Leica-02-008-GooglePlay-AAB
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
