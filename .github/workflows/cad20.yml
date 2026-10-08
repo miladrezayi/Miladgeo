@@ -1,0 +1,180 @@
+name: Build mini Autocad 2026 CAD20
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Indexcad007.html'
+      - 'Indexcad20.html'
+      - 'mini_autocad_2026_icon.png'
+      - 'icon.png'
+      - '.github/workflows/cad20.yml'
+      - '.github/workflows/mini_autocad_2026_icon.png'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Validate source and prepare Android project
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'Repository root:'
+          pwd
+          echo 'Top-level files:'
+          ls -la
+
+          HTML=''
+          for candidate in Indexcad007.html Indexcad20.html; do
+            if [ -s "$candidate" ]; then HTML="$candidate"; break; fi
+          done
+          if [ -z "$HTML" ]; then
+            echo '::error::Neither Indexcad007.html nor Indexcad20.html exists and is non-empty in repository root.'
+            exit 1
+          fi
+          echo "Using HTML source: $HTML"
+
+          ICON=''
+          for candidate in .github/workflows/mini_autocad_2026_icon.png mini_autocad_2026_icon.png icon.png; do
+            if [ -s "$candidate" ]; then ICON="$candidate"; break; fi
+          done
+          if [ -z "$ICON" ]; then
+            echo '::error::App icon not found. Add mini_autocad_2026_icon.png or icon.png to repository root, or mini_autocad_2026_icon.png to .github/workflows/.'
+            echo 'Files under .github/workflows:'
+            ls -la .github/workflows || true
+            exit 1
+          fi
+          echo "Using app icon: $ICON"
+
+          mkdir -p app/src/main/assets app/src/main/java/com/mini/autocad2026 app/src/main/res/drawable-nodpi
+          cp "$HTML" app/src/main/assets/index.html
+          cp "$ICON" app/src/main/res/drawable-nodpi/mini_autocad_icon.png
+
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          h = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          required = ['importDxfBtn','exportDxfBtn','exportExcelBtn','exportTxtBtn','exportPdfBtn','miniExitBtn']
+          missing = [name for name in required if name not in h]
+          if missing:
+              raise SystemExit('Missing expected CAD controls: ' + ', '.join(missing))
+          if 'Android.saveFile' not in h and 'download' not in h.lower():
+              raise SystemExit('No supported file-export path found in HTML')
+          if not Path('app/src/main/res/drawable-nodpi/mini_autocad_icon.png').read_bytes():
+              raise SystemExit('Copied app icon is empty')
+          print('Source, CAD controls, export path and icon checks passed.')
+          PYCODE
+
+          cat > settings.gradle <<'GRADLE'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          rootProject.name = "MiniAutocad2026"
+          include(":app")
+          GRADLE
+
+          cat > build.gradle <<'GRADLE'
+          plugins { id 'com.android.application' version '8.7.3' apply false }
+          GRADLE
+
+          cat > gradle.properties <<'GRADLE'
+          android.useAndroidX=true
+          org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8
+          GRADLE
+
+          cat > app/build.gradle <<'GRADLE'
+          plugins { id 'com.android.application' }
+          android {
+              namespace 'com.mini.autocad2026'
+              compileSdk 35
+              defaultConfig {
+                  applicationId 'com.mini.autocad2026'
+                  minSdk 29
+                  targetSdk 35
+                  versionCode 20
+                  versionName '2026.20'
+              }
+              buildTypes { release { minifyEnabled false } }
+          }
+          GRADLE
+
+          cat > app/src/main/AndroidManifest.xml <<'MANIFEST'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application android:allowBackup="false" android:label="mini Autocad 2026" android:icon="@drawable/mini_autocad_icon" android:roundIcon="@drawable/mini_autocad_icon" android:theme="@android:style/Theme.Material.NoActionBar" android:usesCleartextTraffic="true">
+              <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden">
+                <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          MANIFEST
+
+          cat > app/src/main/java/com/mini/autocad2026/MainActivity.java <<'JAVA'
+          package com.mini.autocad2026;
+          import android.app.Activity;
+          import android.app.AlertDialog;
+          import android.content.ContentValues;
+          import android.content.Intent;
+          import android.graphics.Color;
+          import android.net.Uri;
+          import android.os.Bundle;
+          import android.os.Environment;
+          import android.provider.MediaStore;
+          import android.print.PrintAttributes;
+          import android.print.PrintDocumentAdapter;
+          import android.print.PrintManager;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.widget.Toast;
+          import java.io.OutputStream;
+          public class MainActivity extends Activity {
+            private WebView web; private ValueCallback<Uri[]> fileCallback;
+            private static final int FILE_PICKER=2410;
+            @Override public void onCreate(Bundle state){super.onCreate(state);getWindow().setStatusBarColor(Color.rgb(12,18,24));getWindow().setNavigationBarColor(Color.BLACK);web=new WebView(this);web.setBackgroundColor(Color.BLACK);web.getSettings().setJavaScriptEnabled(true);web.getSettings().setDomStorageEnabled(true);web.getSettings().setAllowFileAccess(true);web.getSettings().setAllowContentAccess(true);web.addJavascriptInterface(new Bridge(),"Android");web.setWebViewClient(new WebViewClient());web.setWebChromeClient(new WebChromeClient(){@Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> cb,FileChooserParams params){if(fileCallback!=null)fileCallback.onReceiveValue(null);fileCallback=cb;Intent i=params.createIntent();try{startActivityForResult(i,FILE_PICKER);}catch(Exception ex){fileCallback=null;Toast.makeText(MainActivity.this,"No file picker available",Toast.LENGTH_LONG).show();return false;}return true;}});setContentView(web);web.loadUrl("file:///android_asset/index.html");}
+            @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICKER){if(fileCallback!=null){Uri[] resultUris=null;if(result==RESULT_OK&&data!=null){Uri u=data.getData();if(u!=null)resultUris=new Uri[]{u};}fileCallback.onReceiveValue(resultUris);fileCallback=null;}}}
+            public class Bridge {
+              @JavascriptInterface public void exitApp(){runOnUiThread(()->new AlertDialog.Builder(MainActivity.this).setTitle("mini Autocad 2026").setMessage("Exit the app?").setNegativeButton("Cancel",(d,w)->{}).setPositiveButton("Exit",(d,w)->finishAffinity()).show());}
+              @JavascriptInterface public void saveFile(String name,String mime,String base64){try{byte[] bytes=android.util.Base64.decode(base64,android.util.Base64.DEFAULT);ContentValues v=new ContentValues();v.put(MediaStore.Downloads.DISPLAY_NAME,name.replaceAll("[/\\]","_"));v.put(MediaStore.Downloads.MIME_TYPE,mime==null?"application/octet-stream":mime);v.put(MediaStore.Downloads.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS+"/mini Autocad 2026");Uri uri=getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI,v);if(uri==null)throw new Exception("Could not create file");try(OutputStream os=getContentResolver().openOutputStream(uri)){if(os==null)throw new Exception("Could not open file");os.write(bytes);}runOnUiThread(()->Toast.makeText(MainActivity.this,"Saved to Downloads/mini Autocad 2026",Toast.LENGTH_LONG).show());}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Save failed: "+e.getMessage(),Toast.LENGTH_LONG).show());}}
+              @JavascriptInterface public void printHtml(String b64){try{String html=new String(android.util.Base64.decode(b64,android.util.Base64.DEFAULT),java.nio.charset.StandardCharsets.UTF_8);runOnUiThread(()->{WebView pw=new WebView(MainActivity.this);pw.getSettings().setJavaScriptEnabled(true);pw.setWebViewClient(new WebViewClient(){@Override public void onPageFinished(WebView view,String url){PrintManager pm=(PrintManager)getSystemService(PRINT_SERVICE);PrintDocumentAdapter ad=view.createPrintDocumentAdapter("mini-Autocad-2026");pm.print("mini-Autocad-2026",ad,new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).setResolution(new PrintAttributes.Resolution("cad", "CAD", 300, 300)).setMinMargins(PrintAttributes.Margins.NO_MARGINS).build());}});pw.loadDataWithBaseURL(null,html,"text/html","UTF-8",null);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Print failed",Toast.LENGTH_LONG).show());}}
+            }
+            @Override public void onBackPressed(){new AlertDialog.Builder(this).setTitle("mini Autocad 2026").setMessage("Exit the app?").setNegativeButton("Cancel",(d,w)->{}).setPositiveButton("Exit",(d,w)->finishAffinity()).show();}
+          }
+          JAVA
+
+      - name: Build APK
+        run: gradle --no-daemon assembleDebug assembleRelease --stacktrace
+
+      - name: Verify APK outputs
+        run: |
+          set -euo pipefail
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          test -s app/build/outputs/apk/release/app-release-unsigned.apk
+          ls -lh app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini-Autocad-2026-CAD20-APK
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 14
