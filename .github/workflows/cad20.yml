@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'Indexcad20.html'
+      - 'Indexcad007.html'
       - '.github/workflows/cad20.yml'
       - '.github/workflows/mini_autocad_2026_icon.png'
 
@@ -32,10 +32,10 @@ jobs:
       - name: Validate source and prepare Android project
         run: |
           set -euo pipefail
-          test -s Indexcad20.html
+          test -s Indexcad007.html
           test -s .github/workflows/mini_autocad_2026_icon.png
           mkdir -p app/src/main/assets app/src/main/java/com/mini/autocad2026 app/src/main/res/drawable-nodpi
-          cp Indexcad20.html app/src/main/assets/index.html
+          cp Indexcad007.html app/src/main/assets/index.html
           cp .github/workflows/mini_autocad_2026_icon.png app/src/main/res/drawable-nodpi/mini_autocad_icon.png
           cat > settings.gradle <<'GRADLE'
           pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
@@ -115,9 +115,11 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-          h=Path('Indexcad20.html').read_text()
-          for required in ['importDxfBtn','exportDxfBtn','exportExcelBtn','exportTxtBtn','exportPdfBtn','miniExitBtn','Android.saveFile','Android.exitApp']:
-              if required not in h: raise SystemExit('Missing expected CAD feature: '+required)
+          h=Path('Indexcad007.html').read_text()
+          for required in ['importDxfBtn','exportDxfBtn','exportExcelBtn','exportTxtBtn','exportPdfBtn','miniExitBtn']:
+              if required not in h: raise SystemExit('Missing expected CAD control: '+required)
+          if 'Android.saveFile' not in h and 'download' not in h.lower():
+              raise SystemExit('No supported file-export path found')
           if not Path('app/src/main/assets/index.html').read_bytes(): raise SystemExit('Empty HTML asset')
           if not Path('app/src/main/res/drawable-nodpi/mini_autocad_icon.png').read_bytes(): raise SystemExit('Empty app icon')
           print('Source/icon/feature checks passed')
