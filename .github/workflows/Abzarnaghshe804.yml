@@ -1,0 +1,1562 @@
+name: Build جعبه‌ابزار نقشه‌بردار V804 Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index707.html'
+      - 'indexv40.html'
+      - 'Indexcad20.html'
+      - '.github/workflows/Abzarnaghshe804.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then echo "KEYSTORE_BASE64 secret is missing"; exit 1; fi
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > geomatic-pro-upload.jks
+          test -s geomatic-pro-upload.jks
+
+      - name: Preflight source validation
+        run: |
+          set -euo pipefail
+          test -s index707.html
+          test -s indexv40.html
+          test -s Indexcad20.html
+          test -s .github/workflows/Abzarnaghshe804.yml || true
+          python3 - <<'PY_VALIDATE'
+          from pathlib import Path
+          checks = {
+              'index707.html': 1000,
+              'indexv40.html': 1000,
+              'Indexcad20.html': 1000,
+          }
+          for name, minimum in checks.items():
+              p = Path(name)
+              if not p.exists() or p.stat().st_size < minimum:
+                  raise SystemExit(f'Invalid or incomplete source file: {name}')
+          s = Path('index707.html').read_text(encoding='utf-8', errors='strict')
+          if '<html' not in s.lower() or '</html>' not in s.lower():
+              raise SystemExit('index707.html is not a complete HTML document')
+          PY_VALIDATE
+
+      - name: Create Android project
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          mkdir -p app/src/main/java/com/miladgeo/app
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/drawable
+
+          # V804: Android build based on the authoritative index707.html reference; preserve the existing app package.
+          # Indexcad20.html is bundled beside index.html so the Menu 9 button can open it locally.
+          python3 - <<'PY_PATCH'
+          from pathlib import Path
+
+          src = Path('index707.html').read_text(encoding='utf-8')
+          cad = Path('Indexcad20.html')
+          if not cad.is_file() or cad.stat().st_size == 0:
+              raise SystemExit('Indexcad20.html is required for Menu 9')
+
+          # index707.html is the authoritative reference and already contains the current Menu 9 Mini Autocad UI.
+          # Do not rewrite or patch the stable 707 HTML here. Bundle it as-is.
+          Path('app/src/main/assets/index.html').write_text(src, encoding='utf-8')
+          Path('app/src/main/assets/Indexcad20.html').write_bytes(cad.read_bytes())
+          PY_PATCH
+
+          cp indexv40.html app/src/main/assets/indexv40.html
+
+          curl -L --fail https://raw.githubusercontent.com/miladrezayi/Miladgeo/main/abzarnaghshebardar573.jpg \
+            -o app/src/main/res/drawable/abzarnaghshebardar573.jpg
+          test -s app/src/main/res/drawable/abzarnaghshebardar573.jpg
+
+          cat > settings.gradle <<'GRADLE'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "AbzarNaghshebardarV804"
+          include(":app")
+          GRADLE
+
+          cat > build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          GRADLE
+
+          cat > gradle.properties <<'GRADLE'
+          android.suppressUnsupportedCompileSdk=36
+          android.useAndroidX=true
+          android.enableJetifier=true
+          GRADLE
+
+          cat > app/build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application'
+          }
+
+          dependencies {
+              implementation 'androidx.core:core:1.13.1'
+          }
+
+          android {
+              namespace 'com.miladgeo.app'
+              compileSdk 36
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+
+              defaultConfig {
+                  applicationId 'com.miladgeo.abzarnaghshebardar600'
+                  minSdk 23
+                  targetSdk 36
+                  versionCode 804
+                  versionName '804.0'
+              }
+
+              signingConfigs {
+                  release {
+                      storeFile rootProject.file("geomatic-pro-upload.jks")
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias "geometric-upload"
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                      shrinkResources false
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          GRADLE
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF_MANIFEST'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.CAMERA" />
+
+              <application
+                  android:allowBackup="true"
+                  android:label="جعبه‌ابزار نقشه‌بردار"
+                  android:icon="@drawable/abzarnaghshebardar573"
+                  android:roundIcon="@drawable/abzarnaghshebardar573"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:usesCleartextTraffic="true">
+
+                  <provider
+                  android:name="androidx.core.content.FileProvider"
+                  android:authorities="${applicationId}.fileprovider"
+                  android:exported="false"
+                  android:grantUriPermissions="true">
+                  <meta-data
+                      android:name="android.support.FILE_PROVIDER_PATHS"
+                      android:resource="@xml/file_paths" />
+              </provider>
+
+              <activity
+                      android:name=".PdfReaderActivity"
+                      android:exported="false"
+                      android:screenOrientation="portrait" />
+
+              <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="unspecified"
+                      android:configChanges="orientation|screenSize|keyboardHidden">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF_MANIFEST
+
+          mkdir -p app/src/main/res/xml
+          cat > app/src/main/res/xml/file_paths.xml <<'EOF_PATHS'
+          <?xml version="1.0" encoding="utf-8"?>
+          <paths xmlns:android="http://schemas.android.com/apk/res/android">
+              <external-files-path name="pictures" path="Pictures/" />
+              <cache-path name="cache" path="." />
+          </paths>
+          EOF_PATHS
+
+          cat > app/src/main/java/com/miladgeo/app/MainActivity.java <<'EOF_JAVA'
+          package com.miladgeo.app;
+
+          import android.Manifest;
+          import android.hardware.camera2.CameraAccessException;
+          import android.hardware.camera2.CameraCharacteristics;
+          import android.hardware.camera2.CameraManager;
+          import android.app.Activity;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.content.pm.ResolveInfo;
+          import android.location.LocationManager;
+          import android.net.Uri;
+          import androidx.core.content.FileProvider;
+          import android.os.Bundle;
+          import android.os.Environment;
+          import android.print.PrintAttributes;
+          import android.print.PrintManager;
+          import android.graphics.Canvas;
+          import android.graphics.pdf.PdfDocument;
+          import android.util.Base64;
+          import android.webkit.GeolocationPermissions;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebResourceRequest;
+          import android.view.View;
+          import android.content.pm.ActivityInfo;
+          import android.content.res.Configuration;
+          import java.io.OutputStream;
+          import java.io.File;
+          import java.io.FileInputStream;
+          import java.io.FileOutputStream;
+          import java.io.InputStream;
+          import java.io.ByteArrayOutputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import org.json.JSONObject;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+              private WebView printWebView;
+              private ValueCallback<Uri[]> filePathCallback;
+              private static final int FILE_CHOOSER_REQUEST = 1001;
+              private static final int SAVE_FILE_REQUEST = 1002;
+              private static final int LOCATION_PERMISSION_REQUEST = 1003;
+              private static final int CAMERA_PERMISSION_REQUEST = 1004;
+              private static final int CAMERA_CAPTURE_REQUEST = 1005;
+              private Uri pendingCameraUri;
+              private String pendingCameraPath;
+              private byte[] pendingSaveBytes;
+              private byte[] pendingPdfBytes;
+              private String pendingPdfName;
+              private String pendingGeoOrigin;
+              private GeolocationPermissions.Callback pendingGeoCallback;
+
+              @Override
+              public void onConfigurationChanged(Configuration newConfig) {
+                  super.onConfigurationChanged(newConfig);
+                  if (webView != null) {
+                      webView.postDelayed(() -> webView.requestLayout(), 50);
+                  }
+              }
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  webView = new WebView(this);
+                  setContentView(webView);
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setAllowFileAccessFromFileURLs(true);
+                  settings.setAllowUniversalAccessFromFileURLs(true);
+                  settings.setGeolocationEnabled(true);
+
+                  webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+                  webView.addJavascriptInterface(new AndroidBridge(), "Android");
+                  webView.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                          return openExternalIfNeeded(url);
+                      }
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          return openExternalIfNeeded(request == null || request.getUrl() == null ? null : request.getUrl().toString());
+                      }
+                  });
+
+                  webView.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public void onGeolocationPermissionsShowPrompt(final String origin, final GeolocationPermissions.Callback callback) {
+                          if (android.os.Build.VERSION.SDK_INT < 23 ||
+                              checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                              checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                              callback.invoke(origin, true, false);
+                          } else {
+                              pendingGeoOrigin = origin;
+                              pendingGeoCallback = callback;
+                              requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+                          }
+                      }
+
+                      @Override
+                      public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                          if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                          filePathCallback = callback;
+                          try {
+                              String[] accepts = params.getAcceptTypes();
+                              boolean wantsImage = false;
+                              if (accepts != null) {
+                                  for (String a : accepts) {
+                                      if (a != null && a.toLowerCase().startsWith("image/")) { wantsImage = true; break; }
+                                  }
+                              }
+                              if (params.isCaptureEnabled() && wantsImage) {
+                                  launchCameraForWebView();
+                                  return true;
+                              }
+                              Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                              intent.addCategory(Intent.CATEGORY_OPENABLE);
+                              intent.setType(wantsImage ? "image/*" : "*/*");
+                              intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE);
+                              startActivityForResult(intent, FILE_CHOOSER_REQUEST);
+                              return true;
+                          } catch (Exception e) {
+                              filePathCallback = null;
+                              return false;
+                          }
+                      }
+                  });
+
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+
+              private void launchCameraForWebView() {
+                  try {
+                      if (android.os.Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                          requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST);
+                          return;
+                      }
+                      File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                      if (dir == null) dir = getCacheDir();
+                      if (!dir.exists()) dir.mkdirs();
+                      File photo = File.createTempFile("miladgeo_camera_", ".jpg", dir);
+                      pendingCameraPath = photo.getAbsolutePath();
+                      pendingCameraUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", photo);
+                      Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                      intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, pendingCameraUri);
+                      intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      startActivityForResult(intent, CAMERA_CAPTURE_REQUEST);
+                  } catch (Exception e) {
+                      if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                      filePathCallback = null;
+                      pendingCameraUri = null;
+                      pendingCameraPath = null;
+                      try { webView.evaluateJavascript("window.showToast&&showToast('باز کردن دوربین ناموفق بود')", null); } catch (Exception ignored) {}
+                  }
+              }
+
+              private boolean openExternalIfNeeded(String url) {
+                  try {
+                      if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+                          startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                          return true;
+                      }
+                  } catch (Exception ignored) {}
+                  return false;
+              }
+
+              public class AndroidBridge {
+                  private boolean torchState = false;
+
+                  @JavascriptInterface
+                  public boolean toggleTorch() {
+                      boolean next = !torchState;
+                      boolean ok = setTorch(next);
+                      if (ok) torchState = next;
+                      return ok ? torchState : false;
+                  }
+
+                  @JavascriptInterface
+                  public boolean setTorch(final boolean enabled) {
+                      if (android.os.Build.VERSION.SDK_INT < 23) return false;
+                      try {
+                          CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+                          if (manager == null) return false;
+                          String selected = null;
+                          for (String id : manager.getCameraIdList()) {
+                              CameraCharacteristics c = manager.getCameraCharacteristics(id);
+                              Boolean flash = c.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                              Integer facing = c.get(CameraCharacteristics.LENS_FACING);
+                              if (Boolean.TRUE.equals(flash)) {
+                                  if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) { selected = id; break; }
+                                  if (selected == null) selected = id;
+                              }
+                          }
+                          if (selected == null) return false;
+                          manager.setTorchMode(selected, enabled);
+                          return true;
+                      } catch (SecurityException | CameraAccessException e) {
+                          return false;
+                      } catch (Exception e) {
+                          return false;
+                      }
+                  }
+
+                  @JavascriptInterface public void setLandscape() { runOnUiThread(() -> setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)); }
+                  @JavascriptInterface public void setPortrait() { runOnUiThread(() -> setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)); }
+                  @JavascriptInterface public void exitLeica() { runOnUiThread(() -> { setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); webView.loadUrl("file:///android_asset/index.html"); }); }
+                  @JavascriptInterface
+                  public boolean saveFile(final String name, final String mime, final String base64) {
+                      try {
+                          pendingSaveBytes = Base64.decode(base64, Base64.DEFAULT);
+                          Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                          intent.addCategory(Intent.CATEGORY_OPENABLE);
+                          intent.setType(mime == null || mime.isEmpty() ? "application/octet-stream" : mime);
+                          intent.putExtra(Intent.EXTRA_TITLE, name == null || name.isEmpty() ? "MILADGEO_EXPORT" : name);
+                          startActivityForResult(intent, SAVE_FILE_REQUEST);
+                          return true;
+                      } catch (Exception e) {
+                          pendingSaveBytes = null;
+                          return false;
+                      }
+                  }
+
+                  @JavascriptInterface
+                  public void openPdf(final String base64, final String fileName) {
+                      runOnUiThread(() -> {
+                          try {
+                              byte[] bytes = Base64.decode(base64 == null ? "" : base64, Base64.DEFAULT);
+                              if (bytes.length == 0) throw new Exception("empty pdf");
+                              File temp = new File(getCacheDir(), "miladgeo_reader_" + System.currentTimeMillis() + ".pdf");
+                              try (FileOutputStream out = new FileOutputStream(temp)) { out.write(bytes); out.flush(); }
+                              Intent reader = new Intent(MainActivity.this, PdfReaderActivity.class);
+                              reader.putExtra("pdf_path", temp.getAbsolutePath());
+                              reader.putExtra("pdf_name", fileName == null || fileName.isEmpty() ? "MiladGeo.pdf" : fileName);
+                              startActivity(reader);
+                          } catch (Exception e) {
+                              try { webView.evaluateJavascript("window.showToast&&showToast('باز کردن PDF داخل برنامه ناموفق بود')", null); } catch (Exception ignored) {}
+                          }
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void openExternalUrl(final String urlString) {
+                      runOnUiThread(() -> {
+                          try {
+                              if (urlString != null && !urlString.isEmpty()) startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlString)));
+                          } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void downloadBinary(final String urlString) {
+                      new Thread(() -> {
+                          HttpURLConnection conn = null;
+                          try {
+                              URL url = new URL(urlString);
+                              conn = (HttpURLConnection) url.openConnection();
+                              conn.setRequestMethod("GET");
+                              conn.setConnectTimeout(20000);
+                              conn.setReadTimeout(60000);
+                              conn.setUseCaches(false);
+                              conn.setRequestProperty("Accept", "application/octet-stream,*/*");
+                              int code = conn.getResponseCode();
+                              InputStream in = code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream();
+                              ByteArrayOutputStream out = new ByteArrayOutputStream();
+                              if (in != null) {
+                                  byte[] buf = new byte[8192];
+                                  int n;
+                                  while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                                  in.close();
+                              }
+                              byte[] bytes = out.toByteArray();
+                              final boolean ok = code >= 200 && code < 300;
+                              final String b64 = ok ? Base64.encodeToString(bytes, Base64.NO_WRAP) : "";
+                              final String err = ok ? "" : new String(bytes, "UTF-8");
+                              final String ct = conn.getContentType() == null ? "" : conn.getContentType();
+                              final String js = "window.m4NativeDEMResult(" + ok + "," + code + "," + JSONObject.quote(b64) + "," + JSONObject.quote(ct) + "," + JSONObject.quote(err) + ");";
+                              runOnUiThread(() -> webView.evaluateJavascript(js, null));
+                          } catch (Exception e) {
+                              final String js = "window.m4NativeDEMResult(false,0,\"\",\"\", " + JSONObject.quote(e.toString()) + ");";
+                              runOnUiThread(() -> webView.evaluateJavascript(js, null));
+                          } finally {
+                              if (conn != null) conn.disconnect();
+                          }
+                      }).start();
+                  }
+
+                  @JavascriptInterface
+                  public void requestLocationPermission() {
+                      runOnUiThread(() -> {
+                          try {
+                              if (android.os.Build.VERSION.SDK_INT < 23 ||
+                                  checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                                  checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                  webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(true)", null);
+                              } else {
+                                  requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION_REQUEST);
+                              }
+                          } catch (Exception e) {
+                              webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(false)", null);
+                          }
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void refreshPage() {
+                      runOnUiThread(() -> {
+                          try { webView.reload(); } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public boolean isLocationEnabled() {
+                      try {
+                          LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                          if (lm == null) return false;
+                          if (android.os.Build.VERSION.SDK_INT >= 28) return lm.isLocationEnabled();
+                          return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                      } catch (Exception e) {
+                          return false;
+                      }
+                  }
+
+                  @JavascriptInterface
+                  public void openLocationSettings() {
+                      runOnUiThread(() -> {
+                          try { startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)); } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void printHtml(final String html) {
+                      runOnUiThread(() -> {
+                          try {
+                              WebView printView = new WebView(MainActivity.this);
+                              printView.getSettings().setJavaScriptEnabled(false);
+                              printView.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);
+                              PrintManager printManager = (PrintManager) getSystemService(PRINT_SERVICE);
+                              printManager.print(
+                                  "MiladGeo",
+                                  printView.createPrintDocumentAdapter("MiladGeo"),
+                                  new PrintAttributes.Builder()
+                                      .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
+                                      .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                                      .build());
+                          } catch (Exception ignored) {}
+                      });
+                  }
+
+                  @JavascriptInterface
+                  public void savePdf(final String html, final String fileName) {
+                      runOnUiThread(() -> {
+                          try {
+                              final WebView pdfView = new WebView(MainActivity.this);
+                              pdfView.getSettings().setJavaScriptEnabled(true);
+                              pdfView.getSettings().setDomStorageEnabled(true);
+                              pdfView.setWebViewClient(new WebViewClient() {
+                                  @Override
+                                  public void onPageFinished(WebView view, String url) {
+                                      view.postDelayed(() -> createPdfBytes(pdfView, fileName), 450);
+                                  }
+                              });
+                              pdfView.loadDataWithBaseURL("file:///android_asset/", html == null ? "" : html, "text/html", "UTF-8", null);
+                          } catch (Exception e) {
+                              webView.evaluateJavascript("window.showToast&&showToast('ساخت PDF ناموفق بود')", null);
+                          }
+                      });
+                  }
+
+                  private void createPdfBytes(final WebView pdfView, final String fileName) {
+                      PdfDocument document = null;
+                      File temp = null;
+                      try {
+                          final int pageW = 595, pageH = 842, renderW = 1080;
+                          int widthSpec = View.MeasureSpec.makeMeasureSpec(renderW, View.MeasureSpec.EXACTLY);
+                          int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+                          pdfView.measure(widthSpec, heightSpec);
+                          int contentH = Math.max(pdfView.getMeasuredHeight(), 1);
+                          pdfView.layout(0, 0, renderW, contentH);
+                          float scale = pageW / (float) renderW;
+                          int sliceH = Math.max(1, Math.round(pageH / scale));
+                          int pageCount = Math.max(1, (contentH + sliceH - 1) / sliceH);
+                          document = new PdfDocument();
+                          for (int i = 0; i < pageCount; i++) {
+                              PdfDocument.PageInfo info = new PdfDocument.PageInfo.Builder(pageW, pageH, i + 1).create();
+                              PdfDocument.Page page = document.startPage(info);
+                              Canvas canvas = page.getCanvas();
+                              canvas.save();
+                              canvas.clipRect(0, 0, pageW, pageH);
+                              canvas.scale(scale, scale);
+                              canvas.translate(0, -(i * sliceH));
+                              pdfView.draw(canvas);
+                              canvas.restore();
+                              document.finishPage(page);
+                          }
+                          temp = new File(getCacheDir(), "miladgeo_export_" + System.currentTimeMillis() + ".pdf");
+                          FileOutputStream out = new FileOutputStream(temp);
+                          document.writeTo(out);
+                          out.flush();
+                          out.close();
+                          document.close();
+                          document = null;
+
+                          FileInputStream in = new FileInputStream(temp);
+                          ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                          byte[] buf = new byte[8192];
+                          int n;
+                          while ((n = in.read(buf)) != -1) bytes.write(buf, 0, n);
+                          in.close();
+
+                          pendingPdfBytes = bytes.toByteArray();
+                          pendingPdfName = (fileName == null || fileName.isEmpty()) ? "MiladGeo_Profile.pdf" : fileName;
+                          Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                          intent.addCategory(Intent.CATEGORY_OPENABLE);
+                          intent.setType("application/pdf");
+                          intent.putExtra(Intent.EXTRA_TITLE, pendingPdfName);
+                          startActivityForResult(intent, SAVE_FILE_REQUEST + 1);
+
+                          try { temp.delete(); } catch (Exception ignored) {}
+                          try { pdfView.destroy(); } catch (Exception ignored) {}
+                      } catch (Exception e) {
+                          try { if (document != null) document.close(); } catch (Exception ignored) {}
+                          try { if (temp != null) temp.delete(); } catch (Exception ignored) {}
+                          try { pdfView.destroy(); } catch (Exception ignored) {}
+                          webView.evaluateJavascript("window.showToast&&showToast('ساخت PDF ناموفق بود')", null);
+                      }
+                  }
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode == CAMERA_PERMISSION_REQUEST) {
+                      boolean granted = android.os.Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+                      if (granted) launchCameraForWebView();
+                      else {
+                          if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                          filePathCallback = null;
+                          try { webView.evaluateJavascript("window.showToast&&showToast('اجازه دوربین داده نشد')", null); } catch (Exception ignored) {}
+                      }
+                      return;
+                  }
+
+                  if (requestCode == LOCATION_PERMISSION_REQUEST) {
+                      boolean granted = android.os.Build.VERSION.SDK_INT < 23 ||
+                          checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                          checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+
+                      if (pendingGeoCallback != null && pendingGeoOrigin != null) {
+                          pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
+                          pendingGeoCallback = null;
+                          pendingGeoOrigin = null;
+                      }
+                      webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(" + granted + ")", null);
+                  }
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode == CAMERA_CAPTURE_REQUEST) {
+                      if (filePathCallback != null) {
+                          if (resultCode == RESULT_OK && pendingCameraUri != null) {
+                              filePathCallback.onReceiveValue(new Uri[]{pendingCameraUri});
+                          } else {
+                              filePathCallback.onReceiveValue(null);
+                              if (pendingCameraPath != null) { try { new File(pendingCameraPath).delete(); } catch (Exception ignored) {} }
+                          }
+                          filePathCallback = null;
+                      }
+                      pendingCameraUri = null;
+                      pendingCameraPath = null;
+                      return;
+                  }
+
+                  if (requestCode == FILE_CHOOSER_REQUEST) {
+                      if (filePathCallback == null) return;
+                      Uri[] results = null;
+                      if (resultCode == RESULT_OK && data != null) {
+                          if (data.getClipData() != null) {
+                              int count = data.getClipData().getItemCount();
+                              results = new Uri[count];
+                              for (int i = 0; i < count; i++) results[i] = data.getClipData().getItemAt(i).getUri();
+                          } else if (data.getData() != null) {
+                              results = new Uri[]{data.getData()};
+                          }
+                      }
+                      filePathCallback.onReceiveValue(results);
+                      filePathCallback = null;
+                      return;
+                  }
+
+                  if (requestCode == SAVE_FILE_REQUEST + 1) {
+                      if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingPdfBytes != null) {
+                          try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                              if (out != null) {
+                                  out.write(pendingPdfBytes);
+                                  out.flush();
+                              }
+                          } catch (Exception ignored) {}
+                      }
+                      pendingPdfBytes = null;
+                      pendingPdfName = null;
+                      return;
+                  }
+
+                  if (requestCode == SAVE_FILE_REQUEST) {
+                      if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingSaveBytes != null) {
+                          try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                              if (out != null) {
+                                  out.write(pendingSaveBytes);
+                                  out.flush();
+                              }
+                          } catch (Exception ignored) {}
+                      }
+                      pendingSaveBytes = null;
+                  }
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView.canGoBack()) webView.goBack();
+                  else super.onBackPressed();
+              }
+          }
+          EOF_JAVA
+
+          cat > app/src/main/java/com/miladgeo/app/PdfReaderActivity.java <<'EOF_PDF_JAVA'
+          package com.miladgeo.app;
+
+          import android.app.Activity;
+          import android.graphics.Bitmap;
+          import android.graphics.Color;
+          import android.graphics.pdf.PdfRenderer;
+          import android.os.Bundle;
+          import android.os.ParcelFileDescriptor;
+          import android.view.Gravity;
+          import android.view.ViewGroup;
+          import android.widget.Button;
+          import android.widget.ImageView;
+          import android.widget.LinearLayout;
+          import android.widget.TextView;
+          import java.io.File;
+
+          public class PdfReaderActivity extends Activity {
+              private PdfRenderer renderer;
+              private ParcelFileDescriptor descriptor;
+              private ImageView image;
+              private TextView pageInfo;
+              private int pageIndex = 0;
+              private String pdfName = "MiladGeo.pdf";
+
+              @Override protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  pdfName = getIntent().getStringExtra("pdf_name");
+                  if (pdfName == null || pdfName.isEmpty()) pdfName = "MiladGeo.pdf";
+                  setTitle(pdfName);
+
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setBackgroundColor(Color.WHITE);
+
+                  LinearLayout bar = new LinearLayout(this);
+                  bar.setGravity(Gravity.CENTER_VERTICAL);
+                  bar.setPadding(10, 8, 10, 8);
+
+                  Button prev = new Button(this); prev.setText("صفحه قبل");
+                  Button next = new Button(this); next.setText("صفحه بعد");
+                  pageInfo = new TextView(this);
+                  pageInfo.setGravity(Gravity.CENTER);
+                  pageInfo.setTextSize(15);
+                  LinearLayout.LayoutParams infoLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                  bar.addView(prev, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                  bar.addView(pageInfo, infoLp);
+                  bar.addView(next, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                  root.addView(bar);
+
+                  image = new ImageView(this);
+                  image.setBackgroundColor(Color.WHITE);
+                  image.setAdjustViewBounds(true);
+                  image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                  root.addView(image, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+                  setContentView(root);
+
+                  prev.setOnClickListener(v -> showPage(pageIndex - 1));
+                  next.setOnClickListener(v -> showPage(pageIndex + 1));
+
+                  try {
+                      String path = getIntent().getStringExtra("pdf_path");
+                      if (path == null) throw new Exception("missing pdf");
+                      File file = new File(path);
+                      descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
+                      renderer = new PdfRenderer(descriptor);
+                      showPage(0);
+                  } catch (Exception e) {
+                      pageInfo.setText("خطا در باز کردن PDF");
+                      prev.setEnabled(false); next.setEnabled(false);
+                  }
+              }
+
+              private void showPage(int index) {
+                  if (renderer == null || index < 0 || index >= renderer.getPageCount()) return;
+                  try {
+                      PdfRenderer.Page page = renderer.openPage(index);
+                      int w = Math.max(1, page.getWidth() * 2);
+                      int h = Math.max(1, page.getHeight() * 2);
+                      Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                      bitmap.eraseColor(Color.WHITE);
+                      page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                      page.close();
+                      image.setImageBitmap(bitmap);
+                      pageIndex = index;
+                      pageInfo.setText("" + (index + 1) + " / " + renderer.getPageCount());
+                  } catch (Exception e) {
+                      pageInfo.setText("خطا در نمایش صفحه");
+                  }
+              }
+
+              @Override protected void onDestroy() {
+                  try { if (renderer != null) renderer.close(); } catch (Exception ignored) {}
+                  try { if (descriptor != null) descriptor.close(); } catch (Exception ignored) {}
+                  super.onDestroy();
+              }
+          }
+          EOF_PDF_JAVA
+
+
+      - name: Add configurable native six-cell home-screen widget
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/java/com/miladgeo/app
+          mkdir -p app/src/main/res/layout app/src/main/res/xml app/src/main/res/drawable
+
+          cat > app/src/main/java/com/miladgeo/app/QuickToolsWidgetProvider.java <<'EOF_WIDGET_JAVA'
+          package com.miladgeo.app;
+
+          import android.app.PendingIntent;
+          import android.appwidget.AppWidgetManager;
+          import android.appwidget.AppWidgetProvider;
+          import android.Manifest;
+          import android.content.pm.PackageManager;
+          import android.location.Location;
+          import android.location.LocationManager;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.widget.RemoteViews;
+
+          public class QuickToolsWidgetProvider extends AppWidgetProvider {
+              static final String PREFS = "miladgeo_widget_prefs";
+              static final String[] TOOL_IDS = {"", "leica5", "measure", "stakeout", "topography", "txt", "excel", "minicad", "coordinates", "units", "calculator", "googleearth", "direction", "flashlight", "compass", "speedometer", "qibla", "level"};
+              static final String[] TOOL_LABELS = {"＋ انتخاب ابزار", "🎯 منو ۱ › ۵ شبیه‌ساز لایکا TS02", "📍 منو ۲: برداشت", "📌 منو ۳: پیاده‌سازی", "📐 منو ۴: توپو و ترازیابی", "📄 منو ۵: ورودی تکست / TXT", "📊 منو ۶: ورودی اکسل", "🖥 منو ۹: مینی اتوکد", "↔ منو ۱۱: تبدیل مختصات", "🔁 منو ۱۲: تبدیل واحدها", "🧮 منو ۱۴: ماشین‌حساب", "🌍 منو ۱۷: ترسیم گوگل ارث", "🧭 منو ۱۸: مرکز جهت‌یابی", "🔦 منو ۱۸: چراغ‌قوه", "🧭 منو ۱۸: قطب‌نما", "🏃 منو ۱۸: سرعت‌سنج", "🕋 منو ۱۸: قبله‌نما", "⚖️ منو ۱۸: تراز"};
+              static final String[] DEFAULT_TOOLS = {"leica5", "measure", "stakeout", "topography", "", "", "", "", "", "", "", ""};
+              static final int SLOT_COUNT = 12;
+              static final int PREF_SCHEMA = 804;
+
+              static String labelFor(String id) {
+                  for (int i = 0; i < TOOL_IDS.length; i++) {
+                      if (TOOL_IDS[i].equals(id)) return TOOL_LABELS[i];
+                  }
+                  return TOOL_LABELS[0];
+              }
+
+              static int indexFor(String id) {
+                  for (int i = 0; i < TOOL_IDS.length; i++) {
+                      if (TOOL_IDS[i].equals(id)) return i;
+                  }
+                  return 0;
+              }
+
+              static String[] readTools(Context context, int widgetId) {
+                  SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+                  String saved = prefs.getString("tools_" + widgetId, null);
+                  if (saved == null) return DEFAULT_TOOLS.clone();
+                  String[] values = saved.split(",", -1);
+                  String[] result = new String[SLOT_COUNT];
+                  for (int i = 0; i < SLOT_COUNT; i++) {
+                      result[i] = i < values.length ? values[i] : "";
+                  }
+                  return result;
+              }
+
+              static void updateWidget(Context context, int widgetId) {
+                  AppWidgetManager manager = AppWidgetManager.getInstance(context);
+                  int layoutMode = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt("layout_" + widgetId, 0);
+                  int layoutRes = layoutMode == 1 ? R.layout.widget_quick_tools_first_large
+                      : (layoutMode == 2 ? R.layout.widget_quick_tools_two_large : R.layout.widget_quick_tools);
+                  RemoteViews views = new RemoteViews(context.getPackageName(), layoutRes);
+                  String[] tools = readTools(context, widgetId);
+                  views.setTextViewText(R.id.widgetGpsStatus, getGpsSummary(context));
+                  int visibleCount = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt("count_" + widgetId, 6);
+                  int tileSize = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt("size_" + widgetId, 1);
+                  int tileHeight = tileSize == 0 ? 42 : (tileSize == 2 ? 78 : 62);
+                  int tileTextSize = tileSize == 0 ? 9 : (tileSize == 2 ? 13 : 11);
+
+                  Intent configIntent = new Intent(context, QuickToolsWidgetConfigActivity.class);
+                  configIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+                  configIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  PendingIntent configPending = PendingIntent.getActivity(
+                      context, widgetId * 20 + 10, configIntent,
+                      PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  views.setOnClickPendingIntent(R.id.widgetSettings, configPending);
+
+                  for (int i = 0; i < SLOT_COUNT; i++) {
+                      int viewId = tileViewId(i);
+                      String tool = tools[i] == null ? "" : tools[i];
+                      views.setTextViewText(viewId, tool.isEmpty() ? TOOL_LABELS[0] : labelFor(tool));
+                      views.setViewVisibility(viewId, i < visibleCount ? android.view.View.VISIBLE : android.view.View.GONE);
+                      int featuredCount = layoutMode == 1 ? 1 : (layoutMode == 2 ? 2 : 0);
+                      int effectiveHeightDp = i < featuredCount ? 94 : tileHeight;
+                      int effectiveHeightPx = Math.round(effectiveHeightDp * context.getResources().getDisplayMetrics().density);
+                      views.setInt(viewId, "setHeight", effectiveHeightPx);
+                      views.setTextViewTextSize(viewId, android.util.TypedValue.COMPLEX_UNIT_SP,
+                          i < featuredCount ? Math.max(14, tileTextSize) : tileTextSize);
+                      Intent clickIntent;
+                      if (tool.isEmpty()) {
+                          clickIntent = new Intent(context, QuickToolsWidgetConfigActivity.class);
+                          clickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+                          clickIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                      } else {
+                          clickIntent = new Intent(context, MainActivity.class);
+                          clickIntent.putExtra("widget_tool", tool);
+                          clickIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                      }
+                      PendingIntent clickPending = PendingIntent.getActivity(
+                          context, widgetId * 20 + i, clickIntent,
+                          PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                      views.setOnClickPendingIntent(viewId, clickPending);
+                  }
+                  manager.updateAppWidget(widgetId, views);
+              }
+
+              private static String getGpsSummary(Context context) {
+                  if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                      && context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                      return "GPS: برای نمایش مختصات، مجوز موقعیت را در برنامه فعال کنید";
+                  }
+                  try {
+                      LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                      Location best = null;
+                      for (String provider : new String[]{LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER}) {
+                          try {
+                              Location candidate = lm.getLastKnownLocation(provider);
+                              if (candidate != null && (best == null || candidate.getTime() > best.getTime())) best = candidate;
+                          } catch (Exception ignored) {}
+                      }
+                      if (best == null) return "GPS: هنوز موقعیت ذخیره‌شده‌ای در دسترس نیست";
+                      String lat = String.format(java.util.Locale.US, "%.5f", best.getLatitude());
+                      String lon = String.format(java.util.Locale.US, "%.5f", best.getLongitude());
+                      String accuracy = best.hasAccuracy() ? String.format(java.util.Locale.US, "%.1f m", best.getAccuracy()) : "نامشخص";
+                      String altitude = best.hasAltitude() ? String.format(java.util.Locale.US, "%.1f m", best.getAltitude()) : "نامشخص";
+                      return "GPS عرض: " + lat + " طول: " + lon + " ارتفاع: " + altitude + " دقت: " + accuracy;
+                  } catch (Exception e) {
+                      return "GPS: دریافت موقعیت ممکن نیست؛ سرویس موقعیت را بررسی کنید";
+                  }
+              }
+
+              private static int tileViewId(int slot) {
+                  switch (slot) {
+                      case 0: return R.id.widgetTile0;
+                      case 1: return R.id.widgetTile1;
+                      case 2: return R.id.widgetTile2;
+                      case 3: return R.id.widgetTile3;
+                      case 4: return R.id.widgetTile4;
+                      case 5: return R.id.widgetTile5;
+                      case 6: return R.id.widgetTile6;
+                      case 7: return R.id.widgetTile7;
+                      case 8: return R.id.widgetTile8;
+                      case 9: return R.id.widgetTile9;
+                      case 10: return R.id.widgetTile10;
+                      default: return R.id.widgetTile11;
+                  }
+              }
+
+              @Override
+              public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
+                  for (int id : appWidgetIds) updateWidget(context, id);
+              }
+
+              @Override
+              public void onDeleted(Context context, int[] appWidgetIds) {
+                  SharedPreferences.Editor editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit();
+                  for (int id : appWidgetIds) editor.remove("tools_" + id);
+                  editor.apply();
+                  super.onDeleted(context, appWidgetIds);
+              }
+          }
+          EOF_WIDGET_JAVA
+
+          cat > app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java <<'EOF_CONFIG_JAVA'
+          package com.miladgeo.app;
+
+          import android.app.Activity;
+          import android.appwidget.AppWidgetManager;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.graphics.Color;
+          import android.os.Bundle;
+          import android.view.Gravity;
+          import android.view.ViewGroup;
+          import android.widget.ArrayAdapter;
+          import android.widget.Button;
+          import android.widget.LinearLayout;
+          import android.widget.ScrollView;
+          import android.widget.Spinner;
+          import android.widget.TextView;
+
+          public class QuickToolsWidgetConfigActivity extends Activity {
+              private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
+              private final Spinner[] selectors = new Spinner[QuickToolsWidgetProvider.SLOT_COUNT];
+              private Spinner countSelector;
+              private Spinner sizeSelector;
+              private Spinner layoutSelector;
+              private Spinner layoutSelector;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  setResult(RESULT_CANCELED);
+                  appWidgetId = getIntent().getIntExtra(
+                      AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+                  if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+                      finish();
+                      return;
+                  }
+
+                  ScrollView scroll = new ScrollView(this);
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setPadding(dp(18), dp(18), dp(18), dp(18));
+                  root.setBackgroundColor(Color.rgb(247, 250, 247));
+
+                  TextView title = new TextView(this);
+                  title.setText("تنظیم ویجت جعبه‌ابزار نقشه‌بردار");
+                  title.setTextSize(20);
+                  title.setTextColor(Color.rgb(35, 105, 62));
+                  title.setGravity(Gravity.CENTER);
+                  title.setPadding(0, dp(6), 0, dp(12));
+                  root.addView(title, new LinearLayout.LayoutParams(-1, -2));
+
+                  TextView hint = new TextView(this);
+                  hint.setText("تعداد خانه‌ها را از ۶ تا ۱۲ انتخاب کن و اندازهٔ نمایش را تنظیم کن. چهار ابزار اول پیش‌فرض هستند؛ خانه‌های دیگر قابل انتخاب‌اند.");
+                  hint.setTextSize(14);
+                  hint.setTextColor(Color.DKGRAY);
+                  hint.setPadding(0, 0, 0, dp(14));
+                  root.addView(hint, new LinearLayout.LayoutParams(-1, -2));
+
+                  TextView countLabel = new TextView(this);
+                  countLabel.setText("تعداد خانه‌های ویجت (۶ تا ۱۲)");
+                  countLabel.setTextSize(15);
+                  countLabel.setTextColor(Color.rgb(45, 70, 50));
+                  root.addView(countLabel, new LinearLayout.LayoutParams(-1, -2));
+                  countSelector = new Spinner(this);
+                  ArrayAdapter<String> countAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
+                      new String[]{"۶ خانه", "۷ خانه", "۸ خانه", "۹ خانه", "۱۰ خانه", "۱۱ خانه", "۱۲ خانه"});
+                  countAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                  countSelector.setAdapter(countAdapter);
+                  int savedCount = getSharedPreferences(QuickToolsWidgetProvider.PREFS, MODE_PRIVATE).getInt("count_" + appWidgetId, 6);
+                  countSelector.setSelection(Math.max(0, Math.min(6, savedCount - 6)));
+                  root.addView(countSelector, new LinearLayout.LayoutParams(-1, dp(48)));
+
+                  TextView sizeLabel = new TextView(this);
+                  sizeLabel.setText("اندازهٔ خانه‌ها");
+                  sizeLabel.setTextSize(15);
+                  sizeLabel.setTextColor(Color.rgb(45, 70, 50));
+                  root.addView(sizeLabel, new LinearLayout.LayoutParams(-1, -2));
+                  sizeSelector = new Spinner(this);
+                  ArrayAdapter<String> sizeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
+                      new String[]{"فشرده", "استاندارد", "درشت"});
+                  sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                  sizeSelector.setAdapter(sizeAdapter);
+                  int savedSize = getSharedPreferences(QuickToolsWidgetProvider.PREFS, MODE_PRIVATE).getInt("size_" + appWidgetId, 1);
+                  sizeSelector.setSelection(Math.max(0, Math.min(2, savedSize)));
+                  root.addView(sizeSelector, new LinearLayout.LayoutParams(-1, dp(48)));
+
+                  TextView layoutLabel = new TextView(this);
+                  layoutLabel.setText("چیدمان حرفه‌ای کارت‌ها");
+                  layoutLabel.setTextSize(15);
+                  layoutLabel.setTextColor(Color.rgb(45, 70, 50));
+                  root.addView(layoutLabel, new LinearLayout.LayoutParams(-1, -2));
+                  layoutSelector = new Spinner(this);
+                  ArrayAdapter<String> layoutAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
+                      new String[]{"همه کارت‌ها هم‌اندازه", "کارت اول بزرگ، بقیه کوچک", "کارت اول و دوم بزرگ، بقیه کوچک"});
+                  layoutAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                  layoutSelector.setAdapter(layoutAdapter);
+                  int savedLayout = getSharedPreferences(QuickToolsWidgetProvider.PREFS, MODE_PRIVATE).getInt("layout_" + appWidgetId, 0);
+                  layoutSelector.setSelection(Math.max(0, Math.min(2, savedLayout)));
+                  root.addView(layoutSelector, new LinearLayout.LayoutParams(-1, dp(48)));
+
+                  String[] saved = QuickToolsWidgetProvider.readTools(this, appWidgetId);
+                  ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                      this, android.R.layout.simple_spinner_item, QuickToolsWidgetProvider.TOOL_LABELS);
+                  adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+                  for (int i = 0; i < selectors.length; i++) {
+                      TextView label = new TextView(this);
+                      label.setText("خانه " + (i + 1));
+                      label.setTextSize(15);
+                      label.setTextColor(Color.rgb(45, 70, 50));
+                      label.setPadding(0, dp(5), 0, dp(4));
+                      root.addView(label, new LinearLayout.LayoutParams(-1, -2));
+
+                      Spinner spinner = new Spinner(this);
+                      spinner.setAdapter(adapter);
+                      spinner.setSelection(QuickToolsWidgetProvider.indexFor(saved[i]));
+                      selectors[i] = spinner;
+                      root.addView(spinner, new LinearLayout.LayoutParams(-1, dp(48)));
+                  }
+
+                  Button save = new Button(this);
+                  save.setText("ذخیره و ساخت ویجت");
+                  LinearLayout.LayoutParams saveParams = new LinearLayout.LayoutParams(-1, -2);
+                  saveParams.topMargin = dp(18);
+                  root.addView(save, saveParams);
+                  save.setOnClickListener(v -> saveConfiguration());
+
+                  scroll.addView(root);
+                  setContentView(scroll);
+              }
+
+              private void saveConfiguration() {
+                  StringBuilder selected = new StringBuilder();
+                  for (int i = 0; i < selectors.length; i++) {
+                      int position = selectors[i].getSelectedItemPosition();
+                      String id = QuickToolsWidgetProvider.TOOL_IDS[position];
+                      if (i > 0) selected.append(',');
+                      selected.append(id);
+                  }
+                  SharedPreferences prefs = getSharedPreferences(
+                      QuickToolsWidgetProvider.PREFS, MODE_PRIVATE);
+                  int visibleCount = countSelector == null ? 6 : countSelector.getSelectedItemPosition() + 6;
+                  int tileSize = sizeSelector == null ? 1 : sizeSelector.getSelectedItemPosition();
+                  int layoutMode = layoutSelector == null ? 0 : layoutSelector.getSelectedItemPosition();
+                  prefs.edit().putString("tools_" + appWidgetId, selected.toString())
+                      .putInt("count_" + appWidgetId, visibleCount)
+                      .putInt("size_" + appWidgetId, tileSize)
+                      .putInt("layout_" + appWidgetId, layoutMode).apply();
+
+                  QuickToolsWidgetProvider.updateWidget(this, appWidgetId);
+                  Intent result = new Intent();
+                  result.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                  setResult(RESULT_OK, result);
+                  finish();
+              }
+
+              private int dp(int value) {
+                  return Math.round(value * getResources().getDisplayMetrics().density);
+              }
+          }
+          EOF_CONFIG_JAVA
+
+          cat > app/src/main/res/layout/widget_quick_tools.xml <<'EOF_WIDGET_LAYOUT'
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:padding="7dp"
+              android:background="@drawable/widget_bg">
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:gravity="center_vertical"
+                  android:orientation="horizontal"
+                  android:paddingBottom="4dp">
+
+                  <TextView
+                      android:layout_width="0dp"
+                      android:layout_height="wrap_content"
+                      android:layout_weight="1"
+                      android:text="جعبه‌ابزار نقشه‌بردار"
+                      android:textColor="#246B3B"
+                      android:textSize="13sp"
+                      android:textStyle="bold" />
+
+                  <TextView
+                      android:id="@+id/widgetSettings"
+                      android:layout_width="36dp"
+                      android:layout_height="30dp"
+                      android:gravity="center"
+                      android:text="⚙"
+                      android:textColor="#246B3B"
+                      android:textSize="19sp"
+                      android:contentDescription="تنظیم ابزارهای ویجت" />
+              </LinearLayout>
+
+              <TextView
+                  android:id="@+id/widgetGpsStatus"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:paddingStart="6dp"
+                  android:paddingEnd="6dp"
+                  android:paddingTop="3dp"
+                  android:paddingBottom="5dp"
+                  android:text="GPS: در انتظار اطلاعات موقعیت"
+                  android:textColor="#246B3B"
+                  android:textSize="10sp"
+                  android:maxLines="2"
+                  android:ellipsize="end" />
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+                  <TextView android:id="@+id/widgetTile0" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile1" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile2" style="@style/QuickWidgetTile" />
+              </LinearLayout>
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+                  <TextView android:id="@+id/widgetTile3" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile4" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile5" style="@style/QuickWidgetTile" />
+              </LinearLayout>
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+                  <TextView android:id="@+id/widgetTile6" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile7" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile8" style="@style/QuickWidgetTile" />
+              </LinearLayout>
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+                  <TextView android:id="@+id/widgetTile9" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile10" style="@style/QuickWidgetTile" />
+                  <TextView android:id="@+id/widgetTile11" style="@style/QuickWidgetTile" />
+              </LinearLayout>
+          </LinearLayout>
+          EOF_WIDGET_LAYOUT
+
+          # V804 alternate layouts: one featured card, two featured cards, or uniform grid.
+          python3 - <<'PYLAYOUT'
+          from pathlib import Path
+          base = Path('app/src/main/res/layout/widget_quick_tools.xml').read_text()
+          start = base.index('              <LinearLayout\n                  android:layout_width="match_parent"\n                  android:layout_height="wrap_content"\n                  android:orientation="horizontal">\n                  <TextView android:id="@+id/widgetTile0"')
+          end = base.index('          </LinearLayout>\n          EOF_WIDGET_LAYOUT') if '          </LinearLayout>\n          EOF_WIDGET_LAYOUT' in base else -1
+          # Extract common header and footer around the 12 tile views.
+          tile_start = base.index('              <LinearLayout', base.index('@+id/widgetGpsStatus'))
+          tail = base.rfind('          </LinearLayout>')
+          header, footer = base[:tile_start], base[tail:]
+          def row(ids, weights=None):
+              bits = ['              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">']
+              for n in ids:
+                  style = '@style/QuickWidgetTile'
+                  if weights and n in weights:
+                      style = '@style/QuickWidgetFeaturedTile'
+                  bits.append(f'                  <TextView android:id="@+id/widgetTile{n}" style="{style}" />')
+              bits.append('              </LinearLayout>')
+              return '\n'.join(bits)
+          ids = list(range(12))
+          first = header + row([0], {0}) + '\n' + '\n'.join(row(ids[i:i+3]) for i in range(1,12,3)) + '\n' + footer
+          two = header + row([0,1], {0,1}) + '\n' + '\n'.join(row(ids[i:i+3]) for i in range(2,12,3)) + '\n' + footer
+          Path('app/src/main/res/layout/widget_quick_tools_first_large.xml').write_text(first)
+          Path('app/src/main/res/layout/widget_quick_tools_two_large.xml').write_text(two)
+          PYLAYOUT
+
+          mkdir -p app/src/main/res/values
+          cat > app/src/main/res/values/widget_styles.xml <<'EOF_WIDGET_STYLES'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="QuickWidgetTile">
+                  <item name="android:layout_width">0dp</item>
+                  <item name="android:layout_height">62dp</item>
+                  <item name="android:layout_weight">1</item>
+                  <item name="android:layout_margin">3dp</item>
+                  <item name="android:gravity">center</item>
+                  <item name="android:padding">4dp</item>
+                  <item name="android:background">@drawable/widget_tile_bg</item>
+                  <item name="android:textColor">#245C36</item>
+                  <item name="android:textSize">11sp</item>
+                  <item name="android:maxLines">2</item>
+                  <item name="android:ellipsize">end</item>
+              </style>
+              <style name="QuickWidgetFeaturedTile" parent="QuickWidgetTile">
+                  <item name="android:layout_width">0dp</item>
+                  <item name="android:layout_height">94dp</item>
+                  <item name="android:layout_weight">1</item>
+                  <item name="android:textSize">14sp</item>
+                  <item name="android:padding">8dp</item>
+              </style>
+          </resources>
+          EOF_WIDGET_STYLES
+
+          cat > app/src/main/res/drawable/widget_bg.xml <<'EOF_WIDGET_BG'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <solid android:color="#F7FBF7" />
+              <stroke android:width="1dp" android:color="#C7DEC9" />
+              <corners android:radius="14dp" />
+          </shape>
+          EOF_WIDGET_BG
+
+          cat > app/src/main/res/drawable/widget_tile_bg.xml <<'EOF_WIDGET_TILE_BG'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <solid android:color="#E7F3E9" />
+              <stroke android:width="1dp" android:color="#B8D7BE" />
+              <corners android:radius="10dp" />
+          </shape>
+          EOF_WIDGET_TILE_BG
+
+          cat > app/src/main/res/xml/quick_tools_widget_info.xml <<'EOF_WIDGET_INFO'
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="220dp"
+              android:minHeight="145dp"
+              android:minResizeWidth="120dp"
+              android:minResizeHeight="100dp"
+              android:maxResizeWidth="500dp"
+              android:maxResizeHeight="360dp"
+              android:updatePeriodMillis="0"
+              android:initialLayout="@layout/widget_quick_tools"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen"
+              android:configure="com.miladgeo.app.QuickToolsWidgetConfigActivity"
+              android:description="@string/quick_tools_widget_description" />
+          EOF_WIDGET_INFO
+
+          cat > app/src/main/res/values/widget_strings.xml <<'EOF_WIDGET_STRINGS'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="quick_tools_widget_description">میان‌برهای قابل تنظیم جعبه‌ابزار نقشه‌بردار</string>
+          </resources>
+          EOF_WIDGET_STRINGS
+
+          python3 - <<'PY_WIDGET_PATCH'
+          from pathlib import Path
+          manifest_path = Path('app/src/main/AndroidManifest.xml')
+          manifest = manifest_path.read_text(encoding='utf-8')
+          if 'QuickToolsWidgetProvider' not in manifest:
+              receiver = '''
+                  <activity
+                      android:name=".QuickToolsWidgetConfigActivity"
+                      android:exported="true"
+                      android:label="تنظیم ویجت" />
+                  <receiver
+                      android:name=".QuickToolsWidgetProvider"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.appwidget.provider"
+                          android:resource="@xml/quick_tools_widget_info" />
+                  </receiver>
+              '''
+              manifest = manifest.replace('    </application>', receiver + '\n            </application>')
+              manifest_path.write_text(manifest, encoding='utf-8')
+
+          java_path = Path('app/src/main/java/com/miladgeo/app/MainActivity.java')
+          java = java_path.read_text(encoding='utf-8')
+          if 'pendingWidgetTool' not in java:
+              java = java.replace(
+                  '    private GeolocationPermissions.Callback pendingGeoCallback;',
+                  '    private GeolocationPermissions.Callback pendingGeoCallback;\n    private String pendingWidgetTool;'
+              )
+              java = java.replace(
+                  '        super.onCreate(savedInstanceState);\n        webView = new WebView(this);',
+                  '        super.onCreate(savedInstanceState);\n        pendingWidgetTool = getIntent().getStringExtra("widget_tool");\n        webView = new WebView(this);'
+              )
+              marker = '''            @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          return openExternalIfNeeded(request == null || request.getUrl() == null ? null : request.getUrl().toString());
+                      }
+                  });'''
+              replacement = '''            @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          return openExternalIfNeeded(request == null || request.getUrl() == null ? null : request.getUrl().toString());
+                      }
+                      @Override
+                      public void onPageFinished(WebView view, String url) {
+                          super.onPageFinished(view, url);
+                          if (pendingWidgetTool != null && !pendingWidgetTool.isEmpty()) {
+                              view.postDelayed(() -> handlePendingWidgetTool(), 900);
+                          }
+                      }
+                  });'''
+              if marker not in java:
+                  raise SystemExit('Could not find WebViewClient insertion point in MainActivity.java')
+              java = java.replace(marker, replacement, 1)
+              method_marker = '    private void launchCameraForWebView() {'
+              helper = r'''    private void handlePendingWidgetTool() {
+                  final String tool = pendingWidgetTool;
+                  if (tool == null || tool.isEmpty() || webView == null) return;
+                  pendingWidgetTool = null;
+                  String js = "(function(){try{var k=" + JSONObject.quote(tool) + ";"
+                      + "var d={"
+                      + "'leica5':['شبیه ساز لایکا','LEICA TS02 V36'],"
+                      + "'measure':['برداشت','برداشت واقعی'],"
+                      + "'stakeout':['پیاده‌سازی','پیاده سازی'],"
+                      + "'topography':['توپو و ترازیابی','ترازیابی','توپوگرافی'],"
+                      + "'txt':['ورودی تکست','TXT'], 'excel':['ورودی اکسل','اکسل'],"
+                      + "'minicad':['مینی اتوکد','Mini Autocad'],"
+                      + "'coordinates':['تبدیل مختصات'], 'units':['تبدیل واحد'],"
+                      + "'calculator':['ماشین حساب','ماشین‌حساب'], 'googleearth':['گوگل ارث','ترسیم گوگل ارث'],"
+                      + "'direction':['مرکز جهت‌یابی','مرکز جهت یابی'],"
+                      + "'flashlight':['چراغ‌قوه','چراغ قوه'], 'compass':['قطب‌نما','قطب نما'],"
+                      + "'speedometer':['سرعت‌سنج','سرعت سنج'], 'qibla':['قبله‌نما','قبله نما'], 'level':['تراز']};"
+                      + "function n(s){return (s||'').replace(/[\\u200c\\s]+/g,' ').trim().toLowerCase();}"
+                      + "var w=(d[k]||[]).map(n);"
+                      + "var ids={measure:'realMeasure',stakeout:'realStake',topography:'leveling',txt:'points',excel:'excel',minicad:'graphicmap',coordinates:'converter',units:'units',calculator:'menu16',googleearth:'menu17',direction:'menu18'};"
+                      + "if(k==='leica5'){var lc=document.querySelector('.leica-sim-card.leica-v36-card');if(lc){lc.click();return;}}"
+                      + "if(ids[k]){var pg=document.getElementById(ids[k]);if(pg){if(window.goPage)window.goPage(ids[k]);else{var b=document.querySelector('[onclick*=\"'+ids[k]+'\"]');if(b)b.click();}return;}}"
+                      + "if(k==='flashlight'||k==='compass'||k==='speedometer'||k==='qibla'||k==='level'){if(window.goPage)window.goPage('menu18');setTimeout(function(){if(window.m18OpenDirect){var c=document.querySelector('[onclick*=\"'+({'flashlight':'m18PanelFlash','compass':'m18PanelCompass','speedometer':'m18PanelSpeed','qibla':'m18PanelQibla','level':'m18PanelLevel'}[k])+'\"]');if(c)window.m18OpenDirect(c);}},500);return;}"
+                      + "var a=[].slice.call(document.querySelectorAll('button,a,[role=button],[onclick],.menu-card,.menu-item,.tool-card,.card,div,section'));"
+                      + "a=a.filter(function(e){var t=n(e.innerText||e.textContent);return t&&t.length<100&&w.some(function(x){return x&&t.indexOf(x)>=0;});});"
+                      + "a.sort(function(x,y){return (x.innerText||x.textContent||'').length-(y.innerText||y.textContent||'').length;});"
+                      + "if(a.length){var e=a[0].closest('button,a,[role=button],[onclick],.menu-card,.menu-item,.tool-card,.card')||a[0];e.click();}"
+                      + "}catch(e){}})();";
+                  webView.evaluateJavascript(js, null);
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  pendingWidgetTool = intent.getStringExtra("widget_tool");
+                  if (pendingWidgetTool != null && webView != null) {
+                      webView.postDelayed(() -> handlePendingWidgetTool(), 650);
+                  }
+              }
+
+              private void launchCameraForWebView() {'''
+              if method_marker not in java:
+                  raise SystemExit('Could not find camera method insertion point in MainActivity.java')
+              java = java.replace(method_marker, helper, 1)
+              java_path.write_text(java, encoding='utf-8')
+          PY_WIDGET_PATCH
+
+      - name: Verify generated project
+        run: |
+          set -euo pipefail
+          grep -q 'versionCode 804' app/build.gradle
+          grep -q "versionName '804.0'" app/build.gradle
+          grep -q 'QuickToolsWidgetProvider' app/src/main/AndroidManifest.xml
+          grep -q 'quick_tools_widget_info' app/src/main/AndroidManifest.xml
+          grep -q 'class QuickToolsWidgetProvider' app/src/main/java/com/miladgeo/app/QuickToolsWidgetProvider.java
+          grep -q 'class QuickToolsWidgetConfigActivity' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
+          grep -q 'pendingWidgetTool' app/src/main/java/com/miladgeo/app/MainActivity.java
+          test -s app/src/main/res/layout/widget_quick_tools.xml
+          test -s app/src/main/res/layout/widget_quick_tools_first_large.xml
+          test -s app/src/main/res/layout/widget_quick_tools_two_large.xml
+          test -s app/src/main/res/xml/quick_tools_widget_info.xml
+          test -s app/src/main/res/values/widget_styles.xml
+          test -s app/src/main/res/values/widget_strings.xml
+          test -s app/src/main/res/drawable/widget_bg.xml
+          test -s app/src/main/res/drawable/widget_tile_bg.xml
+          grep -q "versionName '804.0'" app/build.gradle
+          grep -q "applicationId 'com.miladgeo.abzarnaghshebardar600'" app/build.gradle
+          grep -q 'android.permission.CAMERA' app/src/main/AndroidManifest.xml
+          grep -q 'androidx.core.content.FileProvider' app/src/main/AndroidManifest.xml
+          grep -q 'CameraManager' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'setTorch' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'function m18ToggleFlash' app/src/main/assets/index.html
+          grep -q 'function m18StartMagnify' app/src/main/assets/index.html
+          grep -q 'toggleTorch' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'class MainActivity' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'class PdfReaderActivity' app/src/main/java/com/miladgeo/app/PdfReaderActivity.java
+          python3 - <<'PY_CHECK'
+          from pathlib import Path
+          java = Path('app/src/main/java/com/miladgeo/app/MainActivity.java').read_text(encoding='utf-8')
+          if java.count('{') != java.count('}'):
+              raise SystemExit('MainActivity.java has unbalanced braces')
+          if java.count('(') != java.count(')'):
+              raise SystemExit('MainActivity.java has unbalanced parentheses')
+          manifest = Path('app/src/main/AndroidManifest.xml').read_text(encoding='utf-8')
+          for required in ('android.permission.INTERNET','android.permission.CAMERA','androidx.core.content.FileProvider','.MainActivity','.PdfReaderActivity'):
+              if required not in manifest:
+                  raise SystemExit(f'Missing manifest item: {required}')
+          PY_CHECK
+          test -s index707.html
+          test -s indexv40.html
+          test -s app/src/main/assets/index.html
+          test -s app/src/main/assets/Indexcad20.html
+          test -s app/src/main/assets/indexv40.html
+          test -s app/src/main/res/drawable/abzarnaghshebardar573.jpg
+          test -s app/src/main/AndroidManifest.xml
+          test -s app/src/main/java/com/miladgeo/app/MainActivity.java
+          test -s app/src/main/java/com/miladgeo/app/PdfReaderActivity.java
+          test -s app/src/main/res/xml/file_paths.xml
+          test -s geomatic-pro-upload.jks
+          grep -q '9 — MINI AUTOCAD' app/src/main/assets/index.html
+          grep -q 'چراغ‌قوه' app/src/main/assets/index.html
+          grep -q 'ذره‌بین' app/src/main/assets/index.html
+          cmp -s index707.html app/src/main/assets/index.html
+          grep -q "window.location.href='Indexcad20.html'" app/src/main/assets/index.html
+          grep -q 'Mini Autocad' app/src/main/assets/index.html
+          cmp -s indexv40.html app/src/main/assets/indexv40.html
+
+      - name: Build Release APK and AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          gradle --version
+          gradle clean assembleRelease bundleRelease --stacktrace --no-daemon
+
+      - name: Verify APK
+        run: |
+          test -s app/build/outputs/apk/release/app-release.apk
+          ls -lh app/build/outputs/apk/release/app-release.apk
+
+      - name: Verify AAB
+        run: |
+          test -s app/build/outputs/bundle/release/app-release.aab
+          ls -lh app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbzarNaghshebardar-V804-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Google Play AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbzarNaghshebardar-V804-GooglePlay-AAB
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
