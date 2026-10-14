@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071923"><title>بی‌سیم واقعی دو نفره | میلادژئو</title>
+<style>
+:root{--bg:#071923;--panel:#102a36;--line:#28505b;--green:#38e08b;--text:#eef8fb;--muted:#a3bbc3;--orange:#ffbf69;--red:#ff7378}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#153745 0%,var(--bg) 60%);font-family:Tahoma,Arial,sans-serif;color:var(--text);min-height:100vh}
+.app{max-width:560px;margin:auto;padding:16px 14px 28px}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0 16px}.brand{color:var(--green);font-size:11px;font-weight:bold;letter-spacing:.5px}h1{font-size:23px;margin:6px 0}.pill{font-size:10px;color:var(--muted);border:1px solid var(--line);padding:7px 9px;border-radius:99px;white-space:nowrap}
+.card{background:linear-gradient(145deg,var(--panel),#0b222c);border:1px solid var(--line);border-radius:19px;padding:15px;margin:12px 0}.status{display:flex;gap:9px;align-items:center;background:#0b222c;border:1px solid var(--line);padding:12px;border-radius:13px;font-size:12px;color:var(--muted)}.dot{width:9px;height:9px;border-radius:50%;background:var(--orange);flex-shrink:0}.sectiontitle{font-size:15px;margin:0 0 10px}.muted{color:var(--muted);font-size:12px;line-height:1.9}.roles{display:grid;grid-template-columns:1fr 1fr;gap:9px}.role{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0a2029;color:var(--text);font:inherit;text-align:center;cursor:pointer}.role.active{border-color:var(--green);background:#113a32}.field{margin:10px 0}.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px}textarea{width:100%;min-height:100px;resize:vertical;background:#061820;border:1px solid var(--line);border-radius:11px;padding:10px;color:#dff6ee;font:11px monospace;direction:ltr;text-align:left}button{cursor:pointer}.btn{border:1px solid var(--line);border-radius:11px;background:#173744;color:var(--text);padding:11px 12px;font:inherit;font-size:12px}.btn.primary{background:var(--green);color:#042819;border-color:var(--green);font-weight:bold}.btn:disabled{opacity:.4;cursor:not-allowed}.btnrow{display:flex;gap:8px;flex-wrap:wrap}.btnrow .btn{flex:1;min-width:125px}.pttarea{text-align:center;padding:14px 0 5px}.ptt{width:174px;height:174px;border-radius:50%;border:8px solid #24554f;background:radial-gradient(circle at 35% 25%,#56f5a6,#18a965 70%,#087b49);color:#042719;box-shadow:0 0 0 8px #38e08b12,0 12px 30px #0005,inset 0 3px 8px #ffffff55;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:bold;touch-action:none;user-select:none}.ptt.talking{background:radial-gradient(circle at 35% 25%,#ffd17f,#ff9d42 70%,#c76a20);border-color:#81552c;color:#351900;transform:scale(.97)}.ptt svg{width:37px;height:37px}.ptt strong{font-size:17px}.ptt small{font-size:10px;font-weight:normal}.person{display:flex;justify-content:space-between;align-items:center;gap:10px}.person b{font-size:14px}.tag{font-size:10px;color:var(--muted)}.notice{padding:11px;border:1px solid #735a2e;background:#302719;color:#ffe0a6;border-radius:12px;font-size:11px;line-height:1.9;margin-top:10px}.good{color:var(--green)}.bad{color:var(--red)}.footer{text-align:center;color:#688791;font-size:10px;padding:12px}
+</style></head>
+<body><main class="app">
+<header class="top"><div><div class="brand">MILADGEO • OFFLINE FIELD RADIO</div><h1>بی‌سیم کارگاهی</h1></div><span class="pill">نسخه آزمایشی ۲ نفره</span></header>
+<div class="status"><span class="dot" id="dot"></span><span id="status">قطع است؛ هر دو گوشی باید به یک هات‌اسپات وصل باشند.</span></div>
+<section class="card">
+<h2 class="sectiontitle">۱) انتخاب نقش گوشی</h2>
+<div class="roles"><button class="role active" id="callerRole">گوشی اول • ایجاد اتصال</button><button class="role" id="calleeRole">گوشی دوم • پیوستن</button></div>
+<p class="muted">هر دو نفر همین فایل را در مرورگر باز کنند. ابتدا روی گوشی اول «ساخت پیشنهاد اتصال» بزنید. متن تولیدشده را به گوشی دوم منتقل کنید؛ گوشی دوم پاسخ را بسازد و آن را به گوشی اول برگرداند. این تبادل فقط برای برقراری اولیه است؛ بعد از اتصال، صحبت زنده انجام می‌شود.</p>
+</section>
+<section class="card">
+<h2 class="sectiontitle">۲) برقراری اتصال محلی</h2>
+<div id="callerPanel">
+<div class="btnrow"><button class="btn primary" id="makeOffer">ساخت پیشنهاد اتصال</button><button class="btn" id="applyAnswer">ثبت پاسخ دریافتی</button></div>
+<div class="field"><label>پیشنهاد اتصال — این متن را برای گوشی دوم بفرستید</label><textarea id="offerOut" placeholder="پس از ساخت پیشنهاد، متن اینجا ظاهر می‌شود"></textarea><div class="btnrow"><button class="btn" id="copyOffer">کپی پیشنهاد</button></div></div>
+<div class="field"><label>پاسخی که از گوشی دوم دریافت کرده‌اید</label><textarea id="answerIn" placeholder="متن پاسخ را اینجا وارد کنید"></textarea></div>
+</div>
+<div id="calleePanel" hidden>
+<div class="field"><label>پیشنهاد دریافتی از گوشی اول را اینجا وارد کنید</label><textarea id="offerIn" placeholder="متن پیشنهاد را اینجا وارد کنید"></textarea></div>
+<div class="btnrow"><button class="btn primary" id="makeAnswer">ساخت پاسخ اتصال</button><button class="btn" id="copyAnswer">کپی پاسخ</button></div>
+<div class="field"><label>پاسخ اتصال — این متن را به گوشی اول برگردانید</label><textarea id="answerOut" placeholder="پس از ساخت پاسخ، متن اینجا ظاهر می‌شود"></textarea></div>
+</div>
+<div class="notice">برای شبکه کاملاً آفلاین از سرورهای اینترنتی استفاده نمی‌شود. اتصال مستقیم به پشتیبانی مرورگر و اجازه میکروفن وابسته است. در برخی مرورگرها بازکردن فایل HTML به‌صورت محلی اجازه میکروفن نمی‌دهد؛ در آن حالت باید آن را از یک مبدأ امن/محلی سازگار باز کنید.</div>
+</section>
+<section class="card">
+<div class="person"><b>۳) دکمه صحبت زنده</b><span class="tag" id="connectionTag">منتظر اتصال</span></div>
+<div class="pttarea"><button class="ptt" id="ptt" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg><strong id="pttLabel">برای صحبت نگه دار</strong><small>PUSH TO TALK</small></button><p class="muted" id="pttHelp">پس از اتصال موفق و اجازه میکروفن، دکمه فعال می‌شود.</p></div>
+<audio id="remoteAudio" autoplay playsinline></audio>
+<div class="btnrow"><button class="btn" id="micSetup">فعال‌سازی میکروفن</button><button class="btn" id="hangup">قطع اتصال</button></div>
+<p class="muted" id="audioStatus">صدای دریافتی از گوشی مقابل اینجا پخش می‌شود.</p>
+</section>
+<div class="footer">MiladGeo • ارتباط صوتی مستقیم در شبکه محلی</div>
+</main>
+<script>
+let role='caller', pc=null, localStream=null, localTrack=null, remoteStream=null, connected=false, pressed=false;
+const $=id=>document.getElementById(id);
+function setStatus(msg,good=false){$('status').textContent=msg;$('dot').style.background=good?'var(--green)':'var(--orange)';}
+function setRole(r){role=r;$('callerRole').classList.toggle('active',r==='caller');$('calleeRole').classList.toggle('active',r==='callee');$('callerPanel').hidden=r!=='caller';$('calleePanel').hidden=r!=='callee';}
+$('callerRole').onclick=()=>setRole('caller');$('calleeRole').onclick=()=>setRole('callee');
+function waitIce(pc){return new Promise(resolve=>{if(pc.iceGatheringState==='complete')return resolve();const timeout=setTimeout(()=>{pc.removeEventListener('icegatheringstatechange',check);resolve()},12000);function check(){if(pc.iceGatheringState==='complete'){clearTimeout(timeout);pc.removeEventListener('icegatheringstatechange',check);resolve()}}pc.addEventListener('icegatheringstatechange',check)})}
+function makePC(){
+ if(pc){try{pc.close()}catch(e){}}
+ pc=new RTCPeerConnection({iceServers:[]});remoteStream=new MediaStream();$('remoteAudio').srcObject=remoteStream;
+ pc.ontrack=e=>{e.streams[0]?.getTracks().forEach(t=>{if(!remoteStream.getTracks().includes(t))remoteStream.addTrack(t)});$('remoteAudio').play().catch(()=>{});};
+ pc.onconnectionstatechange=()=>{const s=pc.connectionState;if(s==='connected'){connected=true;$('ptt').disabled=!localTrack;$('connectionTag').textContent='متصل';$('connectionTag').className='tag good';setStatus('اتصال مستقیم برقرار است؛ در صورت آماده بودن میکروفن می‌توانید صحبت کنید.',true);$('pttHelp').textContent=localTrack?'برای صحبت، دکمه سبز را نگه دارید.':'ابتدا دکمه «فعال‌سازی میکروفن» را بزنید.'}else if(s==='failed'||s==='disconnected'||s==='closed'){connected=false;$('ptt').disabled=true;$('connectionTag').textContent='قطع / ناموفق';setStatus('اتصال برقرار نیست؛ هات‌اسپات و مراحل تبادل را بررسی کنید.');}};
+ // Create the audio negotiation channel without requiring microphone permission first.
+ pc.addTransceiver('audio',{direction:'sendrecv'});
+ if(localTrack){const sender=pc.getSenders().find(x=>x.track&&x.track.kind==='audio')||pc.getSenders().find(x=>!x.track);if(sender)sender.replaceTrack(localTrack).catch(()=>{});}
+}
+async function getMic(){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw Error('این صفحه اجازه دسترسی به میکروفن ندارد؛ آن را با آدرس HTTPS در Chrome باز کنید.');if(localStream)return;localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});localTrack=localStream.getAudioTracks()[0];localTrack.enabled=false;if(pc){const sender=pc.getSenders().find(x=>x.track&&x.track.kind==='audio')||pc.getSenders().find(x=>!x.track);if(sender)await sender.replaceTrack(localTrack);else pc.addTrack(localTrack,localStream);} $('audioStatus').textContent='میکروفن آماده است؛ تا زمان نگه‌داشتن دکمه، صدایی ارسال نمی‌شود.';$('ptt').disabled=!connected;}
+$('micSetup').onclick=async()=>{try{await getMic();setStatus('میکروفن آماده است. اتصال دو گوشی را برقرار کنید.',true)}catch(e){setStatus('دسترسی میکروفن ناموفق بود: '+e.message);$('audioStatus').textContent='جزئیات خطا: '+e.message+' — برای دسترسی میکروفن معمولاً HTTPS لازم است.'}};
+$('makeOffer').onclick=async()=>{try{makePC();setStatus('در حال ساخت پیشنهاد اتصال…');const offer=await pc.createOffer();await pc.setLocalDescription(offer);setStatus('در حال آماده‌سازی اطلاعات اتصال…');await waitIce(pc);$('offerOut').value=JSON.stringify(pc.localDescription);setStatus('پیشنهاد آماده است؛ متن را به گوشی دوم منتقل کنید.',true)}catch(e){setStatus('ساخت پیشنهاد ناموفق بود: '+e.message)}};
+$('makeAnswer').onclick=async()=>{try{const raw=$('offerIn').value.trim();if(!raw)throw Error('ابتدا متن پیشنهاد گوشی اول را وارد کنید.');makePC();await pc.setRemoteDescription(JSON.parse(raw));const ans=await pc.createAnswer();await pc.setLocalDescription(ans);setStatus('در حال آماده‌سازی پاسخ اتصال…');await waitIce(pc);$('answerOut').value=JSON.stringify(pc.localDescription);setStatus('پاسخ آماده است؛ آن را به گوشی اول برگردانید. برای صحبت، میکروفن را جداگانه فعال کنید.',true)}catch(e){setStatus('ساخت پاسخ ناموفق بود: '+e.message)}};
+$('applyAnswer').onclick=async()=>{try{if(!pc)throw Error('ابتدا در گوشی اول پیشنهاد بسازید.');const raw=$('answerIn').value.trim();if(!raw)throw Error('متن پاسخ گوشی دوم را وارد کنید.');await pc.setRemoteDescription(JSON.parse(raw));setStatus('پاسخ ثبت شد؛ در حال اتصال مستقیم…')}catch(e){setStatus('ثبت پاسخ ناموفق بود: '+e.message)}};
+async function copy(id){try{await navigator.clipboard.writeText($(id).value);setStatus('متن کپی شد.',true)}catch(e){$(id).focus();$(id).select();setStatus('کپی خودکار ممکن نیست؛ متن را انتخاب و کپی کنید.')}}$('copyOffer').onclick=()=>copy('offerOut');$('copyAnswer').onclick=()=>copy('answerOut');
+function startPTT(e){if(!connected||!localTrack)return;e?.preventDefault();pressed=true;localTrack.enabled=true;$('ptt').classList.add('talking');$('pttLabel').textContent='در حال صحبت…';$('pttHelp').textContent='صدای شما در حال ارسال زنده است.'}
+function stopPTT(){if(!pressed)return;pressed=false;if(localTrack)localTrack.enabled=false;$('ptt').classList.remove('talking');$('pttLabel').textContent='برای صحبت نگه دار';$('pttHelp').textContent='دکمه را نگه دارید تا صحبت کنید؛ با رها کردن، میکروفن ارسال قطع می‌شود.'}
+$('ptt').addEventListener('pointerdown',startPTT);['pointerup','pointercancel','pointerleave'].forEach(ev=>$('ptt').addEventListener(ev,stopPTT));$('ptt').addEventListener('contextmenu',e=>e.preventDefault());
+$('hangup').onclick=()=>{stopPTT();if(pc){pc.close();pc=null}connected=false;$('ptt').disabled=true;$('connectionTag').textContent='منتظر اتصال';if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;localTrack=null}setStatus('اتصال قطع شد. برای شروع دوباره، مراحل اتصال را از اول انجام دهید.');};
+</script></body></html>
