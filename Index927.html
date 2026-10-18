@@ -11274,7 +11274,34 @@ document.getElementById('miladBotChatNew').addEventListener('click',function(){h
 if(quick)quick.addEventListener('click',function(e){var btn=e.target.closest('button[data-prompt]');if(!btn)return;input.value=btn.getAttribute('data-prompt')||'';form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));});
 var fileBtn=document.getElementById('miladBotAnalyzeFile'),fileInput=document.getElementById('miladBotFileInput'),attachBtn=document.getElementById('miladBotAttach');if(attachBtn&&fileInput){attachBtn.addEventListener('click',function(){fileInput.click()});}if(fileBtn&&fileInput){
  fileBtn.addEventListener('click',function(){fileInput.click()});
- function addDownload(label,blob,name){name=String(name||'MiladGeo_AI_export.bin').replace(/[\\/:*?"<>|]+/g,'_');var a=document.createElement('a');a.href='#';a.textContent='⬇ '+label;a.setAttribute('role','button');a.style.cssText='display:inline-block;margin:5px 4px;padding:8px 10px;border-radius:9px;background:#e6f3e3;border:1px solid #9abf93;color:#24572c;font-weight:800;text-decoration:none;direction:rtl';a.addEventListener('click',function(ev){ev.preventDefault();try{if(typeof saveBlobLikeMenu17==='function')saveBlobLikeMenu17(name,blob);else if(typeof saveBlobFile==='function')saveBlobFile(name,blob);else{var url=URL.createObjectURL(blob),tmp=document.createElement('a');tmp.href=url;tmp.download=name;tmp.style.display='none';document.body.appendChild(tmp);tmp.click();setTimeout(function(){URL.revokeObjectURL(url);tmp.remove();},10000);}}catch(err){console.error('AI file download failed',err);if(typeof showToast==='function')showToast('دانلود فایل ناموفق بود');}});var d=document.createElement('div');d.className='mb-chat-msg bot';d.dir='rtl';d.appendChild(a);msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+ function addDownload(label,blob,name){
+  name=String(name||'MiladGeo_AI_export.bin').replace(/[\\/:*?"<>|]+/g,'_');
+  var a=document.createElement('button');a.type='button';a.textContent='⬇ '+label;a.setAttribute('aria-label',label);
+  a.style.cssText='display:inline-block;margin:5px 4px;padding:10px 12px;min-height:42px;border-radius:9px;background:#e6f3e3;border:1px solid #9abf93;color:#24572c;font-weight:800;text-decoration:none;direction:rtl;cursor:pointer;touch-action:manipulation';
+  a.addEventListener('click',function(ev){
+   ev.preventDefault();ev.stopPropagation();
+   if(!blob){console.error('AI file download: missing Blob',name);if(typeof showToast==='function')showToast('فایل خروجی ساخته نشده است');return;}
+   try{
+    /* Use the same public save bridge as the working Excel/export flow. */
+    if(typeof window.miladgeoDirectSaveBlob==='function'){
+      window.miladgeoDirectSaveBlob(name,blob);
+      return;
+    }
+    if(typeof window.miladgeoExportBlob==='function'){
+      window.miladgeoExportBlob(name,blob);
+      return;
+    }
+   }catch(err){console.error('AI native download failed',err);}
+   try{
+    var url=URL.createObjectURL(blob),tmp=document.createElement('a');
+    tmp.href=url;tmp.download=name;tmp.rel='noopener';tmp.style.cssText='position:fixed;left:-9999px;top:0';
+    document.body.appendChild(tmp);tmp.click();
+    setTimeout(function(){try{URL.revokeObjectURL(url);}catch(e){}try{tmp.remove();}catch(e){}},15000);
+    if(typeof showToast==='function')showToast('درخواست ذخیره فایل ارسال شد؛ اگر پنجره‌ای باز نشد، دسترسی ذخیره‌سازی WebView را بررسی کن.');
+   }catch(err){console.error('AI file download failed',err);if(typeof showToast==='function')showToast('دانلود فایل ناموفق بود');}
+  });
+  var d=document.createElement('div');d.className='mb-chat-msg bot';d.dir='rtl';d.appendChild(a);msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;
+ }
  function splitTextRows(text){return String(text||'').replace(/^\uFEFF/,'').split(/\r?\n/).filter(function(x){return x.trim()!==''}).map(function(line){var sep=(line.indexOf('\t')>=0?'\t':(line.indexOf(';')>=0?';':(line.indexOf(',')>=0?',':null)));return sep?line.split(sep).map(function(v){return v.trim()}):line.trim().split(/\s+/)});}
  function ensureMiladGeoXLSX(){return new Promise(function(resolve){var X=window.XLSX;if(X&&X.read&&X.utils&&X.utils.sheet_to_json){resolve(X);return;}var urls=['https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'];var idx=0;function next(){if(window.XLSX&&window.XLSX.read&&window.XLSX.utils&&window.XLSX.utils.sheet_to_json){resolve(window.XLSX);return;}if(idx>=urls.length){resolve(null);return;}var old=document.getElementById('miladgeoExcelFallbackLoader');if(old&&old.parentNode)old.parentNode.removeChild(old);var sc=document.createElement('script');sc.id='miladgeoExcelFallbackLoader';sc.src=urls[idx++];sc.onload=function(){if(window.XLSX&&window.XLSX.read&&window.XLSX.utils&&window.XLSX.utils.sheet_to_json)resolve(window.XLSX);else next();};sc.onerror=next;document.head.appendChild(sc);}next();});}
 function makeXlsx(rows){var X=window.XLSX||(typeof XLSX!=='undefined'?XLSX:null);if(X&&X.utils&&X.write){window.XLSX=X;var wb=X.utils.book_new(),ws=X.utils.aoa_to_sheet(rows);X.utils.book_append_sheet(wb,ws,'Converted');return {data:X.write(wb,{bookType:'xlsx',type:'array'}),legacy:false};}/* Offline fallback: Excel 2003 SpreadsheetML, no external library required. */function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}var xml='<?xml version="1.0" encoding="UTF-8"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Converted"><Table>';rows.forEach(function(row){xml+='<Row>';row.forEach(function(v){var n=String(v==null?'':v).trim(),numeric=n!==''&&isFinite(Number(n));xml+='<Cell><Data ss:Type="'+(numeric?'Number':'String')+'">'+esc(numeric?Number(n):v)+'</Data></Cell>';});xml+='</Row>';});xml+='</Table></Worksheet></Workbook>';return {data:xml,legacy:true};}
