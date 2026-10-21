@@ -5,8 +5,8 @@ on:
   push:
     paths:
       - 'Index880.html'
-      - 'Index1001.html'
-      - 'index1001.html'
+      - 'Index1002.html'
+      - 'index1002.html'
       - 'Index885robot13.html'
       - 'Index885robot14.html'
       - 'MiladmarketV58.html'
