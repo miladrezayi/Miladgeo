@@ -1,0 +1,196 @@
+name: Build Sarresid Houshmand Mohandes Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'SarresidMohandes4.html'
+      - 'Sarresidmohandes.png'
+      - '.github/workflows/SarresidMohandes4.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Restore existing release signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then echo "KEYSTORE_BASE64 secret is missing"; exit 1; fi
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > geomatic-pro-upload.jks
+          test -s geomatic-pro-upload.jks
+
+      - name: Validate HTML, icon and signing secrets
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -s SarresidMohandes4.html
+          test -s Sarresidmohandes.png
+          test -s geomatic-pro-upload.jks
+          test -n "${KEYSTORE_PASSWORD:-}" || { echo "KEYSTORE_PASSWORD secret is missing"; exit 1; }
+          test -n "${KEY_PASSWORD:-}" || { echo "KEY_PASSWORD secret is missing"; exit 1; }
+          python3 - <<'PY_CHECK'
+          from pathlib import Path
+          import struct
+          html=Path('SarresidMohandes4.html').read_text(encoding='utf-8')
+          if '<html' not in html.lower() or '</html>' not in html.lower():
+              raise SystemExit('SarresidMohandes4.html is not a complete HTML document')
+          data=Path('Sarresidmohandes.png').read_bytes()
+          if not data.startswith(b'\x89PNG\r\n\x1a\n'):
+              raise SystemExit('Sarresidmohandes.png is not a valid PNG')
+          if len(data) > 1024*1024:
+              raise SystemExit('Sarresidmohandes.png must be no larger than 1 MB')
+          print(f'HTML: {len(html)} characters; icon: {len(data)} bytes')
+          PY_CHECK
+
+      - name: Create Android WebView project
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/java/com/miladgeo/sarresid app/src/main/assets app/src/main/res/drawable-nodpi
+          cp SarresidMohandes4.html app/src/main/assets/index.html
+          cp Sarresidmohandes.png app/src/main/res/drawable-nodpi/sarresid_icon.png
+          cat > settings.gradle <<'EOF'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          rootProject.name = 'SarresidHoushmandMohandes'
+          include ':app'
+          EOF
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+          cat > app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+              namespace 'com.miladgeo.sarresid'
+              compileSdk 35
+              defaultConfig {
+                  applicationId 'com.miladgeo.sarresid'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0.0'
+              }
+              signingConfigs {
+                  release {
+                      storeFile rootProject.file('geomatic-pro-upload.jks')
+                      storePassword System.getenv('KEYSTORE_PASSWORD')
+                      keyAlias 'geometric-upload'
+                      keyPassword System.getenv('KEY_PASSWORD')
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                  }
+              }
+          }
+          EOF
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <application
+                  android:allowBackup="true"
+                  android:label="سررسید هوشمند مهندس"
+                  android:icon="@drawable/sarresid_icon"
+                  android:roundIcon="@drawable/sarresid_icon"
+                  android:supportsRtl="true"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="unspecified">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+          cat > app/src/main/java/com/miladgeo/sarresid/MainActivity.java <<'EOF'
+          package com.miladgeo.sarresid;
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import android.webkit.WebSettings;
+          import android.webkit.WebViewClient;
+          import android.view.View;
+          import android.graphics.Color;
+          public class MainActivity extends Activity {
+              private WebView webView;
+              @Override public void onCreate(Bundle state) {
+                  super.onCreate(state);
+                  getWindow().setStatusBarColor(Color.rgb(23,76,58));
+                  getWindow().setNavigationBarColor(Color.rgb(30,35,31));
+                  webView = new WebView(this);
+                  webView.setBackgroundColor(Color.rgb(238,246,237));
+                  WebSettings s = webView.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setAllowFileAccess(true);
+                  s.setDefaultTextEncodingName("UTF-8");
+                  webView.setWebViewClient(new WebViewClient());
+                  setContentView(webView);
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+              @Override public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed();
+              }
+          }
+          EOF
+
+      - name: Verify project and build signed release APK and AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -q 'سررسید هوشمند مهندس' app/src/main/AndroidManifest.xml
+          test -s app/src/main/assets/index.html
+          test -s app/src/main/res/drawable-nodpi/sarresid_icon.png
+          gradle --version
+          gradle clean assembleRelease bundleRelease --stacktrace --no-daemon
+          test -s app/build/outputs/apk/release/app-release.apk
+          test -s app/build/outputs/bundle/release/app-release.aab
+          # Ensure the APK is signed, not an unsigned/debug build.
+          jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
+          ls -lh app/build/outputs/apk/release/app-release.apk app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sarresid-Houshmand-Mohandes-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sarresid-Houshmand-Mohandes-AAB
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
