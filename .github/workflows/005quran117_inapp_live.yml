@@ -1,0 +1,360 @@
+name: Build Quran Audio Smart Android APK - In-App Live V117
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Quran_V117_InAppLive.html'
+      - 'Quran110.png'
+      - 'rahim_moazenzadeh.mp3'
+      - 'salim_moazenzadeh.mp3'
+      - 'entezar_2.mp3'
+      - '**/rahim_moazenzadeh.mp3'
+      - '**/salim_moazenzadeh.mp3'
+      - '**/entezar_2.mp3'
+      - '.github/workflows/005quran117_inapp_live.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Restore Quran app release signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then echo "GitHub Actions secret KEYSTORE_BASE64 is missing. Add the existing upload keystore as Base64."; exit 1; fi
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > geomatic-pro-upload.jks
+          test -s geomatic-pro-upload.jks
+
+      - name: Validate Quran HTML, icon and new signing secrets
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "Checking required files (repository root and subfolders)..."
+          missing=0
+          for f in Quran_V117_InAppLive.html rahim_moazenzadeh.mp3 salim_moazenzadeh.mp3 entezar_2.mp3 Quran110.png geomatic-pro-upload.jks; do
+            if [ -s "$f" ]; then
+              echo "OK: $f ($(wc -c < "$f") bytes)"
+            elif [ "$f" = "geomatic-pro-upload.jks" ]; then
+              echo "ERROR: signing key was not restored; check KEYSTORE_BASE64 secret and its decode step"
+              missing=1
+            else
+              found="$(find . -type f -name "$f" -not -path './.git/*' -not -path './.github/*' -print -quit)"
+              if [ -n "$found" ] && [ -s "$found" ]; then
+                cp "$found" "$f"
+                echo "OK: $f found at $found and staged in repository root ($(wc -c < "$f") bytes)"
+              else
+                echo "ERROR: $f was not found (or is empty). Upload this exact file to the repository root or an adhan/ folder."
+                missing=1
+              fi
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Build stopped because one or more required files are absent. See the ERROR lines above."
+            exit 1
+          fi
+          test -n "${KEYSTORE_PASSWORD:-}" || { echo "ERROR: GitHub secret KEYSTORE_PASSWORD is missing or empty"; exit 1; }
+          test -n "${KEY_PASSWORD:-}" || { echo "ERROR: GitHub secret KEY_PASSWORD is missing or empty"; exit 1; }
+          echo "Required files and signing password secrets are present."
+          python3 - <<'PY_CHECK'
+          from pathlib import Path
+          import struct
+          html=Path('Quran_V117_InAppLive.html').read_text(encoding='utf-8')
+          if '<html' not in html.lower() or '</html>' not in html.lower():
+              raise SystemExit('Quran_V117_InAppLive.html is not a complete HTML document')
+          data=Path('Quran110.png').read_bytes()
+          if not data.startswith(b'\x89PNG\r\n\x1a\n'):
+              raise SystemExit('Quran110.png is not a valid PNG')
+          if len(data) > 1024*1024:
+              raise SystemExit('Quran110.png must be no larger than 1 MB')
+          print(f'HTML: {len(html)} characters; icon: {len(data)} bytes')
+          import re, subprocess, tempfile
+          scripts=re.findall(r'<script\b[^>]*>([\s\S]*?)</script\s*>',html,re.I)[3:]
+          with tempfile.TemporaryDirectory() as td:
+              for i,script in enumerate(scripts):
+                  p=Path(td)/f'inline-{i}.js'
+                  p.write_text(script,encoding='utf-8')
+                  check=subprocess.run(['node','--check',str(p)],capture_output=True,text=True)
+                  if check.returncode:
+                      raise SystemExit(f'JavaScript syntax error in inline script {i}:\n{check.stderr}')
+          print(f'JavaScript syntax check passed for {len(scripts)} inline scripts')
+          PY_CHECK
+
+      - name: Create Quran Android WebView project
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/java/com/miladgeo/quran app/src/main/assets/adhan app/src/main/res/drawable-nodpi
+          cp Quran_V117_InAppLive.html app/src/main/assets/index.html
+          cp rahim_moazenzadeh.mp3 salim_moazenzadeh.mp3 entezar_2.mp3 app/src/main/assets/adhan/
+          cp Quran110.png app/src/main/res/drawable-nodpi/quran_icon.png
+          # Enable AndroidX because androidx.webkit:webkit is used by WebViewAssetLoader.
+          # Jetifier is enabled as a compatibility safeguard for any transitive legacy libraries.
+          cat > gradle.properties <<'EOF'
+          android.useAndroidX=true
+          android.enableJetifier=true
+          org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8
+          org.gradle.caching=true
+          EOF
+          cat > settings.gradle <<'EOF'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          rootProject.name = 'QuranAudioSmart'
+          include ':app'
+          EOF
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+          cat > app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+              namespace 'com.miladgeo.quran'
+              compileSdk 35
+              defaultConfig {
+                  applicationId 'com.miladgeo.quran'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 117
+                  versionName '1.1.7'
+              }
+              signingConfigs {
+                  release {
+                      storeFile rootProject.file('geomatic-pro-upload.jks')
+                      storePassword System.getenv('KEYSTORE_PASSWORD')
+                      keyAlias 'geometric-upload'
+                      keyPassword System.getenv('KEY_PASSWORD')
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                  }
+              }
+          }
+          dependencies {
+              implementation 'androidx.webkit:webkit:1.12.1'
+          }
+          EOF
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.RECORD_AUDIO" />
+              <uses-permission android:name="android.permission.CAMERA" />
+              <queries>
+                  <intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent>
+                  <intent><action android:name="android.speech.action.RECOGNIZE_SPEECH" /></intent>
+              </queries>
+              <application
+                  android:allowBackup="true"
+                  android:hardwareAccelerated="true"
+                  android:usesCleartextTraffic="true"
+                  android:label="قرآن صوتی هوشمند"
+                  android:icon="@drawable/quran_icon"
+                  android:roundIcon="@drawable/quran_icon"
+                  android:supportsRtl="true"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="unspecified">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+          cat > app/src/main/java/com/miladgeo/quran/MainActivity.java <<'EOF'
+          package com.miladgeo.quran;
+          import android.app.*;
+          import android.content.*;
+          import android.net.Uri;
+          import android.os.*;
+          import android.print.*;
+          import android.provider.OpenableColumns;
+          import android.speech.RecognizerIntent;
+          import android.webkit.*;
+          import androidx.webkit.WebViewAssetLoader;
+          import android.view.*;
+          import android.graphics.Color;
+          import android.database.Cursor;
+          import org.json.JSONObject;
+          import org.w3c.dom.*;
+          import javax.xml.parsers.DocumentBuilderFactory;
+          import java.io.*;
+          import java.util.*;
+          import java.util.zip.ZipEntry;
+          import java.util.zip.ZipInputStream;
+          public class MainActivity extends Activity {
+              private WebView webView;
+              private ValueCallback<Uri[]> fileCallback;
+              private Uri pendingCameraUri;
+              private static final int FILE_REQ=4101, SPEECH_REQ=4102, MIC_PERMISSION_REQ=4104, CAMERA_PERMISSION_REQ=4104, SAVE_FILE_REQ=4105;
+              private WebChromeClient.FileChooserParams pendingChooserParams;
+              private String speechInitial="";
+              private byte[] pendingSaveBytes;
+              private String pendingSaveMime="application/octet-stream";
+              @Override public void onCreate(Bundle state) {
+                  super.onCreate(state);
+                  getWindow().setStatusBarColor(Color.rgb(23,76,58));
+                  getWindow().setNavigationBarColor(Color.rgb(30,35,31));
+                  webView=new WebView(this); webView.setBackgroundColor(Color.rgb(238,246,237));
+                  WebSettings s=webView.getSettings(); s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);
+                  s.setAllowFileAccess(true); s.setAllowContentAccess(true); s.setDefaultTextEncodingName("UTF-8");
+                  s.setJavaScriptCanOpenWindowsAutomatically(true); s.setSupportMultipleWindows(true);
+                  s.setMediaPlaybackRequiresUserGesture(false);
+                  s.setLoadsImagesAutomatically(true);
+                  s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+                  // Third-party cookies are needed by some embedded live-stream providers.
+                  android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+                  android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView,true);
+                  webView.addJavascriptInterface(new AndroidBridge(),"AndroidBridge");
+                  final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
+                      .setDomain("appassets.androidplatform.net")
+                      .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                      .build();
+                  webView.setWebViewClient(new WebViewClient(){
+                      @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, android.webkit.WebResourceRequest request){
+                          return assetLoader.shouldInterceptRequest(request.getUrl());
+                      }
+                      @Override public void onReceivedError(WebView view, android.webkit.WebResourceRequest request, android.webkit.WebResourceError error){
+                          super.onReceivedError(view,request,error);
+                          if(request.isForMainFrame()) {
+                              String msg = error == null ? "خطای نامشخص" : String.valueOf(error.getDescription());
+                              view.loadDataWithBaseURL(null, "<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:sans-serif;direction:rtl;padding:24px;background:#f8eeee;color:#711'>بارگذاری برنامه ناموفق بود.<br><small>"+android.text.TextUtils.htmlEncode(msg)+"</small></body>", "text/html", "UTF-8", null);
+                          }
+                      }
+                  });
+                  webView.setWebChromeClient(new WebChromeClient(){
+                      @Override public boolean onConsoleMessage(ConsoleMessage message){
+                          android.util.Log.e("QuranWebView", message.message()+" -- line "+message.lineNumber());
+                          return true;
+                      }
+                      @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, WebChromeClient.FileChooserParams params){
+                          if(fileCallback!=null)fileCallback.onReceiveValue(null); fileCallback=cb; pendingCameraUri=null;
+                          String[] types=params.getAcceptTypes(); boolean wantsImage=false;
+                          if(types!=null)for(String t:types)if(t!=null&&(t.contains("image")||t.equals("*/*")))wantsImage=true;
+                          if(wantsImage && Build.VERSION.SDK_INT>=23 && checkSelfPermission(android.Manifest.permission.CAMERA)!=android.content.pm.PackageManager.PERMISSION_GRANTED){
+                              pendingChooserParams=params;
+                              requestPermissions(new String[]{android.Manifest.permission.CAMERA},CAMERA_PERMISSION_REQ);
+                              return true;
+                          }
+                          launchFileChooser(params,wantsImage && checkSelfPermission(android.Manifest.permission.CAMERA)==android.content.pm.PackageManager.PERMISSION_GRANTED);
+                          return true;
+                      }
+                  });
+                  setContentView(webView);
+                  // Load directly from APK assets. This avoids copying the 22+ MB HTML
+                  // into a Java String and serves relative adhan/*.mp3 URLs locally.
+                  webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+              }
+              private void launchFileChooser(WebChromeClient.FileChooserParams params, boolean includeCamera){
+                  try {
+                      Intent picker=params.createIntent();
+                      if(includeCamera){
+                          picker=new Intent(Intent.ACTION_GET_CONTENT);picker.addCategory(Intent.CATEGORY_OPENABLE);picker.setType("image/*");
+                          Intent camera=new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                          if(camera.resolveActivity(getPackageManager())!=null){
+                              android.content.ContentValues values=new android.content.ContentValues();values.put(android.provider.MediaStore.Images.Media.DISPLAY_NAME,"Quran_"+System.currentTimeMillis()+".jpg");values.put(android.provider.MediaStore.Images.Media.MIME_TYPE,"image/jpeg");
+                              pendingCameraUri=getContentResolver().insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,values);
+                              if(pendingCameraUri!=null){camera.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,pendingCameraUri);camera.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);}
+                              Intent chooser=Intent.createChooser(picker,"انتخاب تصویر یا گرفتن عکس");chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS,new Intent[]{camera});startActivityForResult(chooser,FILE_REQ);return;
+                          }
+                      }
+                      startActivityForResult(picker,FILE_REQ);
+                  } catch(Exception e){if(fileCallback!=null){fileCallback.onReceiveValue(null);fileCallback=null;}pendingCameraUri=null;}
+              }
+              private String readTextFromDocx(Uri uri) throws Exception {
+                  InputStream in=getContentResolver().openInputStream(uri); if(in==null)throw new IOException("فایل باز نشد");
+                  ZipInputStream zis=new ZipInputStream(in); String xml=null; ZipEntry en;
+                  while((en=zis.getNextEntry())!=null){if("word/document.xml".equals(en.getName())){ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[8192];int n;while((n=zis.read(b))>0)out.write(b,0,n);xml=out.toString("UTF-8");break;}}
+                  zis.close(); if(xml==null)throw new IOException("محتوای Word پیدا نشد");
+                  DocumentBuilderFactory f=DocumentBuilderFactory.newInstance(); f.setNamespaceAware(true); f.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
+                  Document d=f.newDocumentBuilder().parse(new org.xml.sax.InputSource(new StringReader(xml)));
+                  NodeList ps=d.getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main","p");StringBuilder result=new StringBuilder();
+                  for(int i=0;i<ps.getLength();i++){Node p=ps.item(i);NodeList ts=((Element)p).getElementsByTagNameNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main","t");StringBuilder line=new StringBuilder();for(int j=0;j<ts.getLength();j++)line.append(ts.item(j).getTextContent());if(result.length()>0)result.append('\n');result.append(line);}
+                  return result.toString();
+              }
+              private class AndroidBridge {
+                  @JavascriptInterface public void openExternalUrl(String rawUrl){runOnUiThread(()->{try{Uri uri=Uri.parse(rawUrl);if(!"https".equalsIgnoreCase(uri.getScheme()))return;String host=uri.getHost();if(host==null)return;Intent intent=new Intent(Intent.ACTION_VIEW,uri);startActivity(intent);}catch(Exception e){android.util.Log.e("QuranWebView","Could not open external live page",e);}});}
+                  @JavascriptInterface public void pickWordFile(){runOnUiThread(()->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");i.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/msword","application/octet-stream"});startActivityForResult(i,FILE_REQ);});}
+                  @JavascriptInterface public void pickImage(boolean camera){runOnUiThread(()->{Intent i=new Intent(Intent.ACTION_GET_CONTENT);i.setType("image/*");i.addCategory(Intent.CATEGORY_OPENABLE);try{startActivityForResult(Intent.createChooser(i,camera?"گرفتن عکس یا انتخاب تصویر":"انتخاب تصویر از گالری"),FILE_REQ);}catch(Exception ignored){}});}
+                  @JavascriptInterface public void startPersianSpeech(String initial){runOnUiThread(()->{speechInitial=initial==null?"":initial;if(Build.VERSION.SDK_INT>=23&&checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)!=android.content.pm.PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO},MIC_PERMISSION_REQ);return;}launchPersianSpeech();});}
+                  @JavascriptInterface public void saveFile(String name,String mime,String base64){runOnUiThread(()->{try{pendingSaveBytes=android.util.Base64.decode(base64,android.util.Base64.DEFAULT);pendingSaveMime=(mime==null||mime.trim().isEmpty())?"application/octet-stream":mime;int mimeSep=pendingSaveMime.indexOf(';');if(mimeSep>=0)pendingSaveMime=pendingSaveMime.substring(0,mimeSep).trim();Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType(pendingSaveMime);i.putExtra(Intent.EXTRA_TITLE,(name==null||name.trim().isEmpty())?"MiladGeo_export.bin":name);startActivityForResult(i,SAVE_FILE_REQ);}catch(Exception e){pendingSaveBytes=null;sendSpeechError("آماده‌سازی فایل خروجی ناموفق بود");}});}
+                  @JavascriptInterface public void printHtml(String html,String jobName){runOnUiThread(()->{try{WebView printView=new WebView(MainActivity.this);printView.getSettings().setJavaScriptEnabled(false);printView.setWebViewClient(new WebViewClient(){@Override public void onPageFinished(WebView view,String url){PrintManager pm=(PrintManager)getSystemService(PRINT_SERVICE);PrintDocumentAdapter adapter=view.createPrintDocumentAdapter(jobName==null?"قرآن صوتی هوشمند":jobName);pm.print(jobName==null?"قرآن صوتی هوشمند":jobName,adapter,new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).setResolution(new PrintAttributes.Resolution("pdf", "PDF", 300, 300)).setMinMargins(PrintAttributes.Margins.NO_MARGINS).build());}});printView.loadDataWithBaseURL("file:///android_asset/",html,"text/html","UTF-8",null);}catch(Exception e){runOnUiThread(()->sendSpeechError("بازکردن خروجی PDF ناموفق بود"));}});}
+              }
+              private void launchPersianSpeech(){Intent i=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);i.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"fa-IR");i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"fa-IR");i.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE,false);i.putExtra(RecognizerIntent.EXTRA_PROMPT,"تایپ صوتی فارسی");try{startActivityForResult(i,SPEECH_REQ);}catch(Exception e){sendSpeechError("سرویس تشخیص گفتار گوشی در دسترس نیست");}}
+              @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+                  if(requestCode==MIC_PERMISSION_REQ){if(grantResults.length>0&&grantResults[0]==android.content.pm.PackageManager.PERMISSION_GRANTED)launchPersianSpeech();else sendSpeechError("برای تایپ صوتی، مجوز میکروفن لازم است");}
+                  else if(requestCode==CAMERA_PERMISSION_REQ){WebChromeClient.FileChooserParams p=pendingChooserParams;pendingChooserParams=null;if(p!=null)launchFileChooser(p,grantResults.length>0&&grantResults[0]==android.content.pm.PackageManager.PERMISSION_GRANTED);}
+              }
+              private void sendSpeechError(String err){try{webView.evaluateJavascript("window.m20AndroidSpeechResult('',"+JSONObject.quote(err)+")",null);try{webView.evaluateJavascript("window.quranAndroidSpeechResult('',"+JSONObject.quote(err)+")",null);}catch(Exception ignored){}}catch(Exception ignored){}}
+              @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);
+                  if(requestCode==SAVE_FILE_REQ){Uri out=resultCode==RESULT_OK&&data!=null?data.getData():null;byte[] bytes=pendingSaveBytes;pendingSaveBytes=null;if(out!=null&&bytes!=null){try(OutputStream os=getContentResolver().openOutputStream(out,"w")){if(os==null)throw new IOException("ذخیره‌سازی در دسترس نیست");os.write(bytes);os.flush();webView.evaluateJavascript("window.m20AndroidSaveResult(true,null)",null);}catch(Exception e){webView.evaluateJavascript("window.m20AndroidSaveResult(false,"+JSONObject.quote("ذخیره فایل ناموفق بود: "+e.getMessage())+")",null);}}else{webView.evaluateJavascript("window.m20AndroidSaveResult(false,"+JSONObject.quote("ذخیره فایل لغو شد")+")",null);}return;}
+                  if(requestCode==FILE_REQ){Uri uri=resultCode==RESULT_OK&&data!=null?data.getData():null;
+                      if(uri==null&&resultCode==RESULT_OK&&pendingCameraUri!=null)uri=pendingCameraUri;
+                      if(fileCallback!=null){fileCallback.onReceiveValue(uri==null?null:new Uri[]{uri});fileCallback=null;} pendingCameraUri=null;
+                      if(uri!=null){String mime=getContentResolver().getType(uri);String name="Word";Cursor c=getContentResolver().query(uri,null,null,null,null);if(c!=null){try{int ix=c.getColumnIndex(OpenableColumns.DISPLAY_NAME);if(c.moveToFirst()&&ix>=0)name=c.getString(ix);}finally{c.close();}}
+                          if((name.toLowerCase(Locale.ROOT).endsWith(".docx")||"application/vnd.openxmlformats-officedocument.wordprocessingml.document".equals(mime))){try{String text=readTextFromDocx(uri);webView.evaluateJavascript("window.m20AndroidWordLoaded("+JSONObject.quote(text)+","+JSONObject.quote(name)+")",null);}catch(Exception e){webView.evaluateJavascript("window.m20AndroidSpeechResult('',"+JSONObject.quote("خواندن Word ناموفق بود")+")",null);}}
+                      }return;}
+                  if(requestCode==SPEECH_REQ){if(resultCode==RESULT_OK&&data!=null){ArrayList<String> a=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);String text=a!=null&&!a.isEmpty()?a.get(0):"";webView.evaluateJavascript("window.m20AndroidSpeechResult("+JSONObject.quote(text)+",null)",null);webView.evaluateJavascript("window.quranAndroidSpeechResult("+JSONObject.quote(text)+",null)",null);}else sendSpeechError("تشخیص گفتار لغو شد یا مجوز/سرویس در دسترس نیست");}
+              }
+              @Override public void onBackPressed(){if(webView!=null&&webView.canGoBack())webView.goBack();else super.onBackPressed();}
+          }
+          EOF
+
+      - name: Verify Quran project and build signed release APK and AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          grep -q 'قرآن صوتی هوشمند' app/src/main/AndroidManifest.xml
+          test -s app/src/main/assets/index.html
+          test -s app/src/main/res/drawable-nodpi/quran_icon.png
+          gradle --version
+          gradle clean assembleRelease bundleRelease --stacktrace --no-daemon
+          test -s app/build/outputs/apk/release/app-release.apk
+          test -s app/build/outputs/bundle/release/app-release.aab
+          # Ensure the APK is signed, not an unsigned/debug build.
+          jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
+          ls -lh app/build/outputs/apk/release/app-release.apk app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload Quran release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quran-Smart-Audio-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Quran release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quran-Smart-Audio-AAB
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
