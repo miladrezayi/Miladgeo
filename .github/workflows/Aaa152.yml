@@ -51,9 +51,9 @@ jobs:
           p = Path('Indexxx149.html')
           source = p.read_text(encoding='utf-8')
           source = source.replace('\\x0a', '\n')
-          bad = sum(1 for c in source if ord(c) < 32 and c not in '\\t\\n\\r')
+          bad = sum(1 for c in source if ord(c) < 32 and c not in '\t\n\r')
           if bad:
-              source = ''.join(('\\x%02x' % ord(c)) if ord(c) < 32 and c not in '\\t\\n\\r' else c for c in source)
+              source = ''.join(('\\x%02x' % ord(c)) if ord(c) < 32 and c not in '\t\n\r' else c for c in source)
               p.write_text(source, encoding='utf-8')
           print(f'Escaped {bad} embedded control bytes without changing their runtime values.')
           PY_FIX
