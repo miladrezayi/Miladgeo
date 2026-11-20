@@ -1,0 +1,607 @@
+  gap:5px!important;
+  min-width:0!important;
+  min-height:82px!important;
+  padding:9px 6px!important;
+  border:1px solid #9bb398!important;
+  border-radius:13px!important;
+  background:linear-gradient(145deg,#fff,#e8f0e5)!important;
+  color:#24442b!important;
+  box-shadow:0 3px 0 #536e55,0 5px 9px rgba(0,0,0,.10)!important;
+  text-align:center!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  line-height:1.4!important;
+}
+#job .job-import-clean-36 .job-import-excel-36{
+  background:linear-gradient(145deg,#f5fff6,#dcefe0)!important;
+}
+#job .job-import-clean-36 .job-import-txt-36{
+  background:linear-gradient(145deg,#fff,#e8f0e5)!important;
+  color:#24442b!important;
+}
+#job .job-import-clean-36 .job-import-icon-36{
+  display:grid!important;
+  place-items:center!important;
+  width:32px!important;
+  height:32px!important;
+  flex:0 0 32px!important;
+  border-radius:9px!important;
+  background:rgba(54,99,58,.10)!important;
+  font-size:22px!important;
+}
+#job .job-import-clean-36 .job-import-copy-36{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:2px!important;
+  min-width:0!important;
+}
+#job .job-import-clean-36 .job-import-copy-36 b{
+  display:block!important;
+  font-size:12px!important;
+  line-height:1.4!important;
+  font-weight:1000!important;
+}
+#job .job-import-clean-36 .job-import-copy-36 small{
+  display:block!important;
+  margin:0!important;
+  color:#28613a!important;
+  font-size:11px!important;
+  line-height:1.25!important;
+  font-weight:1000!important;
+  direction:ltr!important;
+}
+#job .job-import-clean-36 .job-import-arrow-36{display:none!important}
+#job .job-import-clean-36 .job-import-action-36:active{
+  transform:translateY(2px)!important;
+  box-shadow:0 1px 0 #536e55,inset 0 1px 3px #0002!important;
+}
+@media(max-width:390px){
+  #job .job-import-clean-36 .job-import-actions-36{gap:7px!important}
+  #job .job-import-clean-36 .job-import-action-36{min-height:78px!important}
+}
+
+/* JOB project archive cards: force all three content rows to remain visible. */
+#job #jobQuickCards390.job-quick-grid-390{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ gap:9px!important;align-items:stretch!important;
+}
+#job #jobQuickCards390 .job-quick-card-390{
+ box-sizing:border-box!important;display:grid!important;
+ grid-template-rows:38px minmax(34px,1fr) auto!important;
+ align-items:center!important;justify-items:center!important;
+ width:100%!important;min-width:0!important;min-height:0!important;
+ aspect-ratio:1 / 1!important;height:auto!important;
+ padding:9px 5px!important;gap:5px!important;
+ overflow:hidden!important;white-space:normal!important;
+}
+#job #jobQuickCards390 .job-quick-folder-390{
+ grid-row:1!important;display:flex!important;align-items:center!important;justify-content:center!important;
+ width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;
+ font-size:23px!important;line-height:1!important;flex:none!important;
+}
+#job #jobQuickCards390 .job-quick-name-390{
+ grid-row:2!important;display:flex!important;align-items:center!important;justify-content:center!important;
+ width:100%!important;min-width:0!important;min-height:34px!important;height:auto!important;max-height:none!important;
+ margin:0!important;padding:2px 1px!important;
+ overflow:visible!important;text-overflow:clip!important;white-space:normal!important;
+ overflow-wrap:anywhere!important;word-break:break-word!important;
+ visibility:visible!important;opacity:1!important;
+ color:#123f27!important;font-family:Tahoma,Arial,sans-serif!important;
+ font-size:clamp(10px,2.7vw,13px)!important;font-weight:1000!important;
+ line-height:1.35!important;text-align:center!important;
+}
+#job #jobQuickCards390 .job-quick-count-390{
+ grid-row:3!important;display:block!important;max-width:100%!important;
+ margin:0!important;padding:3px 5px!important;white-space:normal!important;
+ font-size:clamp(8px,2.1vw,10px)!important;line-height:1.2!important;text-align:center!important;
+}
+@media(max-width:380px){
+ #job #jobQuickCards390.job-quick-grid-390{gap:6px!important}
+ #job #jobQuickCards390 .job-quick-card-390{padding:7px 3px!important;grid-template-rows:34px minmax(32px,1fr) auto!important}
+ #job #jobQuickCards390 .job-quick-name-390{font-size:10px!important;line-height:1.25!important}
+ #job #jobQuickCards390 .job-quick-folder-390{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;font-size:21px!important}
+}
+</style>
+<style id="miladgeo-menu20-photo-cards-v1">
+/* MENU 20 — related offline illustrations; visual-only, card actions remain unchanged. */
+#menu20 #m20Desk .m20-grid .m20-card{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  justify-content:flex-start!important;gap:6px!important;min-height:178px!important;
+  height:auto!important;padding:8px!important;box-sizing:border-box!important;
+  overflow:hidden!important;text-align:center!important;
+}
+#menu20 #m20Desk .m20-grid .m20-card .m20-photo-card-image{
+  display:block!important;width:100%!important;height:92px!important;min-height:92px!important;
+  flex:0 0 92px!important;object-fit:cover!important;object-position:center!important;
+  border:1px solid rgba(49,91,57,.42)!important;border-radius:9px!important;
+  box-shadow:0 2px 6px rgba(25,48,28,.18)!important;background:#dce6d8!important;
+}
+#menu20 #m20Desk .m20-grid .m20-card>b{
+  display:block!important;width:100%!important;margin:0!important;padding:0 2px!important;
+  font-size:13px!important;line-height:1.45!important;text-align:center!important;
+  overflow-wrap:anywhere!important;
+}
+#menu20 #m20Desk .m20-grid .m20-card>span:not(.m20-num){
+  display:block!important;width:100%!important;margin:0!important;padding:0 2px!important;
+  font-size:9.5px!important;line-height:1.5!important;color:#4d5a4e!important;
+  text-align:center!important;overflow-wrap:anywhere!important;
+}
+#menu20 #m20Desk .m20-grid .m20-card:active .m20-photo-card-image{filter:brightness(.96)}
+@media(max-width:420px){
+  #menu20 #m20Desk .m20-grid .m20-card{min-height:170px!important;padding:7px 6px!important;gap:5px!important}
+  #menu20 #m20Desk .m20-grid .m20-card .m20-photo-card-image{height:84px!important;min-height:84px!important;flex-basis:84px!important}
+  #menu20 #m20Desk .m20-grid .m20-card>b{font-size:12px!important;line-height:1.4!important}
+  #menu20 #m20Desk .m20-grid .m20-card>span:not(.m20-num){font-size:9px!important;line-height:1.45!important}
+}
+</style>
+<style id="m10-cards-match-main-menu-v51">
+/* Menu 10 cards styled like the two-column image cards on the main menu */
+#cadpdf .m10-new-cards{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  align-items:stretch!important;
+}
+#cadpdf .m10-new-cards .m10-new-card{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:9px!important;
+  gap:7px!important;
+  overflow:hidden!important;
+  border:2px solid #56765b!important;
+  border-radius:16px!important;
+  background:linear-gradient(145deg,#eef5e9 0%,#d7e3d2 52%,#b8cbb5 100%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 5px 12px rgba(20,40,25,.2)!important;
+  box-sizing:border-box!important;
+}
+#cadpdf .m10-new-cards .m10-card-photo,
+#cadpdf .m10-new-cards .m10-new-card-main .m10-card-photo{
+  display:block!important;
+  order:0!important;
+  flex:0 0 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  height:104px!important;
+  max-height:104px!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border-radius:11px!important;
+  border:1px solid #a9bea7!important;
+  background:#e5eee3!important;
+  box-shadow:0 2px 6px rgba(0,0,0,.14)!important;
+}
+#cadpdf .m10-new-cards .m10-card-photo img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  border-radius:10px!important;
+}
+#cadpdf .m10-new-cards .m10-card-icon{display:none!important}
+#cadpdf .m10-new-cards .m10-card-body{
+  order:1!important;
+  display:block!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:38px!important;
+  padding:2px 2px 4px!important;
+  text-align:center!important;
+  box-sizing:border-box!important;
+}
+#cadpdf .m10-new-cards .m10-card-body b{
+  display:block!important;
+  font-size:14px!important;
+  line-height:1.35!important;
+  font-weight:1000!important;
+  text-align:center!important;
+}
+#cadpdf .m10-new-cards .m10-card-body small{
+  display:block!important;
+  margin-top:4px!important;
+  font-size:9px!important;
+  line-height:1.55!important;
+  text-align:center!important;
+}
+#cadpdf .m10-new-cards .m10-card-arrow{
+  position:absolute!important;
+  top:15px!important;
+  left:15px!important;
+  z-index:2!important;
+  width:26px!important;
+  height:26px!important;
+  border-radius:50%!important;
+  border:1px solid rgba(255,255,255,.85)!important;
+  background:rgba(245,250,244,.94)!important;
+  box-shadow:0 2px 7px rgba(0,0,0,.18)!important;
+}
+@media(max-width:420px){
+  #cadpdf .m10-new-cards{gap:7px!important}
+  #cadpdf .m10-new-cards .m10-new-card{padding:7px!important;gap:6px!important;border-radius:13px!important}
+  #cadpdf .m10-new-cards .m10-card-photo,
+  #cadpdf .m10-new-cards .m10-new-card-main .m10-card-photo{height:88px!important;max-height:88px!important}
+  #cadpdf .m10-new-cards .m10-card-body b{font-size:12px!important}
+  #cadpdf .m10-new-cards .m10-card-body small{font-size:8px!important}
+}
+</style>
+<style id="m10-cam-scanner-layout-v2">
+#cadpdf,#cadpdf *{box-sizing:border-box}
+#cadpdf .m10-new-shell,#cadpdf .m10-new-cards,#cadpdf .m10-new-panel{width:100%;max-width:100%;min-width:0}
+#cadpdf .m10-new-panel{overflow:hidden;overflow-wrap:anywhere}
+#cadpdf .m10-new-cards .m10-new-card{min-width:0;max-width:100%;overflow:hidden}
+#cadpdf .m10-new-cards .m10-card-photo.m10-camera-card-photo{display:grid!important;place-items:center!important;font-size:42px!important;background:linear-gradient(140deg,#d9ead8,#9fbea0)!important}
+#cadpdf .m10-cam-panel{padding:clamp(9px,3vw,14px)!important}
+#cadpdf .m10-cam-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+#cadpdf .m10-cam-actions>*{min-width:0;margin:0!important}
+#cadpdf .m10-cam-file-label{display:flex;align-items:center;justify-content:center;cursor:pointer}
+#cadpdf .m10-cam-file-label input,#cadpdf .m10-cam-hidden-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;left:-9999px!important}
+#cadpdf .m10-cam-actions button{min-height:48px;line-height:1.55;white-space:normal}
+#cadpdf .m10-cam-preview canvas{image-rendering:auto}
+#cadpdf .m10-cam-live{margin-top:10px;padding:7px;border:1px solid #b7cbb7;border-radius:12px;background:#17251a;overflow:hidden}
+#cadpdf .m10-cam-live video{display:block;width:100%;max-width:100%;max-height:48vh;aspect-ratio:4/3;object-fit:contain;border-radius:8px;background:#000}
+#cadpdf .m10-cam-live-actions{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:7px;margin-top:7px}
+#cadpdf .m10-cam-live-actions button{min-width:0;margin:0!important;padding:7px 4px;font-size:11px}
+#cadpdf .m10-cam-secondary{min-height:42px;border:1px solid #79917b;border-radius:10px;background:#edf3ec;color:#25452c;font:800 11px Tahoma,Arial,sans-serif}
+#cadpdf .m10-cam-preview{min-width:0;max-width:100%}
+#cadpdf .m10-cam-preview canvas{display:block;width:100%;max-width:100%;height:auto;max-height:62vh;object-fit:contain;background:#fff}
+#cadpdf .m10-cam-more{margin-top:9px;border:1px solid #cbd8ca;border-radius:10px;background:#f0f5ef;color:#34553a;overflow:hidden}
+#cadpdf .m10-cam-more summary{padding:10px;text-align:center;font:800 10px Tahoma,Arial,sans-serif;cursor:pointer;list-style:none}
+#cadpdf .m10-cam-more summary::-webkit-details-marker{display:none}
+#cadpdf .m10-cam-more summary:after{content:'⌄';margin-right:7px}
+#cadpdf .m10-cam-more[open] summary:after{content:'⌃'}
+#cadpdf .m10-cam-smartscan{display:flex;flex-direction:column;gap:5px;margin-top:10px;padding:11px;border:1px solid #b8cdb8;border-radius:11px;background:linear-gradient(135deg,#f3f8f1,#e6f0e4);color:#29432d;font:10px/1.8 Tahoma,Arial,sans-serif}
+#cadpdf .m10-cam-smartscan b{font-size:12px;color:#1e5129}
+#cadpdf .m10-cam-exports-vertical{display:flex!important;flex-direction:column!important;gap:8px!important;margin-top:10px}
+#cadpdf .m10-cam-exports-vertical button{width:100%;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+#cadpdf .m10-cam-reset-btn{width:100%;margin-top:8px;min-height:48px}
+#cadpdf .m10-cam-exports{margin-top:10px;min-width:0}
+#cadpdf .m10-cam-exports button{min-width:0;overflow-wrap:anywhere}
+#cadpdf .m10-cam-exports button:disabled{opacity:.45;filter:grayscale(.4)}
+#cadpdf .m10-cam-footnote{margin-top:8px;color:#687568;font:9px/1.8 Tahoma,Arial,sans-serif;text-align:center}
+@media(max-width:380px){#cadpdf .m10-cam-panel .m10-panel-head b{font-size:13px}#cadpdf .m10-cam-actions{grid-template-columns:1fr}#cadpdf .m10-cam-exports{gap:5px}#cadpdf .m10-cam-exports button{padding:7px 4px;min-height:56px}#cadpdf .m10-cam-exports button strong{font-size:10px}#cadpdf .m10-cam-exports button span{font-size:8px}}
+</style>
+<script id="m10-cam-scanner-v2">
+(function(){'use strict';
+var original=null,baseCanvas=null,stream=null,sourceName='map',cropApplied=false;
+function el(id){return document.getElementById(id)}
+function say(t){var e=el('m10CamStatus');if(e)e.textContent=t}
+function enableExports(on){document.querySelectorAll('#m10MapReaderCard .m10-cam-exports button').forEach(function(b,i){if(i<3)b.disabled=!on})}
+function stop(){if(stream){stream.getTracks().forEach(function(t){try{t.stop()}catch(e){}});stream=null}var v=el('m10CamVideo');if(v){try{v.pause()}catch(e){}v.srcObject=null}var b=el('m10CamLiveBox');if(b)b.style.display='none'}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function dist(a,b){var x=a.x-b.x,y=a.y-b.y;return Math.sqrt(x*x+y*y)}
+function polygonArea(q){var z=0;for(var i=0;i<4;i++){var a=q[i],b=q[(i+1)%4];z+=a.x*b.y-b.x*a.y}return Math.abs(z)/2}
+function solve8(A,b){for(var i=0;i<8;i++){var piv=i;for(var r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[piv][i]))piv=r;if(Math.abs(A[piv][i])<1e-9)return null;var tmp=A[i];A[i]=A[piv];A[piv]=tmp;var tb=b[i];b[i]=b[piv];b[piv]=tb;var div=A[i][i];for(var c=i;c<8;c++)A[i][c]/=div;b[i]/=div;for(var rr=0;rr<8;rr++){if(rr===i)continue;var f=A[rr][i];for(var cc=i;cc<8;cc++)A[rr][cc]-=f*A[i][cc];b[rr]-=f*b[i]}}return b}
+function homography(src,dst){var A=[],b=[];for(var i=0;i<4;i++){var x=dst[i].x,y=dst[i].y,u=src[i].x,v=src[i].y;A.push([x,y,1,0,0,0,-u*x,-u*y]);b.push(u);A.push([0,0,0,x,y,1,-v*x,-v*y]);b.push(v)}return solve8(A,b)}
+window.detectQuad=detectQuad;
+function detectQuad(canvas){
+ var max=380,scale=Math.min(1,max/Math.max(canvas.width,canvas.height)),w=Math.max(24,Math.round(canvas.width*scale)),h=Math.max(24,Math.round(canvas.height*scale));
+ var dc=document.createElement('canvas');dc.width=w;dc.height=h;var dx=dc.getContext('2d',{willReadFrequently:true});dx.drawImage(canvas,0,0,w,h);var rgba=dx.getImageData(0,0,w,h).data,total=w*h,gray=new Uint8Array(total),hist=new Uint32Array(256);
+ for(var i=0,j=0;i<total;i++,j+=4){var y=Math.round(.299*rgba[j]+.587*rgba[j+1]+.114*rgba[j+2]);gray[i]=y;hist[y]++}
+ var sum=0;for(var k=0;k<256;k++)sum+=k*hist[k];var sumB=0,wB=0,best=-1,otsu=170;for(k=0;k<256;k++){wB+=hist[k];if(!wB)continue;var wF=total-wB;if(!wF)break;sumB+=k*hist[k];var mB=sumB/wB,mF=(sum-sumB)/wF,between=wB*wF*(mB-mF)*(mB-mF);if(between>best){best=between;otsu=k}}
+ var threshold=clamp(Math.max(otsu,160),160,224),mask=new Uint8Array(total),seen=new Uint8Array(total);for(i=0;i<total;i++){var p=i*4,mn=Math.min(rgba[p],rgba[p+1],rgba[p+2]),mx=Math.max(rgba[p],rgba[p+1],rgba[p+2]);mask[i]=(mn>=138&&(mx-mn)<=72&&gray[i]>=148)?1:0;}
+ var queue=new Int32Array(total),bestPixels=null,bestCount=0;
+ for(i=0;i<total;i++){if(!mask[i]||seen[i])continue;var head=0,tail=0;queue[tail++]=i;seen[i]=1;var minX=w,maxX=0,minY=h,maxY=0,minS=1e9,maxS=-1e9,minD=1e9,maxD=-1e9,pts=0,touch=false;
+  while(head<tail){var id=queue[head++],x=id%w,y=Math.floor(id/w);pts++;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;if(x===0||y===0||x===w-1||y===h-1)touch=true;
+   var boundary=x===0||y===0||x===w-1||y===h-1||!mask[id-1]||!mask[id+1]||!mask[id-w]||!mask[id+w];if(boundary){var ss=x+y,dd=x-y;if(ss<minS)minS=ss;if(ss>maxS)maxS=ss;if(dd<minD)minD=dd;if(dd>maxD)maxD=dd}
+   var n;if(x>0&&(n=id-1)>=0&&mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n}if(x<w-1&&(n=id+1)<total&&mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n}if(y>0&&(n=id-w)>=0&&mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n}if(y<h-1&&(n=id+w)<total&&mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n}
+  }
+  if(!touch&&pts>bestCount&&pts>total*.10&&pts<total*.94){bestCount=pts;bestPixels=queue.slice(0,tail)}
+ }
+ if(!bestPixels)return null;
+ function extremum(score,mode){var val=mode==='min'?Infinity:-Infinity,idx=-1;for(var z=0;z<bestPixels.length;z++){var ii=bestPixels[z],xx=ii%w,yy=Math.floor(ii/w),bd=xx===0||yy===0||xx===w-1||yy===h-1||!mask[ii-1]||!mask[ii+1]||!mask[ii-w]||!mask[ii+w];if(!bd)continue;var q=score(xx,yy);if((mode==='min'&&q<val)||(mode==='max'&&q>val)){val=q;idx=ii}}return idx<0?null:{x:(idx%w)/scale,y:Math.floor(idx/w)/scale}}
+ var q=[extremum(function(x,y){return x+y},'min'),extremum(function(x,y){return x-y},'max'),extremum(function(x,y){return x+y},'max'),extremum(function(x,y){return x-y},'min')];
+ if(q.some(function(v){return !v}))return null;
+ var area=polygonArea(q),ratio=area/(canvas.width*canvas.height);if(ratio<.12||ratio>.97)return null;
+ var edges=[dist(q[0],q[1]),dist(q[1],q[2]),dist(q[2],q[3]),dist(q[3],q[0])];if(edges.some(function(v){return v<Math.min(canvas.width,canvas.height)*.12}))return null;
+ return q;
+}
+window.warpCanvas=warpCanvas;
+function warpCanvas(src,quad){
+ var top=dist(quad[0],quad[1]),bottom=dist(quad[3],quad[2]),left=dist(quad[0],quad[3]),right=dist(quad[1],quad[2]);var ow=Math.max(2,Math.round(Math.max(top,bottom))),oh=Math.max(2,Math.round(Math.max(left,right)));var cap=5200000;if(ow*oh>cap){var sc=Math.sqrt(cap/(ow*oh));ow=Math.round(ow*sc);oh=Math.round(oh*sc)}
+ var dst=[{x:0,y:0},{x:ow-1,y:0},{x:ow-1,y:oh-1},{x:0,y:oh-1}],H=homography(quad,dst);if(!H)return null;
+ var sctx=src.getContext('2d',{willReadFrequently:true}),srcData=sctx.getImageData(0,0,src.width,src.height).data,out=document.createElement('canvas');out.width=ow;out.height=oh;var octx=out.getContext('2d'),img=octx.createImageData(ow,oh),d=img.data;
+ for(var y=0;y<oh;y++){for(var x=0;x<ow;x++){var den=H[6]*x+H[7]*y+1;if(Math.abs(den)<1e-8)continue;var sx=(H[0]*x+H[1]*y+H[2])/den,sy=(H[3]*x+H[4]*y+H[5])/den;if(sx<0||sy<0||sx>=src.width-1||sy>=src.height-1)continue;var x0=sx|0,y0=sy|0,fx=sx-x0,fy=sy-y0,p=(y*ow+x)*4,p00=(y0*src.width+x0)*4,p10=p00+4,p01=p00+src.width*4,p11=p01+4;for(var c=0;c<3;c++){var a=srcData[p00+c]*(1-fx)+srcData[p10+c]*fx,b=srcData[p01+c]*(1-fx)+srcData[p11+c]*fx;d[p+c]=a*(1-fy)+b*fy}d[p+3]=255}}
+ octx.putImageData(img,0,0);return out;
+}
+function autoEnhance(ctx,w,h){var im=ctx.getImageData(0,0,w,h),a=im.data,hist=new Uint32Array(256),sample=0;for(var i=0;i<a.length;i+=32){var y=.299*a[i]+.587*a[i+1]+.114*a[i+2];hist[Math.round(y)]++;sample++}function pct(p){var target=sample*p,acc=0;for(var j=0;j<256;j++){acc+=hist[j];if(acc>=target)return j}return 255}var low=pct(.015),high=pct(.985);if(high-low<35){low=Math.max(0,low-12);high=Math.min(255,high+18)}var gain=255/Math.max(35,high-low);for(i=0;i<a.length;i+=4){var y=.299*a[i]+.587*a[i+1]+.114*a[i+2],v=clamp((y-low)*gain,0,255),g=y>2?v/y:1;a[i]=clamp(a[i]*g,0,255);a[i+1]=clamp(a[i+1]*g,0,255);a[i+2]=clamp(a[i+2]*g,0,255)}ctx.putImageData(im,0,0)}
+async function setSource(im,name){
+ original=im;sourceName=(name||'map').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/\.[^.]+$/,'')||'map';
+ var max=2600,scale=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),src=document.createElement('canvas');src.width=Math.max(1,Math.round(im.naturalWidth*scale));src.height=Math.max(1,Math.round(im.naturalHeight*scale));src.getContext('2d').drawImage(im,0,0,src.width,src.height);baseCanvas=src;cropApplied=false;
+ say('در حال شناسایی آفلاین چهار گوشه کاغذ و حذف پس‌زمینه...');var q=null;
+ try{q=detectQuad(src)}catch(fallbackError){q=null}
+ if(q){try{var warped=warpCanvas(src,q);if(warped&&warped.width>100&&warped.height>100){baseCanvas=warped;cropApplied=true}}catch(warpError){baseCanvas=src;cropApplied=false}}
+ var c=el('m10CamCanvas');c.width=baseCanvas.width;c.height=baseCanvas.height;var d=el('m10CamDimensions');if(d)d.textContent=im.naturalWidth+' × '+im.naturalHeight+' px'+(cropApplied?' • کاغذ جدا شد':'');m10CamProcess();enableExports(true);
+ say(cropApplied?'✓ کاغذ جدا شد؛ اطراف حذف و پرسپکتیو اصلاح شد. تصویر آماده ذخیره است.':'✓ تصویر بهبود یافت؛ مرز کاغذ به‌صورت مطمئن پیدا نشد. عکس کامل حفظ شد؛ نور یکنواخت و کاغذ بدون زاویه کمک می‌کند.');
+}
+window.m10CamOpenCamera=function(){var f=el('m10CamCameraFile');if(!f){say('ورودی دوربین پیدا نشد.');return false}try{f.value='';f.click();say('دوربین گوشی را باز کن و از کاغذ عکس بگیر؛ بعد از تأیید، اسکن خودکار شروع می‌شود.')}catch(e){say('بازکردن دوربین ممکن نشد؛ مجوز فایل/دوربین مرورگر را بررسی کن.')}return false};
+window.m10CamOpenGallery=function(){var f=el('m10CamFile');if(!f){say('ورودی گالری پیدا نشد.');return false}try{f.value='';f.click();say('یک عکس از گالری انتخاب کن؛ عکس بلافاصله اسکن می‌شود.')}catch(e){say('بازکردن گالری ممکن نشد؛ مجوز دسترسی به عکس‌ها را بررسی کن.')}return false};
+window.m10CamStart=async function(){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){say('دوربین زنده در این مرورگر فعال نیست؛ از دکمه انتخاب عکس استفاده کن.');return false}try{stop();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});var v=el('m10CamVideo');v.srcObject=stream;el('m10CamLiveBox').style.display='block';try{await v.play()}catch(e){}say('دوربین آماده است. نقشه را صاف و کامل داخل کادر بگیر، سپس ثبت عکس را بزن.')}catch(e){say('دسترسی دوربین برقرار نشد: '+(e.message||e)+'؛ می‌توانی عکس را از گالری انتخاب کنی.')}return false};
+window.m10CamStop=function(){stop();say('دوربین متوقف شد.');return false};
+function loadDataUrl(url,name){var im=new Image();im.onload=function(){Promise.resolve(setSource(im,name)).catch(function(e){enableExports(false);say('پردازش تصویر ناموفق بود: '+(e.message||e))})};im.onerror=function(){say('خواندن تصویر ناموفق بود. یک تصویر JPG یا PNG دیگر انتخاب کن.')};im.src=url}
+window.m10CamLoad=function(file){if(!file)return false;if(!/^image\//.test(file.type||'')){say('لطفاً یک فایل تصویری انتخاب کن.');return false}say('در حال اسکن و بهبود خودکار تصویر...');var r=new FileReader();r.onload=function(){loadDataUrl(r.result,file.name)};r.onerror=function(){say('خواندن فایل تصویر ناموفق بود.')};r.readAsDataURL(file);return false};
+window.m10CamCapture=function(){var v=el('m10CamVideo');if(!v||!v.videoWidth){say('دوربین هنوز آماده ثبت تصویر نیست.');return false}var c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);var url;try{url=c.toDataURL('image/jpeg',.96)}catch(e){say('ثبت عکس ممکن نشد.');return false}stop();say('عکس ثبت شد؛ کادر و وضوح تصویر به‌صورت خودکار اصلاح می‌شود...');loadDataUrl(url,'camera-map');return false};
+window.m10CamProcess=function(){if(!baseCanvas)return false;var c=el('m10CamCanvas');if(c.width!==baseCanvas.width||c.height!==baseCanvas.height){c.width=baseCanvas.width;c.height=baseCanvas.height}var ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(baseCanvas,0,0);autoEnhance(ctx,c.width,c.height);return false};
+window.m10CamDownload=function(fmt){if(!baseCanvas){say('ابتدا یک تصویر ثبت یا انتخاب کن.');return false}var c=el('m10CamCanvas'),mime=fmt==='jpg'?'image/jpeg':'image/png',url;try{url=c.toDataURL(mime,fmt==='jpg'?.94:1)}catch(e){say('ساخت فایل خروجی ناموفق بود.');return false}var a=document.createElement('a');a.href=url;a.download=sourceName+'-scanned.'+(fmt==='jpg'?'jpg':'png');document.body.appendChild(a);a.click();a.remove();say('فایل '+fmt.toUpperCase()+' آماده و ذخیره شد.');return false};
+window.m10CamPdf=function(){if(!baseCanvas){say('ابتدا یک تصویر ثبت یا انتخاب کن.');return false}var c=el('m10CamCanvas'),url=c.toDataURL('image/png'),w=window.open('','_blank');if(!w){say('پنجره ساخت PDF مسدود شد؛ اجازه بازشدن پنجره را بده و دوباره تلاش کن.');return false}var title=(sourceName+' - scanned map').replace(/[<>]/g,''),orient=c.width>=c.height?'landscape':'portrait';w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>@page{size:A4 '+orient+';margin:8mm}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff}body{min-height:100vh;display:flex;align-items:center;justify-content:center}img{display:block;max-width:100%;max-height:96vh;object-fit:contain}@media print{body{height:100vh}}</style></head><body><img src="'+url+'" onload="setTimeout(function(){window.focus();window.print()},300)"></body></html>');w.document.close();say('برگه PDF آماده شد؛ در پنجره چاپ، «ذخیره به‌صورت PDF» را انتخاب کن.');return false};
+window.m10CamReset=function(){stop();original=null;baseCanvas=null;cropApplied=false;var c=el('m10CamCanvas');if(c){c.width=0;c.height=0}var d=el('m10CamDimensions');if(d)d.textContent='هنوز تصویری ثبت نشده';var f=el('m10CamFile');if(f)f.value='';var cf=el('m10CamCameraFile');if(cf)cf.value='';enableExports(false);say('تصویر پاک شد؛ برای اسکن بعدی دوربین را روشن کن یا عکس انتخاب کن.');return false};
+window.addEventListener('pagehide',stop);enableExports(false);
+})();
+</script>
+<style id="miladgeo-menu2-pro-redesign-v273">
+/* Menu 2 visual refresh: match Menu 3's premium field-work design. All survey IDs and handlers remain unchanged. */
+#realMeasure{direction:rtl!important;color:#14251a!important;padding-bottom:14px!important}
+#realMeasure>.back{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:42px!important;margin:2px 0 10px!important;padding:0 16px!important;border:1px solid #536a56!important;border-radius:13px!important;background:linear-gradient(180deg,#f1f5ee,#c8d4c7)!important;color:#17351f!important;font-weight:1000!important;box-shadow:0 3px 8px rgba(0,0,0,.18)!important}
+#realMeasure>.title{display:none!important}
+#realMeasure .m2-pro-hero{position:relative;isolation:isolate;min-height:190px;overflow:hidden;border:2px solid #dce8d9;border-radius:22px;background:#193d29;box-shadow:0 7px 18px rgba(12,28,17,.28);margin:0 0 12px}
+#realMeasure .m2-pro-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 48%;z-index:-2}
+#realMeasure .m2-pro-hero-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,24,15,.88),rgba(9,35,19,.55) 62%,rgba(8,27,15,.14))}
+#realMeasure .m2-pro-hero-copy{position:relative;z-index:1;max-width:84%;padding:19px 17px 17px;color:#f5fff2;text-shadow:0 2px 5px rgba(0,0,0,.55)}
+#realMeasure .m2-pro-kicker{display:inline-block;font:900 9px Arial,sans-serif;letter-spacing:1.4px;color:#d5f4cf;border:1px solid rgba(223,255,218,.5);background:rgba(13,53,26,.52);padding:5px 9px;border-radius:20px}
+#realMeasure .m2-pro-hero h1{font-family:Tahoma,Arial,sans-serif;font-size:25px;line-height:1.35;font-weight:1000;margin:10px 0 5px;color:#fff}
+#realMeasure .m2-pro-hero p{font-family:Tahoma,Arial,sans-serif;font-size:11px;line-height:1.9;margin:0;max-width:440px;color:#edf7e9}
+#realMeasure .m2-pro-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#realMeasure .m2-pro-tags span{font:900 9px Arial,Tahoma,sans-serif;padding:5px 9px;border-radius:20px;background:rgba(235,248,232,.17);border:1px solid rgba(234,255,228,.56);color:#fff}
+#realMeasure .m2-pro-hero-index{position:absolute;left:13px;bottom:8px;font:1000 52px/1 Arial,sans-serif;color:rgba(255,255,255,.23);letter-spacing:-4px}
+#realMeasure .m2-pro-flow{display:grid;grid-template-columns:1fr 16px 1fr 16px 1fr;align-items:center;gap:4px;margin:0 0 12px;padding:9px 7px;border:1px solid #a7b8a3;border-radius:15px;background:linear-gradient(140deg,#f0f5ed,#d5e1d2);box-shadow:inset 0 1px #fff,0 3px 9px rgba(18,35,20,.10)}
+#realMeasure .m2-pro-flow>div{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+#realMeasure .m2-pro-flow b{display:inline-flex;flex:0 0 25px;width:25px;height:25px;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(145deg,#24683d,#123e25);color:#fff;font:900 9px Arial,sans-serif;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+#realMeasure .m2-pro-flow span{font:900 10px Tahoma,Arial,sans-serif;color:#21442a;white-space:nowrap}
+#realMeasure .m2-pro-flow>i{height:2px;background:linear-gradient(90deg,#a5b59f,#527b59);border-radius:2px}
+#realMeasure .m3-stake-panel{box-sizing:border-box!important;min-width:0!important;margin:0 0 12px!important;padding:13px!important;border:1px solid #899b87!important;border-radius:19px!important;background:linear-gradient(145deg,rgba(246,250,243,.97),rgba(211,224,208,.95))!important;box-shadow:0 4px 12px rgba(15,32,17,.14),inset 0 1px rgba(255,255,255,.95)!important;color:#172b1c!important}
+#realMeasure .m2-pro-panel-heading{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#realMeasure .m3-stake-heading-symbol{display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#266c40,#124127);color:#fff;font:900 29px/1 Arial,sans-serif;box-shadow:0 3px 7px rgba(16,55,27,.2)}
+#realMeasure .m3-stake-eyebrow{display:block;font:900 8px Arial,sans-serif;letter-spacing:1.2px;color:#63806a;margin-bottom:3px}
+#realMeasure .m2-pro-panel-title{font:1000 16px Tahoma,Arial,sans-serif;color:#173d24}
+#realMeasure .m3-stake-pill{margin-right:auto;font:900 9px Tahoma,Arial,sans-serif;padding:6px 9px;border:1px solid #9ab39a;border-radius:20px;color:#2a6035;background:#e1eddd;white-space:nowrap}
+#realMeasure .real-action-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin:0!important}
+#realMeasure .real-action-grid .real-action-card{box-sizing:border-box!important;min-width:0!important;min-height:190px!important;justify-content:flex-start!important;padding:8px!important;gap:7px!important;overflow:hidden!important;border:1px solid #a6b5a2!important;border-radius:15px!important;background:linear-gradient(145deg,#f8faf6,#e1e9de)!important;color:#193c24!important;box-shadow:0 3px 9px rgba(21,52,27,.12)!important}
+#realMeasure .real-action-grid .real-action-card .mg-submenu-photo{display:block!important;position:relative!important;width:100%!important;height:112px!important;min-height:112px!important;max-height:112px!important;flex:0 0 112px!important;border-radius:11px!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;border:1px solid rgba(50,70,50,.28)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)!important}
+#realMeasure .real-action-grid .real-action-card b{display:block!important;font:1000 15px Tahoma,Arial,sans-serif!important;line-height:1.4!important;color:#1d4d2b!important}
+#realMeasure .real-action-grid .real-action-card small{display:block!important;font:10px/1.6 Tahoma,Arial,sans-serif!important;color:#627364!important;opacity:1!important}
+#realMeasure .real-action-grid .real-action-card:active{transform:scale(.985)!important;background:linear-gradient(145deg,#e8f3e5,#cfdfca)!important}
+#realMeasure .m275-dashboard{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin-top:0!important;align-items:stretch!important}
+#realMeasure .m275-dashboard>.card{box-sizing:border-box!important;min-width:0!important;margin:0!important;padding:13px!important;border:1px solid #899b87!important;border-radius:19px!important;background:linear-gradient(145deg,rgba(246,250,243,.97),rgba(211,224,208,.95))!important;box-shadow:0 4px 12px rgba(15,32,17,.14),inset 0 1px rgba(255,255,255,.95)!important;color:#172b1c!important}
+#realMeasure .m275-dashboard>.m2-pro-sketch-panel,#realMeasure .m275-dashboard>.m2-pro-table-panel{grid-column:1/-1!important}
+#realMeasure .m275-title{font:1000 14px Tahoma,Arial,sans-serif!important;color:#163d23!important;padding:0 0 8px!important;margin:0 0 9px!important;border-bottom:1px solid #c1cfbd!important;justify-content:flex-start!important;line-height:1.6!important}
+#realMeasure .m275-badge{margin-right:auto!important;background:linear-gradient(145deg,#286c40,#164327)!important;color:#fff!important;border:1px solid #8eb18b!important;box-shadow:0 2px 5px rgba(18,65,31,.15)!important}
+#realMeasure .m275-sketch{padding:8px!important;border:1px solid #a8b9a3!important;border-radius:14px!important;background:linear-gradient(145deg,#f4f8f1,#e2ebe0)!important}
+#realMeasure #m275Sketch{border:1px solid #b2c2ae!important;border-radius:10px!important;background:#f4f8f1!important}
+#realMeasure .m2-summary>button{border:1px solid #b0c1ab!important;border-radius:11px!important;background:linear-gradient(145deg,#f8faf6,#e3ece0)!important;color:#23442a!important;box-shadow:0 2px 5px rgba(24,60,30,.08)!important;font-family:Tahoma,Arial,sans-serif!important}
+#realMeasure .m2-summary>button.active{background:linear-gradient(145deg,#dcebd9,#c4dfbf)!important;border:2px solid #5f9860!important}
+#realMeasure .m2-detail-empty,#realMeasure .m2-detail-item{border-color:#c0cec0!important;border-radius:10px!important;background:#f5f8f3!important;color:#23442a!important}
+#realMeasure .m2-detail-item.active{background:#e0efdc!important;border-color:#6c9d68!important}
+#realMeasure .m2-legend{border:1px solid #c0cec0!important;border-radius:11px!important;background:#f1f6ee!important;color:#425d45!important}
+#realMeasure .m277-area-bar{border:1px solid #a8b9a3!important;border-radius:12px!important;background:linear-gradient(90deg,#e3efe0,#f5f8f2)!important;color:#23442a!important;font:900 12px Tahoma,Arial,sans-serif!important}
+#realMeasure .m277-area-bar b{color:#225531!important;font:1000 15px Arial,sans-serif!important}
+#realMeasure .m2-live-result{border:1px solid #a8b9a3!important;border-radius:12px!important;background:#f6f9f4!important;color:#245331!important;font:900 13px Tahoma,Arial,sans-serif!important}
+#realMeasure .m2-quick-actions .btn{border:1px solid #9eb39a!important;border-radius:11px!important;background:linear-gradient(180deg,#edf3ea,#d5e1d2)!important;color:#1d4d2b!important;box-shadow:0 2px 5px rgba(20,60,28,.10)!important;font:900 11px Tahoma,Arial,sans-serif!important}
+#realMeasure .m275-table-wrap{border:1px solid #b1c0ad!important;border-radius:13px!important;background:#f8faf6!important}
+#realMeasure .m275-table th{background:#e1ebdd!important;color:#21452a!important}
+#realMeasure .m275-table td{border-bottom:1px solid #d5dfd1!important;color:#273b2b!important}
+#realMeasure .m277-clear-btn{border:1px solid #a7b4a4!important;border-radius:11px!important;background:linear-gradient(180deg,#edf1eb,#d3dbd0)!important;color:#70413b!important;font:900 11px Tahoma,Arial,sans-serif!important}
+#realMeasure .m275-output{border:1px solid #b1c0ad!important;border-radius:12px!important;background:linear-gradient(145deg,#f8faf6,#e7eee4)!important;color:#25442b!important}
+#realMeasure .m275-output .btn{border:1px solid #8eaa89!important;border-radius:9px!important;background:linear-gradient(180deg,#dcebd8,#b7d2b1)!important;color:#174125!important;font-weight:1000!important}
+#realMeasure .m2-pro-hint{margin-top:12px!important}
+#realMeasure .real-hint b{display:block;font:1000 13px Tahoma,Arial,sans-serif;color:#225531;margin-bottom:5px}
+#realMeasure .real-hint .subtitle{font:10px/1.9 Tahoma,Arial,sans-serif;color:#566b58;margin:0}
+@media(max-width:700px){#realMeasure .m275-dashboard{grid-template-columns:1fr!important}#realMeasure .m275-dashboard>.card{grid-column:1!important}#realMeasure .m2-pro-hero{min-height:178px}#realMeasure .m2-pro-hero-copy{max-width:88%;padding:16px 13px}#realMeasure .m2-pro-hero h1{font-size:21px}#realMeasure .m275-dashboard{gap:10px!important}}
+@media(max-width:430px){#realMeasure .m2-pro-flow{gap:2px;padding:8px 4px}#realMeasure .m2-pro-flow>div{gap:4px}#realMeasure .m2-pro-flow b{width:22px;height:22px;flex-basis:22px;font-size:8px}#realMeasure .m2-pro-flow span{font-size:9px}#realMeasure .m3-stake-panel{padding:10px!important}#realMeasure .real-action-grid{gap:8px!important}#realMeasure .real-action-grid .real-action-card{min-height:172px!important;padding:6px!important}#realMeasure .real-action-grid .real-action-card .mg-submenu-photo{height:92px!important;min-height:92px!important;max-height:92px!important;flex-basis:92px!important}#realMeasure .real-action-grid .real-action-card b{font-size:13px!important}#realMeasure .real-action-grid .real-action-card small{font-size:9px!important}}
+@media(max-width:350px){#realMeasure .m2-pro-flow span{font-size:8px}#realMeasure .m2-pro-hero h1{font-size:19px}}
+</style>
+<style id="miladgeo-bot-avatar-only-styles-v118">
+/* V118: Leica-style survey instrument head + optional always-visible pinned mode; original orb position and main menu preserved. */
+#miladBotOrb .mg117-avatar-svg{display:block;width:66px;height:66px;overflow:visible;filter:drop-shadow(0 3px 4px rgba(0,0,0,.36))}
+#miladBotOrb.mb-pinned{animation:none!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translate(-50%,0)!important;left:50%!important;right:auto!important;bottom:calc(2px + env(safe-area-inset-bottom))!important}
+#miladBotOrb .mg117-blink{transform-box:fill-box;transform-origin:center;animation:mg117EyeBlink 5.2s ease-in-out infinite}
+#miladBotOrb .mg117-blink.delay{animation-delay:.14s}
+#miladBotOrb .mg117-lens-glint{animation:mg117LensGlint 3.8s ease-in-out infinite;transform-origin:center}
+@keyframes mg117EyeBlink{0%,43%,48%,100%{transform:scaleY(1)}45.5%{transform:scaleY(.09)}}
+@keyframes mg117LensGlint{0%,100%{opacity:.45;transform:translateX(0)}50%{opacity:1;transform:translateX(2px)}}
+#main .miladgeo-lang-panel .mg117-avatar-heading{grid-column:1/-1;text-align:center;font:900 13px Tahoma,Arial,sans-serif;color:#263b28;padding:9px 4px 3px;margin-top:5px;border-top:1px solid #bdcbb8}
+#main .miladgeo-lang-panel .mg117-avatar-note{grid-column:1/-1;text-align:center;font:10px/1.7 Tahoma,Arial,sans-serif;color:#56665a;padding:0 5px 3px}
+#main .miladgeo-lang-panel .mg117-avatar-grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
+#main .miladgeo-lang-panel .mg117-avatar-choice{min-width:0;min-height:90px;padding:7px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(145deg,#f8fbf5,#e4ece1);border:1px solid #a5b7a2;border-radius:11px;color:#263c2b;font:800 10px/1.45 Tahoma,Arial,sans-serif;white-space:normal}
+#main .miladgeo-lang-panel .mg117-avatar-choice svg{display:block;width:47px;height:47px}
+#main .miladgeo-lang-panel .mg117-avatar-choice[aria-pressed="true"]{outline:2px solid #236b3b!important;outline-offset:0;border:2px solid #236b3b!important;background:linear-gradient(145deg,#e1f1df,#cde4ca)!important;box-shadow:inset 0 0 0 1px #fff!important}
+#main .miladgeo-lang-panel .mg117-stay-option{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:7px;padding:10px 11px;border:1px solid #9caf9d;border-radius:12px;background:linear-gradient(145deg,#f5faf2,#e5eee1);color:#24452b;cursor:pointer;direction:rtl}
+#main .miladgeo-lang-panel .mg117-stay-option input{width:21px;height:21px;flex:0 0 21px;margin:0;accent-color:#217442;cursor:pointer}
+#main .miladgeo-lang-panel .mg117-sleep-option{border-color:#aeb6ae;background:linear-gradient(145deg,#f7f8f6,#e8ebe7)}
+#main .miladgeo-lang-panel .mg117-sleep-option input{accent-color:#58645b}
+#main .miladgeo-lang-panel .mg117-stay-option input:disabled{opacity:.45;cursor:not-allowed}
+#main .miladgeo-lang-panel .mg117-stay-copy{display:flex;flex-direction:column;gap:3px;min-width:0;font-family:Tahoma,Arial,sans-serif}
+#main .miladgeo-lang-panel .mg117-stay-copy strong{font-size:11px;font-weight:900}
+#main .miladgeo-lang-panel .mg117-stay-copy small{font-size:9px;line-height:1.6;color:#586c5a}
+@media(max-width:350px){#main .miladgeo-lang-panel .mg117-avatar-choice{font-size:9px;min-height:84px}#main .miladgeo-lang-panel .mg117-avatar-choice svg{width:42px;height:42px}}
+</style>
+<script id="miladgeo-bot-avatar-settings-v118">
+(function(){
+ 'use strict';
+ var STORE_KEY='miladgeo_bot_head_style_v117';
+ var orb=document.getElementById('miladBotOrb');
+ var panel=document.querySelector('#main .miladgeo-lang-panel');
+ if(!orb||!panel||panel.querySelector('#mg117AvatarSettings'))return;
+ var originalMarkup='<span class="mb-antenna"></span><span class="mb-halo"></span><span class="mb-face"><span class="mb-ai">AI</span><i class="mb-eye left"></i><i class="mb-eye right"></i><i class="mb-cheek left"></i><i class="mb-cheek right"></i><i class="mb-mouth"></i></span>';
+ function svg(kind,prefix){
+  prefix=String(prefix||'mg117');
+  if(kind==='robot' || kind==='camera'){
+   return '<svg class="mg117-avatar-svg mg117-white-robot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="ربات سفید میلادژئو با دو گوش و صورت مشکی چشمک‌زن"><defs><linearGradient id="'+prefix+'WhiteShell" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset=".34" stop-color="#f7f9fa"/><stop offset=".72" stop-color="#dfe4e7"/><stop offset="1" stop-color="#b9c2c7"/></linearGradient><linearGradient id="'+prefix+'WhiteEar" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffffff"/><stop offset=".7" stop-color="#e8ecee"/><stop offset="1" stop-color="#c7cfd3"/></linearGradient><linearGradient id="'+prefix+'BlackVisor" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#34383d"/><stop offset=".42" stop-color="#111317"/><stop offset="1" stop-color="#050607"/></linearGradient><linearGradient id="'+prefix+'Gloss" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff" stop-opacity=".95"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient><filter id="'+prefix+'BotShadow" x="-40%" y="-40%" width="180%" height="190%"><feGaussianBlur stdDeviation="2.1"/></filter><filter id="'+prefix+'EyeGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><ellipse cx="50" cy="94" rx="33" ry="3.4" fill="#30383d" opacity=".2" filter="url(#'+prefix+'BotShadow)"/><g><path d="M19 29Q19 19 24 13Q29 7 35 11Q41 15 43 25L57 25Q59 15 65 11Q71 7 76 13Q81 19 81 29" fill="url(#'+prefix+'WhiteEar)" stroke="#c4cbd0" stroke-width="1.4"/><path d="M23 25Q25 14 31 12Q37 12 40 24M77 25Q75 14 69 12Q63 12 60 24" fill="none" stroke="#ffffff" stroke-width="1.4" opacity=".72"/><ellipse cx="9" cy="58" rx="7" ry="15" transform="rotate(8 9 58)" fill="url(#'+prefix+'WhiteShell)" stroke="#c8d0d4" stroke-width="1.4"/><ellipse cx="91" cy="58" rx="7" ry="15" transform="rotate(-8 91 58)" fill="url(#'+prefix+'WhiteShell)" stroke="#c8d0d4" stroke-width="1.4"/><path d="M15 34Q15 20 30 19H70Q85 20 85 34V70Q85 87 67 91H33Q15 87 15 70Z" fill="url(#'+prefix+'WhiteShell)" stroke="#c5cdd1" stroke-width="1.8"/><path d="M19 34Q19 23 31 23H69Q81 23 81 34V69Q81 82 66 86H34Q19 82 19 69Z" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".9"/><path d="M21 37Q21 27 33 27H67Q79 27 79 37V66Q79 78 65 81H35Q21 78 21 66Z" fill="url(#'+prefix+'BlackVisor)" stroke="#080a0c" stroke-width="2.1"/><path d="M27 31Q41 27 58 29" fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-width="2" stroke-linecap="round"/><g class="mg117-blink" filter="url(#'+prefix+'EyeGlow)"><rect x="34" y="40" width="13" height="16" rx="5.2" fill="#f7ffff"/><path d="M35 42H46M35 45H46M35 48H46" stroke="#d9ffff" stroke-width=".55" opacity=".8"/></g><g class="mg117-blink delay" filter="url(#'+prefix+'EyeGlow)"><rect x="57" y="45" width="13" height="6" rx="3" fill="#f7ffff"/><path d="M59 47H68" stroke="#d9ffff" stroke-width=".6" opacity=".85"/></g><path d="M43 63Q50 70 57 63" fill="none" stroke="#f7ffff" stroke-width="3.2" stroke-linecap="round" filter="url(#'+prefix+'EyeGlow)"/><path d="M27 30Q31 26 39 27" fill="none" stroke="url(#'+prefix+'Gloss)" stroke-width="2.2" stroke-linecap="round"/><path d="M67 75Q73 72 75 65" fill="none" stroke="#ffffff" stroke-opacity=".12" stroke-width="1.6" stroke-linecap="round"/></g></svg>';
+  }
+  if(kind==='girl'){
+   return '<svg class="mg117-avatar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="سر ربات میلادژئو با ظاهر دخترانه"><defs><linearGradient id="'+prefix+'Shell" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffafd"/><stop offset=".5" stop-color="#e9dff7"/><stop offset="1" stop-color="#a98acb"/></linearGradient><linearGradient id="'+prefix+'Visor" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#29304c"/><stop offset="1" stop-color="#11172c"/></linearGradient><linearGradient id="'+prefix+'Pink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffb9da"/><stop offset="1" stop-color="#d957a3"/></linearGradient><radialGradient id="'+prefix+'Eye"><stop stop-color="#fff"/><stop offset=".3" stop-color="#a9faff"/><stop offset="1" stop-color="#43c8e3"/></radialGradient></defs><ellipse cx="50" cy="91" rx="35" ry="5" fill="#1c1624" opacity=".18"/><circle cx="12" cy="51" r="12" fill="#8f77b2" stroke="#f4e6ff" stroke-width="3"/><circle cx="88" cy="51" r="12" fill="#8f77b2" stroke="#f4e6ff" stroke-width="3"/><circle cx="12" cy="51" r="5" fill="#f7c4e5"/><circle cx="88" cy="51" r="5" fill="#f7c4e5"/><rect x="13" y="9" width="74" height="82" rx="30" fill="url(#'+prefix+'Shell)" stroke="#765d98" stroke-width="3"/><path d="M23 31Q25 12 50 12Q75 12 77 31" fill="none" stroke="#d875b4" stroke-width="5" stroke-linecap="round"/><path d="M18 37Q25 23 39 26M82 37Q75 23 61 26" fill="none" stroke="#b66b9e" stroke-width="3" stroke-linecap="round"/><rect x="20" y="33" width="60" height="43" rx="19" fill="url(#'+prefix+'Visor)" stroke="#f8d9f0" stroke-width="2.5"/><g class="mg117-blink"><path d="M31 49q7-10 14 0" fill="none" stroke="#8ef5ff" stroke-width="3.5" stroke-linecap="round"/><circle cx="38" cy="52" r="4.7" fill="url(#'+prefix+'Eye)"/><path d="M27 46l-4-4m8 1l-2-5m7 4v-5" stroke="#19172a" stroke-width="1.7" stroke-linecap="round"/></g><g class="mg117-blink delay"><path d="M55 49q7-10 14 0" fill="none" stroke="#8ef5ff" stroke-width="3.5" stroke-linecap="round"/><circle cx="62" cy="52" r="4.7" fill="url(#'+prefix+'Eye)"/><path d="M52 42l-2-5m8 4v-5m8 6l3-4" stroke="#19172a" stroke-width="1.7" stroke-linecap="round"/></g><ellipse cx="29" cy="64" rx="5" ry="2.8" fill="#f28bbd" opacity=".85"/><ellipse cx="71" cy="64" rx="5" ry="2.8" fill="#f28bbd" opacity=".85"/><path d="M44 65q6 6 12 0" fill="none" stroke="#ffb9de" stroke-width="2.5" stroke-linecap="round"/><path d="M27 13q-8-9-15-2q-1 9 12 12q-2 10 7 10q9-5 3-13q10-5 7-13q-8-6-14 6z" fill="url(#'+prefix+'Pink)" stroke="#a74282" stroke-width="1.5"/><circle cx="29" cy="19" r="3" fill="#fff2fb"/><path d="M50 6l2-4 2 4 4 2-4 2-2 4-2-4-4-2z" fill="#f5d16d" stroke="#a98435" stroke-width=".8"/></svg>';
+  }
+  return '<svg class="mg117-avatar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="سر ربات اصلی میلادژئو"><defs><linearGradient id="'+prefix+'Classic" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#effff0"/><stop offset=".55" stop-color="#77c99a"/><stop offset="1" stop-color="#236b49"/></linearGradient></defs><circle cx="50" cy="50" r="45" fill="url(#'+prefix+'Classic)" stroke="#d6f5d8" stroke-width="3"/><rect x="17" y="26" width="66" height="47" rx="21" fill="#123b2c" stroke="#e4ffe5" stroke-width="3"/><g class="mg117-blink"><ellipse cx="36" cy="48" rx="5.5" ry="7.5" fill="#baff84"/><ellipse cx="36" cy="46" rx="2" ry="2" fill="#fff"/></g><g class="mg117-blink delay"><ellipse cx="64" cy="48" rx="5.5" ry="7.5" fill="#baff84"/><ellipse cx="64" cy="46" rx="2" ry="2" fill="#fff"/></g><path d="M42 60q8 7 16 0" stroke="#d9ffb7" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="50" cy="12" r="5" fill="#a5edff" stroke="#fff" stroke-width="1.5"/><path d="M50 17v7" stroke="#dffcff" stroke-width="3" stroke-linecap="round"/></svg>';
+ }
+ window.mg117AvatarSvg=svg;
+ function apply(kind,save){
+  if(kind==='camera')kind='robot';
+  if(['classic','robot','girl'].indexOf(kind)<0)kind='classic';
+  if(kind==='classic')orb.innerHTML=originalMarkup;
+  else orb.innerHTML=svg(kind,'mg117live');
+  orb.setAttribute('data-mg-bot-avatar',kind);
+  if(save!==false){try{localStorage.setItem(STORE_KEY,kind)}catch(e){}}
+  panel.querySelectorAll('[data-mg117-avatar-choice]').forEach(function(btn){btn.setAttribute('aria-pressed',btn.getAttribute('data-mg117-avatar-choice')===kind?'true':'false')});
+ }
+ var section=document.createElement('section');section.id='mg117AvatarSettings';section.style.cssText='display:contents';
+ var heading=document.createElement('div');heading.className='mg117-avatar-heading';heading.textContent='ظاهر ربات دستیار میلاد';section.appendChild(heading);
+ var note=document.createElement('div');note.className='mg117-avatar-note';note.textContent='فقط ظاهر سر ربات عوض می‌شود؛ گفتگو، صدا و امکانات همان دستیار قبلی می‌ماند.';section.appendChild(note);
+ var grid=document.createElement('div');grid.className='mg117-avatar-grid';section.appendChild(grid);
+ var choices=[{id:'classic',label:'ربات اصلی',sub:'ظاهر قبلی'}, {id:'robot',label:'ربات سفید',sub:'بدنه سفید، دو گوش و صورت مشکی'}, {id:'girl',label:'ربات دخترانه',sub:'همان ربات با استایل لطیف'}];
+ choices.forEach(function(item){
+  var btn=document.createElement('button');btn.type='button';btn.className='mg117-avatar-choice';btn.setAttribute('data-mg117-avatar-choice',item.id);btn.setAttribute('aria-pressed','false');
+  btn.innerHTML=svg(item.id,'mg117thumb'+item.id)+'<span>'+item.label+'</span><small>'+item.sub+'</small>';
+  btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();apply(item.id,true)});
+  grid.appendChild(btn);
+ });
+ var stayLabel=document.createElement('label');stayLabel.className='mg117-stay-option';stayLabel.setAttribute('for','mg117StayVisible');
+ var stayInput=document.createElement('input');stayInput.type='checkbox';stayInput.id='mg117StayVisible';stayInput.checked=!!(window.miladBotIsPinned&&window.miladBotIsPinned());
+ var stayCopy=document.createElement('span');stayCopy.className='mg117-stay-copy';stayCopy.innerHTML='<strong>ربات همیشه نمایش داده شود</strong><small>با فعال‌کردن این گزینه، ربات در جای ثابت پایین صفحه می‌ماند و مخفی، نیمه‌پنهان یا فراری نمی‌شود.</small>';
+ stayLabel.appendChild(stayInput);stayLabel.appendChild(stayCopy);
+ var sleepLabel=document.createElement('label');sleepLabel.className='mg117-stay-option mg117-sleep-option';sleepLabel.setAttribute('for','mg117BotSleep');
+ var sleepInput=document.createElement('input');sleepInput.type='checkbox';sleepInput.id='mg117BotSleep';sleepInput.checked=!!(window.miladBotIsSleeping&&window.miladBotIsSleeping());
+ var sleepCopy=document.createElement('span');sleepCopy.className='mg117-stay-copy';sleepCopy.innerHTML='<strong>ربات بخوابه و نمایش داده نشه</strong><small>با فعال‌کردن این گزینه، ربات و پیام‌های خودکارش پنهان می‌مانند؛ هر زمان خواستی با برداشتن تیک دوباره بیدار می‌شود.</small>';
+ sleepLabel.appendChild(sleepInput);sleepLabel.appendChild(sleepCopy);
+ function syncBotVisibilityOptions(){stayInput.disabled=sleepInput.checked;stayLabel.style.opacity=sleepInput.checked?'.55':'1'}
+ stayInput.addEventListener('change',function(e){e.stopPropagation();if(stayInput.checked){sleepInput.checked=false;if(window.miladBotSetSleeping)window.miladBotSetSleeping(false)}if(window.miladBotSetPinned)window.miladBotSetPinned(stayInput.checked);else{try{localStorage.setItem('miladgeo_bot_orb_pinned_v118',stayInput.checked?'1':'0')}catch(err){}}syncBotVisibilityOptions()});
+ sleepInput.addEventListener('change',function(e){e.stopPropagation();if(sleepInput.checked){stayInput.checked=false;if(window.miladBotSetSleeping)window.miladBotSetSleeping(true);if(window.miladBotSetPinned)window.miladBotSetPinned(false)}else{if(window.miladBotSetSleeping)window.miladBotSetSleeping(false)}syncBotVisibilityOptions()});
+ section.appendChild(stayLabel);section.appendChild(sleepLabel);syncBotVisibilityOptions();
+ panel.appendChild(section);
+ var saved='robot';try{saved=localStorage.getItem(STORE_KEY)||'robot'}catch(e){}
+ if(saved==='camera')saved='robot';
+ apply(saved,false);
+})();
+</script>
+
+<style id="mg-auto-theme-rotation-style">
+#main .miladgeo-lang-panel .mg-auto-theme-heading{grid-column:1/-1;text-align:center;font:900 13px Tahoma,Arial,sans-serif;color:#263b28;padding:9px 4px 3px;margin-top:5px;border-top:1px solid #bdcbb8}
+#main .miladgeo-lang-panel .mg-auto-theme-choice{min-width:0;min-height:66px;padding:9px 6px;border:1px solid #8a9b89;border-radius:12px;background:linear-gradient(145deg,#fff,#e7eee4);color:#263b28;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:900 13px/1.35 Tahoma,Arial,sans-serif;box-shadow:0 3px 9px #00000012}
+#main .miladgeo-lang-panel .mg-auto-theme-choice small{font:500 9px/1.5 Tahoma,Arial,sans-serif;opacity:.8}
+#main .miladgeo-lang-panel .mg-auto-theme-choice[aria-pressed="true"]{outline:2px solid #34734a;border:2px solid #34734a;background:linear-gradient(145deg,#e6f4e4,#cfe5cd);box-shadow:inset 0 0 0 1px #fff,0 3px 10px #0002}
+#main .miladgeo-lang-panel .mg-auto-theme-note{grid-column:1/-1;text-align:center;font:10px/1.8 Tahoma,Arial,sans-serif;color:#526452;padding:2px 6px 5px}
+</style>
+<script id="mg-auto-theme-rotation-runtime">
+(function(){
+ 'use strict';
+ var STORE='miladgeo_auto_theme_rotation_v1';
+ var DAY=24*60*60*1000, WEEK=7*DAY, MONTH=30*DAY;
+ var timer=null, mode='off', nextAt=0, lastTheme='';
+ function read(){try{var v=JSON.parse(localStorage.getItem(STORE)||'{}');mode=(v.mode==='24h'||v.mode==='week'||v.mode==='month')?v.mode:'off';nextAt=Number(v.nextAt)||0;lastTheme=String(v.lastTheme||'');}catch(e){mode='off';nextAt=0;lastTheme='';}}
+ function save(){try{localStorage.setItem(STORE,JSON.stringify({mode:mode,nextAt:nextAt,lastTheme:lastTheme}));}catch(e){}}
+ function interval(){return mode==='week'?WEEK:(mode==='month'?MONTH:DAY);}
+ function syncButtons(){var panel=document.querySelector('#main .miladgeo-lang-panel');if(!panel)return;panel.querySelectorAll('[data-mg-auto-theme]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-mg-auto-theme')===mode?'true':'false');});}
+ function chooseRandom(){
+  var choices=Array.prototype.slice.call(document.querySelectorAll('#main .mg-theme-choice[data-theme]'))
+   .map(function(b){return b.getAttribute('data-theme');}).filter(function(id,i,a){return id&&a.indexOf(id)===i;});
+  if(!choices.length)return false;
+  var current='';try{current=localStorage.getItem('miladgeo-main-theme-399')||'';}catch(e){}
+  var pool=choices.filter(function(id){return id!==current&&id!==lastTheme;});
+  if(!pool.length)pool=choices.filter(function(id){return id!==current;});
+  if(!pool.length)pool=choices;
+  var picked=pool[Math.floor(Math.random()*pool.length)];
+  if(typeof window.miladGeoApplyMainTheme==='function')window.miladGeoApplyMainTheme(picked);
+  else{var button=document.querySelector('#main .mg-theme-choice[data-theme="'+picked+'"]');if(button)button.click();else return false;}
+  lastTheme=picked;return true;
+ }
+ function runIfDue(){
+  if(mode==='off')return;
+  var now=Date.now();
+  if(!nextAt){nextAt=now+interval();save();}
+  if(now>=nextAt){
+   if(chooseRandom()){
+    nextAt=now+interval();save();
+    if(typeof window.showToast==='function')window.showToast(mode==='week'?'رنگ صفحه به‌صورت تصادفی تغییر کرد؛ تغییر بعدی یک هفته دیگر انجام می‌شود.':'رنگ صفحه به‌صورت تصادفی تغییر کرد؛ تغییر بعدی ۲۴ ساعت دیگر انجام می‌شود.');
+   }else{nextAt=now+60000;save();}
+  }
+  syncButtons();schedule();
+ }
+ function schedule(){if(timer)clearTimeout(timer);if(mode==='off')return;var wait=Math.max(1000,nextAt-Date.now());timer=setTimeout(runIfDue,Math.min(wait,2147480000));}
+ function select(value){
+  mode=value;nextAt=mode==='off'?0:Date.now()+interval();save();syncButtons();schedule();
+  if(typeof window.showToast==='function'){var msg=value==='off'?'تغییر خودکار رنگ صفحه غیرفعال شد.':value==='week'?'از این پس رنگ صفحه به‌صورت تصادفی هر ۱ هفته تغییر خواهد کرد.':value==='month'?'از این پس رنگ صفحه به‌صورت تصادفی هر ۱ ماه (۳۰ روز) تغییر خواهد کرد.':'از این پس رنگ صفحه به‌صورت تصادفی هر ۲۴ ساعت تغییر خواهد کرد.';window.showToast(msg);}
+ }
+ function addCards(){
+  var panel=document.querySelector('#main .miladgeo-lang-panel');
+  if(!panel||panel.querySelector('[data-mg-auto-theme]'))return;
+  // Place the automatic-rotation controls immediately after the theme color cards.
+  var themeCards=panel.querySelectorAll('.mg-theme-choice');
+  var anchor=themeCards.length?themeCards[themeCards.length-1]:null;
+  var heading=document.createElement('div');heading.className='mg-auto-theme-heading';heading.textContent='تغییر خودکار و تصادفی رنگ صفحه';
+  var nodes=[heading];
+  [{id:'24h',label:'🕒 هر ۲۴ ساعت',sub:'تغییر رنگ روزانه'},{id:'week',label:'🗓️ هر ۱ هفته',sub:'تغییر رنگ هفتگی'},{id:'month',label:'📅 هر ۱ ماه',sub:'تغییر رنگ هر ۳۰ روز'},{id:'off',label:'⏸️ بدون تغییر خودکار',sub:'رنگ صفحه ثابت می‌ماند'}].forEach(function(item){
+   var b=document.createElement('button');b.type='button';b.className='mg-auto-theme-choice';b.setAttribute('data-mg-auto-theme',item.id);b.setAttribute('aria-pressed','false');
+   var strong=document.createElement('strong');strong.textContent=item.label;var small=document.createElement('small');small.textContent=item.sub;b.appendChild(strong);b.appendChild(small);
+   b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();select(item.id);});nodes.push(b);
+  });
+  var note=document.createElement('div');note.className='mg-auto-theme-note';note.textContent='با انتخاب بازه، زمان‌بندی از همان لحظه شروع می‌شود. گزینه «بدون تغییر خودکار» این قابلیت را غیرفعال می‌کند؛ انتخابت پس از بستن برنامه حفظ خواهد شد.';nodes.push(note);
+  var reference=anchor?anchor.nextSibling:panel.firstChild;
+  nodes.forEach(function(node){panel.insertBefore(node,reference);});
+  syncButtons();
+ }
+ function init(){addCards();read();if(mode!=='off'){if(!nextAt){nextAt=Date.now()+interval();save();}runIfDue();}syncButtons();}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+ window.addEventListener('pageshow',function(){read();runIfDue();});
+ document.addEventListener('visibilitychange',function(){if(!document.hidden){read();runIfDue();}});
+ window.addEventListener('focus',function(){read();runIfDue();});
+})();
+</script>
+
+<!-- MILADGEO V149: reliable 1x1 home widgets for every main menu entry -->
+<style id="mg-home-widgets-v149-style">
+#mgHomeWidgets149{direction:rtl;box-sizing:border-box;width:100%;margin:10px 0 14px;padding:12px;border:1px solid rgba(130,190,160,.62);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(223,239,225,.92));box-shadow:0 7px 22px rgba(12,35,18,.13);color:#173522}
+#mgHomeWidgets149[hidden]{display:none!important}
+#mgHomeWidgets149 .mgw-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
+#mgHomeWidgets149 .mgw-title{font:900 15px Tahoma,Arial,sans-serif;display:flex;align-items:center;gap:7px}
+#mgHomeWidgets149 .mgw-sub{font:600 10px Tahoma,Arial,sans-serif;opacity:.72;margin-top:3px}
+#mgHomeWidgets149 .mgw-count{font:800 10px Tahoma,Arial,sans-serif;padding:5px 8px;border-radius:99px;background:#d9ebdb;border:1px solid #9dc2a2}
+#mgHomeWidgets149 .mgw-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#mgHomeWidgets149 .mgw-tile{position:relative;min-width:0;aspect-ratio:1/1;border:1px solid #82a98a;border-radius:14px;background:linear-gradient(145deg,#f8fff7,#d9ead9 58%,#c7dfcc);box-shadow:inset 0 1px 0 #fff,0 3px 9px #17352220;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:9px 6px 7px;color:#183a24;cursor:pointer;overflow:hidden;font-family:Tahoma,Arial,sans-serif;touch-action:manipulation;transition:transform .12s,box-shadow .12s}
+#mgHomeWidgets149 .mgw-tile:active{transform:scale(.97);box-shadow:inset 0 2px 6px #17352222}
+#mgHomeWidgets149 .mgw-icon{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#fff,#c6ddcc);border:1px solid #a5c2aa;box-shadow:0 3px 8px #183a2422;font-size:24px;font-weight:900}
+#mgHomeWidgets149 .mgw-num{font:900 11px Tahoma,Arial,sans-serif;opacity:.68}
+#mgHomeWidgets149 .mgw-name{font:900 11px/1.45 Tahoma,Arial,sans-serif;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+#mgHomeWidgets149 .mgw-remove{position:absolute;top:4px;left:4px;width:23px;height:23px;min-width:23px;min-height:23px;padding:0;border:1px solid #c18b8b;border-radius:8px;background:#fff;color:#9d2929;font:900 16px/20px Tahoma,Arial,sans-serif;z-index:2;cursor:pointer}
+#main .menu-grid>.menu-btn{position:relative}
+#main .mgw-pin-menu{position:absolute!important;left:7px!important;top:7px!important;z-index:30!important;width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;padding:0!important;margin:0!important;border:1px solid #8aa58d!important;border-radius:9px!important;background:rgba(255,255,255,.96)!important;color:#245b32!important;box-shadow:0 2px 7px #0003!important;font:900 18px/28px Tahoma,Arial,sans-serif!important;display:grid!important;place-items:center!important;cursor:pointer!important}
+#main .mgw-pin-menu.is-active{background:#d5efd9!important;border-color:#2d9148!important;color:#087a31!important}
+@media(min-width:560px){#mgHomeWidgets149 .mgw-grid{grid-template-columns:repeat(4,minmax(0,1fr))}#mgHomeWidgets149 .mgw-name{font-size:12px}}
+@media(max-width:360px){#mgHomeWidgets149{padding:9px}#mgHomeWidgets149 .mgw-grid{gap:6px}#mgHomeWidgets149 .mgw-tile{border-radius:11px;padding:7px 4px}#mgHomeWidgets149 .mgw-icon{width:37px;height:37px;font-size:21px}#mgHomeWidgets149 .mgw-name{font-size:10px}}
+</style>
+<script id="mg-home-widgets-v149">
+(function(){
+ 'use strict';
+ var KEY='miladgeo_home_widgets_149_v1';
+ var MENU_TITLES=['شبیه‌ساز لایکا','برداشت زمینی','پیاده‌سازی نقاط','ترازیابی و توپوگرافی','نقاط و TXT','ورود و خروجی Excel','مساحت و پلیگون','محاسبه حجم سه‌بعدی','Mini AutoCAD','DXF به PDF','تبدیل مختصات','مبدل واحدها','محاسبات COGO','ماشین‌حساب مهندسی','مرکز بازی‌ها','کتابخانه مهندسی','گوگل ارث و ترسیم','جهت‌یابی و قطب‌نما','دوربین نقشه‌برداری','دفتر مهندس'];
+ var MENU_ICONS=['📸','📍','🎯','📏','📌','📊','📐','🧊','🖥️','🖨️','🌐','📏','🧮','🧮','🎮','📚','🗺️','🧭','📷','🗒️'];
+ function safeRead(){try{var a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a.map(String).filter(function(x,i){return /^m\d+$/.test(x)&&a.indexOf(x)===i&&Number(x.slice(1))>=1&&Number(x.slice(1))<=20;}):[]}catch(e){return[]}}
+ function safeWrite(a){try{localStorage.setItem(KEY,JSON.stringify(a));return true}catch(e){toast('ذخیره ویجت انجام نشد؛ حافظه برنامه را بررسی کن.');return false}}
+ function toast(msg){if(typeof window.showToast==='function')window.showToast(msg);else if(typeof window.toast==='function')window.toast(msg);else console.log(msg)}
+ function main(){return document.getElementById('main')}
+ function menuGrid(){var m=main();return m&&m.querySelector('.menu-grid')}
+ function anchors(){var g=menuGrid();return g?Array.prototype.filter.call(g.querySelectorAll(':scope > a.menu-btn'),function(a){return !!a;}):[]}
+ function getAnchor(n){return anchors()[n-1]||null}
+ function titleFrom(a,n){var t=a&&(a.querySelector('.menu-label')||a.querySelector('.menu-title'));var raw=t?(t.innerText||t.textContent):a?(a.innerText||a.textContent):'';raw=String(raw||'').replace(/\s+/g,' ').trim();return raw.replace(/^\s*[0-9۰-۹]+\s*/,'').split(' ').slice(0,6).join(' ')||MENU_TITLES[n-1]}
+ function makePanel(){var m=main();if(!m)return null;var box=document.getElementById('mgHomeWidgets149');if(box)return box;box=document.createElement('section');box.id='mgHomeWidgets149';box.setAttribute('aria-label','ویجت‌های صفحه اصلی');box.hidden=true;box.innerHTML='<div class="mgw-head"><div><div class="mgw-title">▦ ویجت‌های من</div><div class="mgw-sub">میانبرهای یک‌لمسی، هر کارت در اندازه ۱×۱</div></div><span class="mgw-count" id="mgwCount149">۰ ویجت</span></div><div class="mgw-grid" id="mgwGrid149"></div>';
+  var job=m.querySelector('.main-job-card'),grid=menuGrid(),slot=document.getElementById('mgMusicDockSlot');
+  if(job&&job.parentNode)job.parentNode.insertBefore(box,job.nextSibling);else if(slot&&slot.parentNode)slot.parentNode.insertBefore(box,slot.nextSibling);else if(grid&&grid.parentNode)grid.parentNode.insertBefore(box,grid);else m.appendChild(box);return box;}
+ function selectedTitle(n){var a=getAnchor(n);return titleFrom(a,n)}
+ function openMenu(n){var a=getAnchor(n);if(!a){toast('منوی انتخاب‌شده در این نسخه پیدا نشد.');return;}
+  try{a.click();}catch(e){var href=a.getAttribute('href')||'';var oc=a.getAttribute('onclick')||'';var p=oc.match(/(?:goPage|showPage)\(['"]([^'"]+)['"]\)/);if(p&&typeof window.goPage==='function')window.goPage(p[1]);else if(href.charAt(0)==='#'&&typeof window.goPage==='function')window.goPage(href.slice(1));else if(href)window.location.href=href;else toast('باز کردن منو ناموفق بود.');}
+ }
+ function render(){var box=makePanel();if(!box)return;var grid=box.querySelector('#mgwGrid149'),count=box.querySelector('#mgwCount149'),ids=safeRead();grid.innerHTML='';box.hidden=!ids.length;count.textContent=ids.length+' ویجت';ids.forEach(function(key){var n=Number(key.slice(1)),a=getAnchor(n);if(!a)return;var tile=document.createElement('div');tile.className='mgw-tile';tile.setAttribute('role','button');tile.tabIndex=0;tile.setAttribute('data-mgw-open',key);tile.setAttribute('aria-label','باز کردن '+selectedTitle(n));var icon=document.createElement('span');icon.className='mgw-icon';icon.textContent=MENU_ICONS[n-1];var num=document.createElement('span');num.className='mgw-num';num.textContent='منوی '+String(n).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[Number(d)]});var label=document.createElement('span');label.className='mgw-name';label.textContent=selectedTitle(n);var remove=document.createElement('button');remove.type='button';remove.className='mgw-remove';remove.textContent='×';remove.title='حذف ویجت';remove.setAttribute('aria-label','حذف ویجت '+selectedTitle(n));remove.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();safeWrite(safeRead().filter(function(x){return x!==key}));render();refreshPins();});tile.append(icon,num,label);tile.appendChild(remove);tile.addEventListener('click',function(e){if(e.target.closest('.mgw-remove'))return;e.preventDefault();e.stopPropagation();openMenu(n);});tile.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){if(e.target.closest('.mgw-remove'))return;e.preventDefault();openMenu(n);}});grid.appendChild(tile);});}
+ function toggle(n){var key='m'+n,a=safeRead(),i=a.indexOf(key);if(i>=0)a.splice(i,1);else a.push(key);if(safeWrite(a)){render();refreshPins();toast(i>=0?'ویجت از صفحه اصلی برداشته شد.':'ویجت به صفحه اصلی اضافه شد.');}}
+ function refreshPins(){anchors().forEach(function(a,i){var n=i+1,btn=a.querySelector(':scope > .mgw-pin-menu');if(!btn){btn=document.createElement('button');btn.type='button';btn.className='mgw-pin-menu';btn.setAttribute('data-mgw-pin',String(n));btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();toggle(n);});a.appendChild(btn);}var active=safeRead().indexOf('m'+n)>=0;btn.classList.toggle('is-active',active);btn.textContent=active?'✓':'＋';btn.title=active?'حذف ویجت از صفحه اصلی':'افزودن منو به صفحه اصلی';btn.setAttribute('aria-label',btn.title+'، '+selectedTitle(n));});}
+ function directLegacyWidget(title){var t=String(title||'').replace(/^[^A-Za-z0-9\u0600-\u06FF]+/,'').trim().toLowerCase();var map=[
+  ['شبیه‌ساز لایکا',1],['برداشت زمینی',2],['پیاده‌سازی نقاط',3],['ترازیابی و توپوگرافی',4],['نقاط و txt',5],['ورود و خروجی excel',6],['مساحت و پلیگون',7],['محاسبه حجم سه‌بعدی',8],['mini autocad',9],['dxf به pdf',10],['تبدیل مختصات',11],['مبدل واحدها',12],['محاسبات cogo',13],['ماشین‌حساب مهندسی',14],['مرکز بازی‌ها',15],['کتابخانه مهندسی',16],['گوگل ارث و ترسیم',17],['جهت‌یابی و قطب‌نما',18],['دوربین نقشه‌برداری',19],['دفتر مهندس',20]
+ ];for(var i=0;i<map.length;i++)if(t.indexOf(map[i][0])>=0)return map[i][1];return 0;}
+ function interceptOldWidgetClicks(e){var row=e.target&&e.target.closest&&e.target.closest('#mgPinnedSearchToolsV282 .mg-v282-pinned-row');if(!row||e.target.closest('.mg-v282-unpin'))return;var title=row.querySelector('span');var n=directLegacyWidget(title?title.textContent:'');if(!n)return;e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();openMenu(n);}
+ function init(){makePanel();refreshPins();render();document.addEventListener('click',interceptOldWidgetClicks,true);var m=main();if(m&&window.MutationObserver){var pending=false;new MutationObserver(function(records){var change=records.some(function(r){return Array.prototype.some.call(r.addedNodes||[],function(n){return n.nodeType===1&&(n.matches&&n.matches('.menu-grid,.menu-btn')||n.querySelector&&n.querySelector('.menu-grid,.menu-btn'));});});if(!change||pending)return;pending=true;requestAnimationFrame(function(){pending=false;refreshPins();render();});}).observe(m,{childList:true,subtree:true});}window.addEventListener('pageshow',function(){refreshPins();render();});window.addEventListener('storage',function(e){if(e.key===KEY){refreshPins();render();}});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>

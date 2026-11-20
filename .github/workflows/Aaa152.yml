@@ -18,12 +18,16 @@ on:
       - 'Indexcad20.html'
       - 'bazi_mohandes_v57.html'
       - 'music25.html'
+      - '.miladgeo149_parts/**'
       - '.github/workflows/Abzarnaghshe880.yml'
       - '.github/workflows/Abzarnaghshe885.yml'
       - '.github/workflows/X2.yml'
       - '.github/workflows/X102.yml'
       - '.github/workflows/XX222_AutoOpen_Bazaar.yml'
       - '.github/workflows/XX272_AutoOpen_Bazaar.yml'
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -32,6 +36,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Reassemble and publish Indexxx149.html
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d .miladgeo149_parts
+          cat .miladgeo149_parts/part_*.txt > Indexxx149.html
+          test -s Indexxx149.html
+          echo "Reassembled Indexxx149.html ($(wc -c < Indexxx149.html) bytes)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Indexxx149.html
+          git rm -r .miladgeo149_parts
+          git commit -m "Publish Indexxx149.html source"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Prepare offline DWG engine
         run: |

@@ -1,0 +1,1000 @@
+ m19.rows.push({point:point,kind:kind,bs:bs,is:isv,fs:fs,hi:hiUsed,rl:rl,delta:delta,rise:rise,fall:fall,nextHI:nextHI,dist:dist,chainage:chainage});
+ m19.tpPending=(kind==='tp');
+ el('m19Point').value=m19.tpPending?point:'';el('m19BS').value='';el('m19IS').value='';el('m19FS').value='';if(el('m19Dist'))el('m19Dist').value='';if(el('m19Kind'))el('m19Kind').value='normal';
+ if(m19.tpPending){el('m19BookStatus').innerHTML='✓ '+esc(point)+' به‌عنوان TP ثبت شد. حالا فقط <b>B.S دستگاه جدید</b> را برای همین نقطه وارد کن و «ثبت ردیف» را بزن.';}
+ m19RenderBook();m19RenderRF();m19RenderReport();return false;
+}
+function m19RenderBook(){
+ var box=el('m19BookWrap');if(!box)return;
+ if(!m19.rows.length){box.innerHTML='<div style="padding:12px;text-align:center">هنوز ردیفی ثبت نشده است.</div>';var k=el('m19BookKpis');if(k)k.innerHTML='';return}
+ var html='<table><thead><tr><th>ردیف</th><th>نام نقطه</th><th>نوع</th><th>B.S<br>قرائت عقب</th><th>I.S<br>قرائت وسط</th><th>F.S<br>قرائت جلو</th><th>Rise</th><th>Fall</th><th>H / RL (m)</th><th>HI (m)</th><th>×</th></tr></thead><tbody>';
+ var sumBS=0,sumIS=0,sumFS=0;
+ m19.rows.forEach(function(r,i){if(isFinite(r.bs))sumBS+=r.bs;if(isFinite(r.is))sumIS+=r.is;if(isFinite(r.fs))sumFS+=r.fs;
+  html+='<tr><td>'+(i+1)+'</td><td><b>'+esc(r.point)+'</b></td><td>'+(r.kind==='tp'?'<b>TP-FS</b>':(r.kind==='tp-bs'?'<b>TP-BS</b>':'—'))+'</td><td>'+fmt(r.bs)+'</td><td>'+fmt(r.is)+'</td><td>'+fmt(r.fs)+'</td><td>'+r.rise+'</td><td>'+r.fall+'</td><td><b>'+fmt(r.rl)+'</b></td><td>'+fmt(r.hi)+'</td><td><button class="btn danger" style="min-height:30px;padding:3px 7px" onclick="m19RemoveRow('+i+')" type="button">×</button></td></tr>';
+ });
+ html+='<tr class="sum"><td colspan="3">مجموع</td><td>'+fmt(sumBS)+'</td><td>'+fmt(sumIS)+'</td><td>'+fmt(sumFS)+'</td><td colspan="3">ΣBS − ΣFS = '+fmt(sumBS-sumFS)+'</td><td></td><td></td></tr></tbody></table>';
+ box.innerHTML=html;
+ var k=el('m19BookKpis');if(k){var first=m19.startRL,last=m19.rows[m19.rows.length-1].rl,deltaRL=last-first,check=(sumBS-sumFS)-deltaRL,tpCount=m19.rows.filter(function(r){return r.kind==='tp'}).length;k.innerHTML='<div class="m19-kpis"><div class="m19-kpi">Σ B.S<b>'+fmt(sumBS)+'</b></div><div class="m19-kpi">Σ F.S<b>'+fmt(sumFS)+'</b></div><div class="m19-kpi">ΔRL<b>'+fmt(deltaRL)+'</b></div><div class="m19-kpi">خطای کنترل<b>'+fmt(check)+'</b></div><div class="m19-kpi">تعداد TP<b>'+tpCount+'</b></div></div>'}
+ var st=el('m19BookStatus');if(st)st.innerHTML=m19.tpPending?'⚠️ '+m19.rows.length+' ردیف ثبت شده — <b>'+esc(m19.rows[m19.rows.length-1].point)+'</b> در انتظار B.S دستگاه جدید است.':'✓ '+m19.rows.length+' ردیف ثبت شده — <b>کنترل عددی جدول انجام شد.</b>';
+}
+function m19Guide(){
+ var box=el('m19GuideBox');
+ if(!box)return false;
+ box.style.display=(box.style.display==='none'||!box.style.display)?'block':'none';
+ return false;
+}
+function m19RemoveRow(i){m19.rows.splice(i,1);m19.tpPending=false;if(m19.rows.length&&m19.rows[m19.rows.length-1].kind==='tp')m19.tpPending=true;m19RenderBook();m19RenderRF();m19RenderReport()}
+function m19ClearBook(){m19.rows=[];m19.startRL=NaN;m19.tpPending=false;m19RenderBook();m19RenderRF();m19RenderReport();var st=el('m19BookStatus');if(st)st.textContent='جدول پاک شد. RL نقطه شروع را دوباره وارد کن.'}
+function m19RenderRF(){var b=el('m19RFBody');if(!b)return;if(!m19.rows.length){b.innerHTML='<div class="m19-status">ابتدا در «دفتر ترازیابی» چند ردیف ثبت کن.</div>';return}var h='<div class="m19-book"><table><thead><tr><th>نقطه</th><th>RL قبلی</th><th>RL فعلی</th><th>ΔH</th><th>Rise</th><th>Fall</th></tr></thead><tbody>';m19.rows.forEach(function(r,i){var prev=i?m19.rows[i-1].rl:m19.startRL,d=isFinite(r.rl)&&isFinite(prev)?r.rl-prev:NaN;h+='<tr><td>'+esc(r.point)+'</td><td>'+fmt(prev)+'</td><td>'+fmt(r.rl)+'</td><td>'+fmt(d)+'</td><td>'+(d>0?fmt(d):'')+'</td><td>'+(d<0?fmt(-d):'')+'</td></tr>'});h+='</tbody></table></div>';b.innerHTML=h}
+function m19CalcLoop(){var s=num(el('m19LStart').value),e=num(el('m19LEnd').value),bsf=num(el('m19BSF').value),fsf=num(el('m19FSF').value),bsb=num(el('m19BSB').value),fsb=num(el('m19FSB').value);if([s,e,bsf,fsf,bsb,fsb].some(function(x){return !isFinite(x)})){el('m19LoopResult').innerHTML='<div class="result"><b>همه ورودی‌ها را کامل کن.</b></div>';return}var rf=bsf-fsf,rb=bsb-fsb,known=e-s,knownBack=s-e,errF=rf-known,errB=rb-knownBack; m19.last={type:'LOOP',start:s,end:e,forward:rf,back:rb,known:known,errorForward:errF,errorBack:errB};el('m19LoopResult').innerHTML='<div class="result"><div class="result-line"><span>اختلاف ارتفاع رفت</span><b>'+fmt(rf)+'</b></div><div class="result-line"><span>اختلاف ارتفاع برگشت</span><b>'+fmt(rb)+'</b></div><div class="result-line"><span>اختلاف ارتفاع معلوم رفت</span><b>'+fmt(known)+'</b></div><div class="result-line"><span>اختلاف ارتفاع معلوم برگشت</span><b>'+fmt(knownBack)+'</b></div><div class="result-line"><span>خطای بست رفت</span><b>'+fmt(errF)+'</b></div><div class="result-line"><span>خطای بست برگشت</span><b>'+fmt(errB)+'</b></div></div>';m19RenderReport()}
+function m19RenderReport(){
+ var b=el('m19Report');if(!b)return;
+ if(!m19.rows.length){b.innerHTML='<div class="m19-status">برای ساخت گزارش، ابتدا جدول ترازیابی را ثبت کن.</div>';return}
+ m19CaptureMeta();
+ var bs=0,fs=0,isv=0,tp=0;
+ m19.rows.forEach(function(r){if(isFinite(r.bs))bs+=r.bs;if(isFinite(r.fs))fs+=r.fs;if(isFinite(r.is))isv+=r.is;if(r.kind==='tp')tp++});
+ var first=m19.startRL,last=m19.rows[m19.rows.length-1].rl,delta=last-first,err=(bs-fs)-delta;
+ var complete=!m19.tpPending&&isFinite(first)&&isFinite(last);
+ var status=complete&&Math.abs(err)<0.001,endPoint=m19.rows[m19.rows.length-1].point,meta=m19.meta;
+ var loop=m19.last&&m19.last.type==='LOOP'?m19.last:null;
+ var prof=m19.rows.filter(function(r){return isFinite(r.rl)});
+ var minRL=prof.length?Math.min.apply(null,prof.map(function(r){return r.rl})):NaN;
+ var maxRL=prof.length?Math.max.apply(null,prof.map(function(r){return r.rl})):NaN;
+ var totalDist=prof.length?prof[prof.length-1].chainage:NaN;
+ var h='<div class="m19-report-head"><div class="m19-report-title">گزارش نهایی حرفه‌ای ترازیابی</div><div class="m19-report-sub">MiladGeo — دفتر محاسبات، کنترل ارتفاع و پروفیل طولی</div>'+
+ '<div class="m19-meta-grid"><div class="m19-meta-cell">نام پروژه<b>'+esc(meta.project||'—')+'</b></div><div class="m19-meta-cell">نام عملیات<b>'+esc(meta.operation||'—')+'</b></div><div class="m19-meta-cell">نقطه شروع<b>'+esc(meta.startPoint||'—')+'</b></div><div class="m19-meta-cell">نقطه پایان<b>'+esc(endPoint||'—')+'</b></div><div class="m19-meta-cell">تاریخ<b>'+esc(meta.date||'—')+'</b></div><div class="m19-meta-cell">اپراتور<b>'+esc(meta.operator||'—')+'</b></div><div class="m19-meta-cell">RL شروع<b>'+fmt(first)+' m</b></div><div class="m19-meta-cell">RL پایان<b>'+fmt(last)+' m</b></div></div></div>';
+ h+='<div class="m19-summary-grid"><div class="m19-summary-item">تعداد قرائت‌ها<b>'+m19.rows.length+'</b></div><div class="m19-summary-item">تعداد TP<b>'+tp+'</b></div><div class="m19-summary-item">Σ B.S<b>'+fmt(bs)+' m</b></div><div class="m19-summary-item">Σ I.S<b>'+fmt(isv)+' m</b></div><div class="m19-summary-item">Σ F.S<b>'+fmt(fs)+' m</b></div></div>';
+ h+='<div class="m19-kpis"><div class="m19-kpi">کمترین RL<b>'+fmt(minRL)+' m</b></div><div class="m19-kpi">بیشترین RL<b>'+fmt(maxRL)+' m</b></div><div class="m19-kpi">طول کل پروفیل<b>'+fmt(totalDist)+' m</b></div></div>';
+ h+='<div class="m19-control-box '+(status?'m19-control-ok':'m19-control-warn')+'"><b>کنترل نهایی دفتر</b><br>RL شروع: <b>'+fmt(first)+' m</b> &nbsp; | &nbsp; RL پایان: <b>'+fmt(last)+' m</b> &nbsp; | &nbsp; ΔRL: <b>'+fmt(delta)+' m</b><br>ΣBS − ΣFS: <b>'+fmt(bs-fs)+' m</b> &nbsp; | &nbsp; خطای بست دفتر: <b>'+fmt(err)+' m</b><br>'+(!complete?'⚠️ گزارش ناقص است؛ آخرین TP هنوز B.S دستگاه جدید ندارد.':(status?'✓ کنترل عددی دفتر قابل قبول است.':'⚠️ خطای بست دفتر نیاز به بررسی دارد.'))+'<br><span style="font-size:10px">رابطه کنترل: ΣBS − ΣFS = RL پایان − RL شروع</span></div>';
+ if(loop){
+   var loopOK=Math.abs(loop.errorForward)<0.001&&Math.abs(loop.errorBack)<0.001;
+   h+='<div class="m19-control-box '+(loopOK?'m19-control-ok':'m19-control-warn')+'"><b>کنترل مستقل رفت و برگشت</b><br>'+
+   'رفت: ΔH = <b>'+fmt(loop.forward)+' m</b> | ΔH معلوم = <b>'+fmt(loop.known)+' m</b> | خطای بست = <b>'+fmt(loop.errorForward)+' m</b><br>'+
+   'برگشت: ΔH = <b>'+fmt(loop.back)+' m</b> | ΔH معلوم = <b>'+fmt(loop.knownBack)+' m</b> | خطای بست = <b>'+fmt(loop.errorBack)+' m</b><br>'+
+   (loopOK?'✓ کنترل رفت و برگشت در محدوده کنترل عددی قرار دارد.':'⚠️ کنترل رفت و برگشت نیاز به بررسی دارد.')+'</div>';
+ } else {
+   h+='<div class="m19-control-box"><b>کنترل رفت و برگشت</b><br>برای درج نتیجه مستقل رفت و برگشت، ابتدا از بخش «خطای بست» محاسبه کنترل رفت و برگشت را اجرا کن.</div>';
+ }
+ h+='<div class="m19-book"><div style="font-weight:900;margin:7px 0">۱ — جدول اصلی دفتر ترازیابی</div>'+m19TableHTML(meta.project||'')+'</div>';
+ h+='<div class="m19-book" style="margin-top:10px"><div style="font-weight:900;margin:7px 0">۲ — پروفیل طولی</div>'+m19ProfileSVG()+
+ '<div style="font-size:10px;margin:5px 0;text-align:center">محور افقی: فاصله / Chainage (m) — محور قائم: ارتفاع / RL (m)</div>'+
+ '<table><tr><th>نقطه</th><th>فاصله از قبل (m)</th><th>Chainage (m)</th><th>RL (m)</th><th>ΔH (m)</th></tr>'+
+ prof.map(function(r){return '<tr><td>'+esc(r.point)+'</td><td>'+fmt(r.dist)+'</td><td>'+fmt(r.chainage)+'</td><td>'+fmt(r.rl)+'</td><td>'+((r.delta>0?'+':'')+fmt(r.delta))+'</td></tr>'}).join('')+'</table></div>';
+ h+='<div class="m19-sign-grid"><div class="m19-sign">تهیه‌کننده / اپراتور<br><span style="opacity:.65">نام و امضا</span></div><div class="m19-sign">کنترل‌کننده<br><span style="opacity:.65">نام و امضا</span></div><div class="m19-sign">محل مهر و امضا<br><span style="opacity:.65">تاریخ / تأیید نهایی</span></div></div>';
+ h+='<div class="m19-mini" style="text-align:center;margin-top:8px">MiladGeo — گزارش مهندسی ترازیابی | تمام مقادیر ارتفاعی بر حسب متر هستند.</div>';
+ b.innerHTML=h;
+}
+function m19TableHTML(title){
+ var rows=m19.rows,bs=0,isv=0,fs=0;rows.forEach(function(r){if(isFinite(r.bs))bs+=r.bs;if(isFinite(r.is))isv+=r.is;if(isFinite(r.fs))fs+=r.fs});
+ var h='<table><thead><tr><th>ردیف</th><th>نام نقطه</th><th>نوع</th><th>B.S<br>قرائت عقب (m)</th><th>I.S<br>قرائت وسط (m)</th><th>F.S<br>قرائت جلو (m)</th><th>Rise</th><th>Fall</th><th>H / RL (m)</th><th>HI (m)</th></tr></thead><tbody>';
+ rows.forEach(function(r,i){h+='<tr><td>'+(i+1)+'</td><td>'+esc(r.point)+'</td><td>'+(r.kind==='tp'?'TP-FS':(r.kind==='tp-bs'?'TP-BS':'—'))+'</td><td>'+fmt(r.bs)+'</td><td>'+fmt(r.is)+'</td><td>'+fmt(r.fs)+'</td><td>'+r.rise+'</td><td>'+r.fall+'</td><td>'+fmt(r.rl)+'</td><td>'+fmt(r.hi)+'</td></tr>'});
+ h+='<tr class="sum"><td colspan="3">مجموع</td><td>'+fmt(bs)+'</td><td>'+fmt(isv)+'</td><td>'+fmt(fs)+'</td><td colspan="4">ΣBS − ΣFS = '+fmt(bs-fs)+'</td></tr></tbody></table>';return h
+}
+function m19Print(){
+ if(!m19.rows.length){showToast&&showToast('ابتدا جدول ترازیابی را ثبت کن.');return false}
+ m19CaptureMeta();
+ var bs=0,fs=0,isv=0;m19.rows.forEach(function(r){if(isFinite(r.bs))bs+=r.bs;if(isFinite(r.fs))fs+=r.fs;if(isFinite(r.is))isv+=r.is});
+ var first=m19.startRL,last=m19.rows[m19.rows.length-1].rl,delta=last-first,err=(bs-fs)-delta,tp=m19.rows.filter(function(r){return r.kind==='tp'}).length;
+ var complete=!m19.tpPending,status=complete&&Math.abs(err)<0.001,job=m19.meta.project||'MiladGeo — Leveling Report',endPoint=m19.rows[m19.rows.length-1].point;
+ var loop=m19.last&&m19.last.type==='LOOP'?m19.last:null;
+ var prof=m19.rows.filter(function(r){return isFinite(r.rl)});
+ var minRL=prof.length?Math.min.apply(null,prof.map(function(r){return r.rl})):NaN;
+ var maxRL=prof.length?Math.max.apply(null,prof.map(function(r){return r.rl})):NaN;
+ var totalDist=prof.length?prof[prof.length-1].chainage:NaN;
+ var table=m19TableHTML(job);
+ var loopHtml=loop?('<div class="control '+((Math.abs(loop.errorForward)<0.001&&Math.abs(loop.errorBack)<0.001)?'ok':'warn')+'"><b>کنترل مستقل رفت و برگشت</b><br>'+
+ 'رفت: ΔH = '+fmt(loop.forward)+' m &nbsp; | &nbsp; ΔH معلوم = '+fmt(loop.known)+' m &nbsp; | &nbsp; خطای بست = <b>'+fmt(loop.errorForward)+' m</b><br>'+
+ 'برگشت: ΔH = '+fmt(loop.back)+' m &nbsp; | &nbsp; ΔH معلوم = '+fmt(loop.knownBack)+' m &nbsp; | &nbsp; خطای بست = <b>'+fmt(loop.errorBack)+' m</b><br>'+
+ ((Math.abs(loop.errorForward)<0.001&&Math.abs(loop.errorBack)<0.001)?'✓ کنترل رفت و برگشت در محدوده عددی قرار دارد.':'⚠️ کنترل رفت و برگشت نیاز به بررسی دارد.')+'</div>'):
+ '<div class="control"><b>کنترل مستقل رفت و برگشت</b><br>برای درج نتیجه این کنترل، ابتدا محاسبه رفت و برگشت را در بخش «خطای بست» اجرا کنید.</div>';
+ var profileRows=prof.map(function(r){return '<tr><td>'+esc(r.point)+'</td><td>'+fmt(r.dist)+'</td><td>'+fmt(r.chainage)+'</td><td>'+fmt(r.rl)+'</td><td>'+((r.delta>0?'+':'')+fmt(r.delta))+'</td></tr>'}).join('');
+ var html='<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>'+esc(job)+'</title><style>'+
+ '@page{size:A4 landscape;margin:9mm}html,body{margin:0;padding:0;background:#fff;color:#111}body{font-family:Arial,Tahoma,sans-serif;font-size:10px;line-height:1.5}'+
+ '.page{width:100%;box-sizing:border-box}.head{border:2px solid #3f4e43;border-radius:8px;padding:9px;margin-bottom:7px}.title{text-align:center;font-size:20px;font-weight:900;color:#17351b}.sub{text-align:center;font-size:10px;margin-top:2px}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}.meta div{border:1px solid #777;border-radius:5px;padding:5px;background:#f3f5f1}.meta b{display:block;font-size:11px;margin-top:2px}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0}.sumitem{border:1px solid #777;padding:5px;text-align:center;border-radius:5px;background:#f6f7f5}.sumitem b{display:block;font-size:12px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:6px 0}.kpi{border:1px solid #777;padding:5px;text-align:center;border-radius:5px;background:#f6f7f5}.kpi b{display:block;font-size:12px}.control{border:2px solid #555;border-radius:6px;padding:6px;margin:6px 0;background:#f5f6f3}.ok{border-color:#36733e;background:#e9f4ea}.warn{border-color:#a87516;background:#fff5d9}.section-title{font-weight:900;font-size:13px;margin:7px 0 4px}.profile{border:1px solid #687168;border-radius:7px;padding:4px;background:#f7f8f5}.profile-table{width:100%;border-collapse:collapse;font-size:8.5px;margin-top:5px}.profile-table th,.profile-table td{border:1px solid #666;padding:3px;text-align:center}.profile-table th{background:#e1e6df;font-weight:900}table{width:100%;border-collapse:collapse;font-size:8.5px}th,td{border:1px solid #555;padding:3px;text-align:center}th{background:#e1e6df;font-weight:900}.sum td{background:#dce7d8;font-weight:900}.sign{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px}.sign div{border-top:1px solid #777;text-align:center;padding-top:5px;min-height:22px}.foot{margin-top:7px;font-size:8px;text-align:center;color:#555}@media print{button{display:none!important}}</style></head><body><div class="page">'+
+ '<div class="head"><div class="title">گزارش نهایی حرفه‌ای ترازیابی</div><div class="sub">MiladGeo — دفتر محاسبات، کنترل ارتفاع و پروفیل طولی</div><div class="meta"><div>نام پروژه<b>'+esc(m19.meta.project||'—')+'</b></div><div>نام عملیات<b>'+esc(m19.meta.operation||'—')+'</b></div><div>نقطه شروع<b>'+esc(m19.meta.startPoint||'—')+'</b></div><div>نقطه پایان<b>'+esc(endPoint||'—')+'</b></div><div>تاریخ<b>'+esc(m19.meta.date||'—')+'</b></div><div>اپراتور<b>'+esc(m19.meta.operator||'—')+'</b></div><div>RL شروع<b>'+fmt(first)+' m</b></div><div>RL پایان<b>'+fmt(last)+' m</b></div></div></div>'+
+ '<div class="summary"><div class="sumitem">تعداد قرائت‌ها<b>'+m19.rows.length+'</b></div><div class="sumitem">تعداد TP<b>'+tp+'</b></div><div class="sumitem">Σ B.S<b>'+fmt(bs)+' m</b></div><div class="sumitem">Σ I.S<b>'+fmt(isv)+' m</b></div><div class="sumitem">Σ F.S<b>'+fmt(fs)+' m</b></div></div>'+
+ '<div class="kpis"><div class="kpi">کمترین RL<b>'+fmt(minRL)+' m</b></div><div class="kpi">بیشترین RL<b>'+fmt(maxRL)+' m</b></div><div class="kpi">طول کل پروفیل<b>'+fmt(totalDist)+' m</b></div></div>'+
+ '<div class="control '+(status?'ok':'warn')+'"><b>کنترل نهایی دفتر:</b> RL شروع = '+fmt(first)+' m &nbsp; | &nbsp; RL پایان = '+fmt(last)+' m &nbsp; | &nbsp; ΔRL = '+fmt(delta)+' m<br>ΣBS − ΣFS = '+fmt(bs-fs)+' m &nbsp; | &nbsp; خطای بست دفتر = <b>'+fmt(err)+' m</b> &nbsp; | &nbsp; '+(!complete?'⚠️ ناقص — آخرین TP نیاز به B.S دستگاه جدید دارد.':(status?'✓ کنترل عددی قابل قبول است.':'⚠️ خطای بست نیاز به بررسی دارد.'))+'<br>رابطه کنترل: ΣBS − ΣFS = RL پایان − RL شروع</div>'+
+ loopHtml+
+ '<div class="section-title">۱ — جدول اصلی دفتر ترازیابی</div>'+table+
+ '<div class="section-title">۲ — پروفیل طولی</div><div class="profile">'+m19ProfileSVG()+'<div style="text-align:center;font-size:8.5px;margin-top:3px">محور افقی: فاصله / Chainage (m) — محور قائم: ارتفاع / RL (m)</div><table class="profile-table"><tr><th>نقطه</th><th>فاصله از قبل (m)</th><th>Chainage (m)</th><th>RL (m)</th><th>ΔH (m)</th></tr>'+profileRows+'</table></div>'+
+ '<div class="sign"><div>تهیه‌کننده / اپراتور</div><div>کنترل‌کننده</div><div>محل مهر و امضا</div></div><div class="foot">MiladGeo — گزارش مهندسی ترازیابی | تمام مقادیر ارتفاعی بر حسب متر هستند.</div></div></body></html>';
+ try{if(window.AndroidBridge&&typeof window.AndroidBridge.printHtml==='function'){window.AndroidBridge.printHtml(String(html));return false;}}catch(e){console.warn('M19 native print',e)}
+ try{if(window.miladgeoNative&&typeof window.miladgeoNative.printHtml==='function'){window.miladgeoNative.printHtml(String(html));return false;}}catch(e){console.warn('M19 native print fallback',e)}
+ var w=window.open('','_blank');if(!w){showToast&&showToast('پنجره چاپ توسط مرورگر مسدود شده است.');return false}
+ w.document.write(html);w.document.close();return false
+}
+function m19CopyTable(){if(!m19.rows.length)return;var t='ردیف\\tنقطه\\tB.S\\tI.S\\tF.S\\tRise\\tFall\\tH/RL\\tHI\\n';m19.rows.forEach(function(r,i){t+=(i+1)+'\\t'+r.point+'\\t'+fmt(r.bs)+'\\t'+fmt(r.is)+'\\t'+fmt(r.fs)+'\\t'+r.rise+'\\t'+r.fall+'\\t'+fmt(r.rl)+'\\t'+fmt(r.hi)+'\\n'});navigator.clipboard&&navigator.clipboard.writeText(t).then(function(){showToast('جدول کپی شد ✓')})}
+function m19ExportCSV(){
+ if(!m19.rows.length){showToast&&showToast('ابتدا جدول ترازیابی را ثبت کن.');return false}
+ var t='Row,Point,Type,BS,IS,FS,Rise,Fall,RL,HI\r\n';
+ m19.rows.forEach(function(r,i){t+=(i+1)+','+JSON.stringify(r.point)+','+JSON.stringify(r.kind==='tp'?'TP-FS':(r.kind==='tp-bs'?'TP-BS':'Normal'))+','+[r.bs,r.is,r.fs,r.rise,r.fall,r.rl,r.hi].map(function(x){return isFinite(x)?x:''}).join(',')+'\r\n'});
+ var blob=new Blob(['\ufeff'+t],{type:'text/csv;charset=utf-8'});
+ try{
+   if(typeof window.miladgeoDirectSaveBlob==='function'){
+     window.miladgeoDirectSaveBlob('miladgeo_leveling.csv',blob);
+     return false;
+   }
+ }catch(e){console.warn('M19 CSV native export',e)}
+ try{
+   var a=document.createElement('a'),url=URL.createObjectURL(blob);
+   a.href=url;a.download='miladgeo_leveling.csv';a.rel='noopener';a.style.display='none';
+   document.body.appendChild(a);a.click();
+   setTimeout(function(){try{a.remove();}catch(_){}try{URL.revokeObjectURL(url);}catch(_){}},10000);
+   showToast&&showToast('✓ فایل CSV سازگار با Excel آماده شد');
+   return false;
+ }catch(e){showToast&&showToast('ذخیره CSV ناموفق بود');return false}
+}
+window.m19Mode=m19Mode;window.m19AddRow=m19AddRow;window.m19ProfessionalReport=m19RenderReport;window.m19RemoveRow=m19RemoveRow;window.m19ClearBook=m19ClearBook;window.m19Guide=m19Guide;window.m19CalcLoop=m19CalcLoop;window.m19Print=m19Print;window.m19CopyTable=m19CopyTable;window.m19ExportCSV=m19ExportCSV;
+m19Mode('book');
+})();
+</script>
+<script id="v381-leveling-touch-fix">
+(function(){
+  'use strict';
+  function bindLevelingButtons(){
+    var box=document.querySelector('#m4LevelingSection .m19-mode-grid');
+    if(!box || box.dataset.v381Bound==='1') return;
+    box.dataset.v381Bound='1';
+    box.style.position='relative';
+    box.style.zIndex='20';
+    box.style.pointerEvents='auto';
+    Array.prototype.forEach.call(box.querySelectorAll('button'),function(btn){
+      btn.style.position='relative';
+      btn.style.zIndex='21';
+      btn.style.pointerEvents='auto';
+      btn.addEventListener('touchend',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var m=(btn.getAttribute('onclick')||'').match(/m19Mode\('([^']+)'\)/);
+        if(m && typeof window.m19Mode==='function') window.m19Mode(m[1]);
+      },{passive:false});
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bindLevelingButtons);
+  else bindLevelingButtons();
+  window.addEventListener('load',bindLevelingButtons);
+})();
+</script>
+<script id="v261-real-tools-runtime">(function(){var bu=document.getElementById('realStakeMethodUtm'),bg=document.getElementById('realStakeMethodGeo'),bl=document.getElementById('realStakeLiveLaunch');if(bu)bu.addEventListener('click',function(){setRealStakeMethod('utm')});if(bg)bg.addEventListener('click',function(){setRealStakeMethod('geo')});if(bl)bl.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();realStakeStartLive()});})();</script><script id="v264-real-tools-runtime">(function(){
+var bu=document.getElementById('realStakeMethodUtm'),bg=document.getElementById('realStakeMethodGeo');
+if(bu)bu.addEventListener('click',function(e){e.stopPropagation();setRealStakeMethod('utm');});
+if(bg)bg.addEventListener('click',function(e){e.stopPropagation();setRealStakeMethod('geo');});
+})();</script><script id="v286-real-stake-map-runtime">(function(){
+  /* V286: Android-safe direct map launch for Menu 3 / real Stake Out.
+     The button has an inline onclick, so it does not depend on delegated click handlers. */
+  window.realStakeShowOnMap = window.realStakeShowOnMap || function(){
+    try{
+      var el=function(id){return document.getElementById(id);};
+      var lat,lng;
+
+      var method=(typeof realStakeMethod!=='undefined') ? realStakeMethod : 'utm';
+
+      if(method==='utm'){
+        var x=Number(String(el('realStakeX')?el('realStakeX').value:'').replace(/,/g,'').trim());
+        var y=Number(String(el('realStakeY')?el('realStakeY').value:'').replace(/,/g,'').trim());
+        var z=Number(String(el('realStakeZone')?el('realStakeZone').value:'').replace(/,/g,'').trim());
+
+        if(!isFinite(x)||!isFinite(y)||!isFinite(z)||z<1||z>60){
+          if(typeof showToast==='function')showToast('X / Y / Zone را صحیح وارد کن');
+          return false;
+        }
+
+        /* Do not depend on Menu 17's current map hemisphere/state.
+           The real Stake Out screen is used for the project coordinates; for
+           the supplied Iranian UTM zones, the coordinates are northern hemisphere. */
+        var conv=null;
+        if(typeof window.m17UtmToWgs84==='function'){
+          conv=window.m17UtmToWgs84(x,y,z,true);
+        }else if(typeof window.m17ConvertUtmToWgs84==='function'){
+          conv=window.m17ConvertUtmToWgs84(x,y,z);
+        }
+
+        if(!conv||!isFinite(Number(conv.lat))||!isFinite(Number(conv.lng))){
+          if(typeof showToast==='function')showToast('تبدیل مختصات هدف انجام نشد');
+          return false;
+        }
+
+        lat=Number(conv.lat);
+        lng=Number(conv.lng);
+
+      }else{
+        lng=Number(String(el('realStakeLng')?el('realStakeLng').value:'').replace(/,/g,'').trim());
+        lat=Number(String(el('realStakeLat')?el('realStakeLat').value:'').replace(/,/g,'').trim());
+
+        if(!isFinite(lat)||!isFinite(lng)||lat<-90||lat>90||lng<-180||lng>180){
+          if(typeof showToast==='function')showToast('طول و عرض جغرافیایی را صحیح وارد کن');
+          return false;
+        }
+      }
+
+      if(typeof showPage==='function')showPage('menu17');
+
+      setTimeout(function(){
+        try{
+          if(typeof m17Init==='function')m17Init();
+
+          /* Set the map center AFTER initialization so the target cannot be
+             overwritten by the default map center. */
+          if(typeof state!=='undefined'){
+            state.lat=lat;
+            state.lng=lng;
+            state.zoom=17;
+            state.tap={lat:lat,lng:lng};
+          }
+
+          if(typeof showCoordAtLatLng==='function')showCoordAtLatLng(lat,lng);
+          if(typeof renderTapMarker==='function')renderTapMarker();
+          if(typeof renderDrawings==='function')renderDrawings();
+          if(typeof renderSoon==='function')renderSoon();
+
+          if(typeof showToast==='function')showToast('نقطه روی نقشه نمایش داده شد ✓');
+        }catch(err){
+          console.error('V286_REAL_STAKE_MAP_RENDER',err);
+          if(typeof showToast==='function')showToast('نمایش نقطه روی نقشه انجام نشد');
+        }
+      },300);
+
+    }catch(err){
+      console.error('V286_REAL_STAKE_MAP',err);
+      if(typeof showToast==='function')showToast('نمایش نقطه روی نقشه انجام نشد');
+    }
+    return false;
+  };
+
+  /* Keep the legacy element listener harmless; inline onclick is authoritative. */
+  var b=document.getElementById('realStakeMapLaunch');
+  if(b){
+    b.setAttribute('onclick','return window.realStakeShowOnMap();');
+    ['pointerdown','pointerup','touchstart','touchend'].forEach(function(t){
+      b.addEventListener(t,function(e){e.stopPropagation();},{passive:true});
+    });
+  }
+})();</script>
+<script>
+/* V339 — Topography range picker: standalone overlay, no Menu 17 navigation. */
+(function(){
+  var savedParent=null, savedNext=null, savedStyles=null, hiddenEls=[];
+  function by(id){return document.getElementById(id);}
+  function hide(id){var el=by(id); if(el){hiddenEls.push([el,el.style.display]);el.style.display='none';}}
+  function restoreHidden(){for(var i=0;i<hiddenEls.length;i++)hiddenEls[i][0].style.display=hiddenEls[i][1]||'';hiddenEls=[];}
+  function makeOverlay(){
+    var old=by('m4TerrainPickerOverlay'); if(old)old.remove();
+    var ov=document.createElement('div');ov.id='m4TerrainPickerOverlay';
+    ov.setAttribute('dir','rtl');
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#111;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;';
+    var head=document.createElement('div');
+    head.style.cssText='height:52px;flex:0 0 52px;background:rgba(20,24,20,.96);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:5px 8px;gap:6px;box-sizing:border-box;font-weight:900;';
+    head.innerHTML='<button id="m4TerrainCancel" type="button" style="min-width:82px;height:40px;border:2px solid #687365;border-radius:9px;background:linear-gradient(#e1e5df,#aeb7aa);font-weight:900;font-size:12px">↩ بازگشت</button><div style="flex:1;text-align:center;font-size:13px">📍 انتخاب محدوده توپوگرافی</div><button id="m4TerrainUndo" type="button" style="min-width:82px;height:40px;border:2px solid #687365;border-radius:9px;background:linear-gradient(#e1e5df,#aeb7aa);font-weight:900;font-size:12px">↶ آخرین نقطه</button>';
+    var area=document.createElement('div');area.id='m4TerrainPickerMap';area.style.cssText='position:relative;flex:1;min-height:0;overflow:hidden;background:#000;';
+    var note=document.createElement('div');note.id='m4TerrainPickerNote';note.style.cssText='position:absolute;left:50%;bottom:72px;transform:translateX(-50%);z-index:100;width:92%;padding:7px 10px;border-radius:9px;background:rgba(0,0,0,.72);color:#fff;text-align:center;font-size:12px;font-weight:800;box-sizing:border-box;pointer-events:none;';
+    note.textContent='نقاط محدوده را روی نقشه لمس کن؛ حداقل ۳ نقطه لازم است.';
+    var foot=document.createElement('div');foot.style.cssText='height:104px;min-height:104px;flex:0 0 104px;background:rgba(20,24,20,.96);display:grid;grid-template-columns:1fr 1.35fr;gap:8px;padding:7px 8px 18px;box-sizing:border-box;position:relative;z-index:100000;';
+     foot.style.paddingBottom='max(18px, env(safe-area-inset-bottom, 18px))';
+    foot.innerHTML='<button id="m4TerrainCancel2" type="button" style="border:2px solid #687365;border-radius:10px;background:linear-gradient(#e1e5df,#aeb7aa);font-weight:900;font-size:14px">لغو و بازگشت</button><button id="m4TerrainConfirm" type="button" style="border:2px solid #397a2c;border-radius:10px;background:linear-gradient(#a8d787,#68aa52);font-weight:1000;font-size:14px">✓ تأیید محدوده</button>';
+    ov.appendChild(head);ov.appendChild(area);area.appendChild(note);ov.appendChild(foot);document.body.appendChild(ov);
+    by('m4TerrainCancel').onclick=window.m4CloseTerrainMap;
+    by('m4TerrainCancel2').onclick=window.m4CloseTerrainMap;
+    by('m4TerrainUndo').onclick=window.m4TerrainMapUndo;
+    by('m4TerrainConfirm').onclick=window.m4ConfirmTerrainMap;
+    return {ov,area};
+  }
+  window.m4OpenTerrainMap=function(){
+    try{
+      var map=by('m17Map'); if(!map){showToast('نقشه آماده نشد');return false;}
+      if(window.m4TerrainMapOpen)return false;
+      savedParent=map.parentNode;savedNext=map.nextSibling;
+      savedStyles={position:map.style.position,inset:map.style.inset,width:map.style.width,height:map.style.height,minHeight:map.style.minHeight,zIndex:map.style.zIndex};
+      var ui=makeOverlay();
+      ui.area.appendChild(map);
+      map.style.cssText+=';position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;z-index:1!important;';
+      hide('m17MyLocationBtn');hide('m17StakeBtn');hide('m17UndoPointBtn');hide('m17CoordBox');hide('m17AreaBox');hide('m17GoogleMark');hide('m17MiladTower');
+      var tb=by('m17DrawToolbar');if(tb){hiddenEls.push([tb,tb.style.display]);tb.style.display='none';}
+      var th=by('m17DrawHint');if(th){hiddenEls.push([th,th.style.display]);th.style.display='none';}
+      window.m4TerrainMapOpen=true;
+      if(typeof m17Init==='function')m17Init();
+      if(typeof setDrawMode==='function')setDrawMode('line');
+      if(typeof renderDrawings==='function')renderDrawings();
+      if(typeof renderSoon==='function')renderSoon();
+      showToast('محدوده را روی همین نقشه انتخاب کن؛ نیازی به منوی ۱۷ نیست.');
+    }catch(e){console.error('M4_PICKER_V339',e);showToast('نقشه آماده نشد');}
+    return false;
+  };
+  window.m4CloseTerrainMap=function(){
+    try{
+      var map=by('m17Map');
+      if(map&&savedParent){
+        if(savedNext&&savedNext.parentNode===savedParent)savedParent.insertBefore(map,savedNext);else savedParent.appendChild(map);
+      }
+      if(map&&savedStyles){map.style.position=savedStyles.position;map.style.inset=savedStyles.inset;map.style.width=savedStyles.width;map.style.height=savedStyles.height;map.style.minHeight=savedStyles.minHeight;map.style.zIndex=savedStyles.zIndex;}
+      var ov=by('m4TerrainPickerOverlay');if(ov)ov.remove();
+      restoreHidden();window.m4TerrainMapOpen=false;savedParent=null;savedNext=null;savedStyles=null;
+      if(typeof renderSoon==='function')renderSoon();
+    }catch(e){console.error('M4_PICKER_CLOSE_V339',e);}
+    return false;
+  };
+  window.m4TerrainMapUndo=function(){
+    try{var b=by('m17UndoPointBtn');if(b){b.click();return false;}if(window.state&&state.drawPoints&&state.drawPoints.length){state.drawPoints.pop();renderDrawings();renderSoon();}}catch(e){console.error('M4_PICKER_UNDO_V339',e);}return false;
+  };
+  window.m4ConfirmTerrainMap=function(){
+    try{
+      var poly=window.m17GetTerrainPolygon?window.m17GetTerrainPolygon():[];
+      if(poly.length<3){showToast('برای محدوده حداقل ۳ نقطه انتخاب کن.');return false;}
+      if(typeof finishCurrentDrawing==='function')finishCurrentDrawing();
+      var donePoly=window.m17GetTerrainPolygon?window.m17GetTerrainPolygon():poly;
+      window.m4CloseTerrainMap();
+      setTimeout(function(){
+        var box=by('m4TerrainSelection');
+        if(box)box.innerHTML='✓ '+donePoly.length+' راس<br>'+polygonAreaApprox(donePoly).toFixed(0)+' m²';
+        var del=by('m4DeleteTerrainSelection');if(del){del.disabled=false;del.style.opacity='1';del.style.cursor='pointer';}
+        /* انتخاب محدوده بلافاصله پس از تأیید نقشه کامل است؛ بررسی محدوده مرحله جداگانه باقی می‌ماند. */
+        function markSelectionConfirmed(){
+          var card=by('m4StepCard1');
+          if(card)card.classList.add('done');
+          if(typeof window.m4SetStep==='function')window.m4SetStep(1,true);
+          var check=card&&card.querySelector('.m4-workflow-num');
+          if(check){check.textContent='✓';check.setAttribute('aria-label','تکمیل شد');}
+          var card2=by('m4StepCard2');if(card2)card2.classList.remove('done');
+        }
+        markSelectionConfirmed();
+        /* بعضی نقشه‌ها هنگام بستن overlay دوباره render می‌شوند؛ تیک را بعد از render هم اعمال کن. */
+        setTimeout(markSelectionConfirmed,250);
+        setTimeout(markSelectionConfirmed,700);
+        status('محدوده انتخاب و تأیید شد ✓ — حالا مرحله «بررسی محدوده» را اجرا کن.');
+        var sec=by('m4TerrainSection');if(sec)sec.scrollIntoView({block:'start',behavior:'smooth'});
+        showToast('✓ محدوده انتخاب شد و به توپوگرافی برگشتیم.');
+      },120);
+    }catch(e){console.error('M4_PICKER_CONFIRM_V339',e);showToast('تأیید محدوده انجام نشد');}
+    return false;
+  };
+})();
+</script>
+<script>
+/* V362 — JOB archive: save/recall/delete | V43 archive jump routing fix */
+(function(){
+  'use strict';
+  var KEY='miladgeo_jobs_v362';
+  var ACTIVE='miladgeo_active_job_v362';
+
+  function el(id){return document.getElementById(id);}
+  function safeParse(v,f){try{return JSON.parse(v)}catch(e){return f}}
+  function now(){return new Date().toISOString();}
+  function readJobs(){return safeParse(localStorage.getItem(KEY)||'[]',[]);}
+  function writeJobs(a){localStorage.setItem(KEY,JSON.stringify(a));}
+  function clone(v){try{return JSON.parse(JSON.stringify(v))}catch(e){return v}}
+  function currentName(){
+    var x=el('jobName');
+    return x && x.value ? String(x.value).trim() : '';
+  }
+  function getPointArray(){
+    try{
+      if(Array.isArray(window.points)) return clone(window.points);
+      if(typeof points!=='undefined' && Array.isArray(points)) return clone(points);
+    }catch(e){}
+    return [];
+  }
+  function collectState(name){
+    var live=null;
+    try{live=window.miladGeoGetJobState();}catch(e){}
+    var o={
+      name:name||'JOB',
+      createdAt:now(),
+      updatedAt:now(),
+      points:live&&Array.isArray(live.points)?clone(live.points):getPointArray(),
+      job:live&&live.job?clone(live.job):{name:name||'JOB'},
+      setup:live&&live.setup?clone(live.setup):{}
+    };
+    o.job.name=o.name;
+    return o;
+  }
+
+  function activeName(){return localStorage.getItem(ACTIVE)||'';}
+  function setActive(n){localStorage.setItem(ACTIVE,n||'');}
+  function findByName(a,n){
+    var low=String(n||'').toLowerCase();
+    return a.findIndex(function(j){return String(j.name||'').toLowerCase()===low});
+  }
+
+  function upsertSnapshot(name, state, makeActive){
+    var n=String(name||'').trim();
+    if(!n)return false;
+    var st=state||{};
+    var a=readJobs(), idx=findByName(a,n), old=idx>=0?a[idx]:null;
+    var j={
+      name:n,
+      createdAt:old&&old.createdAt?old.createdAt:(st.job&&st.job.created?st.job.created:now()),
+      updatedAt:now(),
+      points:clone(Array.isArray(st.points)?st.points:[]),
+      job:clone(st.job||{name:n}),
+      setup:clone(st.setup||{})
+    };
+    j.job.name=n;
+    a=a.filter(function(_,i){return i!==idx});
+    a.unshift(j);
+    writeJobs(a.slice(0,50));
+    if(makeActive)setActive(n);
+    return true;
+  }
+
+  function saveArchive(){
+    var n=currentName();
+    if(!n){alert('ابتدا نام JOB را وارد کن.');return false;}
+    var st;try{st=window.miladGeoGetJobState();}catch(e){st=null;}
+    if(!st)st=collectState(n);
+    st.job=st.job||{};st.job.name=n;
+    upsertSnapshot(n,st,true);
+    renderList();
+    return true;
+  }
+
+  /* Keep the archived snapshot synchronized whenever the live JOB changes. */
+  window.miladJobAutoSync362=function(){
+    try{
+      var st=window.miladGeoGetJobState&&window.miladGeoGetJobState();
+      var n=st&&st.job&&String(st.job.name||'').trim();
+      if(!n)return false;
+      return upsertSnapshot(n,st,false);
+    }catch(e){return false;}
+  };
+
+  /* Before switching to a different JOB, freeze the complete current JOB first. */
+  window.miladJobArchiveCurrent362=function(){
+    try{
+      var st=window.miladGeoGetJobState&&window.miladGeoGetJobState();
+      var n=st&&st.job&&String(st.job.name||'').trim();
+      if(!n)return false;
+      upsertSnapshot(n,st,true);
+      renderList();
+      return true;
+    }catch(e){return false;}
+  };
+
+  function recall(n){
+    var a=readJobs(), idx=findByName(a,n), j=idx>=0?a[idx]:null;
+    if(!j)return;
+
+    var restored={
+      job:clone(j.job||{name:j.name||'JOB',created:j.createdAt||now()}),
+      setup:clone(j.setup||{stationSet:false,orientationSet:false}),
+      points:clone(j.points||[])
+    };
+    restored.job.name=j.name||restored.job.name||'JOB';
+
+    /* IMPORTANT: apply inside the main app scope, not this archive IIFE scope. */
+    try{
+      if(typeof window.miladGeoApplyJobState!=='function'){
+        alert('پل ارتباطی JOB آماده نیست.');
+        return false;
+      }
+      window.miladGeoApplyJobState(restored);
+    }catch(e){
+      console.error('JOB recall apply',e);
+      alert('فراخوانی JOB ناموفق بود.');
+      return false;
+    }
+
+    setActive(restored.job.name);
+    var input=el('jobName');
+    if(input) input.value=restored.job.name;
+
+    renderList();
+    try{updateJobOutput363();}catch(e){}
+
+    /* MAIN MENU is refreshed from the real `job` variable by the bridge. */
+    setTimeout(function(){
+      try{goPage('main');}catch(e){}
+      try{updateAllUI();}catch(e){}
+      try{window.scrollTo(0,0);}catch(e){}
+    },120);
+    return true;
+  }
+
+  function renameArchivedJob(oldName){
+    var oldN=String(oldName||'').trim();
+    if(!oldN)return false;
+    var a=readJobs(), idx=findByName(a,oldN);
+    if(idx<0){showToast('JOB پیدا نشد');return false;}
+    var j=a[idx];
+    var n=window.prompt('نام جدید برای JOB «'+oldN+'» را وارد کن:',oldN);
+    n=String(n==null?'':n).trim();
+    if(!n){showToast('تغییر نام لغو شد');return false;}
+    if(n.toLowerCase()===oldN.toLowerCase()){showToast('نام JOB تغییر نکرد');return false;}
+    if(findByName(a,n)>=0){showToast('این نام JOB قبلاً وجود دارد');return false;}
+    j.name=n;
+    j.updatedAt=now();
+    if(j.job)j.job.name=n;
+    a.splice(idx,1,j);
+    writeJobs(a);
+    if(activeName().toLowerCase()===oldN.toLowerCase()){
+      setActive(n);
+      try{
+        var st=window.miladGeoGetJobState&&window.miladGeoGetJobState();
+        if(st&&st.job){st.job.name=n; if(window.miladGeoApplyJobState)window.miladGeoApplyJobState(st);}
+        var inp=el('jobName');if(inp)inp.value=n;
+        try{updateJobOutput363();}catch(e){}
+        try{updateAllUI();}catch(e){}
+      }catch(e){console.warn('JOB rename live apply',e);}
+    }
+    renderList();
+    showToast('نام JOB تغییر کرد ✓');
+    return false;
+  }
+
+  function removeJob(n){
+    var a=readJobs().filter(function(j){
+      return String(j.name||'').toLowerCase()!==String(n||'').toLowerCase();
+    });
+    writeJobs(a);
+    if(activeName()===n)setActive('');
+    renderList();
+  }
+
+  function esc(v){
+    return String(v).replace(/[<>&"]/g,function(c){
+      return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];
+    });
+  }
+
+  function addGreenStyle(){if(document.getElementById('m20AccGreenStyle'))return;var st=document.createElement('style');st.id='m20AccGreenStyle';st.textContent='#m20Body .btn,#m20Body button{background:linear-gradient(#b9e78e,#76bf50)!important;color:#173a26!important;border:2px solid #438333!important;box-shadow:inset 0 1px 0 #efffe5!important;font-weight:800!important;border-radius:9px}#m20Body button:active{filter:brightness(.94)}#m20Body input{accent-color:#4b9b35}#m20Body .m20-meta{border-color:#b8d7a8}#m20Body .acc-danger{background:linear-gradient(#d8f0c7,#a8d88c)!important}';document.head.appendChild(st)}
+ window.m20AccRename=function(id){var p=getProject(id);if(!p)return;var name=prompt('نام جدید پروژه را وارد کن:',p.name);if(name===null)return;name=name.trim();if(!name){alert('نام پروژه نمی‌تواند خالی باشد.');return}var a=read(),q=a.find(function(x){return x.id===id});if(!q)return;q.name=name;if(write(a))renderList()};
+ window.m20AccDeleteProject=function(id){var p=getProject(id);if(!p)return;var msg='پروژه «'+p.name+'» و تمام هزینه‌های ثبت‌شده در آن حذف شود؟ این کار قابل بازگشت نیست.';if(!confirm(msg))return;var a=read().filter(function(x){return x.id!==id});if(write(a))renderList()};
+  function jumpToJobSection34(name,targetId){
+    /* First activate the selected archived JOB; all following actions use its points. */
+    var ok=recall(name);
+    if(ok!==true)return false;
+    /* recall() briefly returns to MAIN MENU; reopen JOB after its refresh is complete. */
+    setTimeout(function(){
+      try{goPage('job');}catch(e){}
+      setTimeout(function(){
+        /* The JOB page is split into tabs. Activate the matching tab before scrolling;
+           otherwise the target remains inside a hidden panel and appears not to open. */
+        var tab=(targetId==='jobOutput363')?'output':'input';
+        try{
+          if(typeof window.miladGeoJobTab35==='function')window.miladGeoJobTab35(tab,false);
+        }catch(e){}
+        try{updateJobOutput363();}catch(e){}
+        var target=el(targetId);
+        if(target){
+          try{target.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){
+            try{window.scrollTo(0,target.getBoundingClientRect().top+window.pageYOffset-12);}catch(_e){}
+          }
+        }
+      },140);
+    },300);
+    return false;
+  }
+
+ function renderList(){
+    var box=el('jobList362'), quick=el('jobQuickCards390');
+    var a=readJobs(), act=activeName();
+    if(quick){
+      if(!a.length){quick.innerHTML='<div class="job-quick-empty-390">هنوز JOB ذخیره‌شده‌ای وجود ندارد.</div>';}
+      else{
+        quick.innerHTML=a.map(function(j){
+          var qn=String(j.name||'JOB'), qc=Array.isArray(j.points)?j.points.length:0;
+          var qa=qn.toLowerCase()===String(act).toLowerCase();
+          return '<button type="button" class="job-quick-card-390'+(qa?' is-active':'')+'" data-job-name="'+esc(qn)+'" aria-label="فراخوانی JOB '+esc(qn)+'">'+
+            '<span class="job-quick-folder-390">'+(qa?'📂':'🗂️')+'</span>'+
+            '<b class="job-quick-name-390">'+esc(qn)+'</b>'+
+            '<small class="job-quick-count-390">'+qc+' نقطه · '+(qa?'فعال':'فراخوانی')+'</small></button>';
+        }).join('');
+        Array.prototype.forEach.call(quick.querySelectorAll('.job-quick-card-390'),function(card){
+          card.addEventListener('click',function(){recall(card.getAttribute('data-job-name')||'');});
+        });
+      }
+    }
+    if(!box)return;
+    if(!a.length){
+      box.innerHTML='<div class="job-list-empty-362">هنوز JOB ذخیره‌شده‌ای وجود ندارد.</div>';
+      return;
+    }
+    box.innerHTML=a.map(function(j){
+      var name=String(j.name||'JOB');
+      var count=Array.isArray(j.points)?j.points.length:0;
+      var active=name.toLowerCase()===String(act).toLowerCase();
+      return '<div class="job-item-362'+(active?' active':'')+'">'+
+        '<div><div class="job-item-name">'+esc(name)+'</div>'+
+        '<div class="job-item-meta">'+(active?'✓ JOB فعال · ':'')+count+' نقطه</div></div>'+
+        '<div class="job-item-actions">'+
+        '<button class="btn primary job-recall-362" type="button" data-job-name="'+esc(name)+'">فراخوانی</button>'+
+        '<button class="btn gray job-rename-362" type="button" data-job-name="'+esc(name)+'">✏️ تغییر نام JOB</button>'+
+        '<button class="btn job-jump-import-34" type="button" data-job-name="'+esc(name)+'">📥 ورود نقاط</button>'+
+        '<button class="btn job-jump-export-34" type="button" data-job-name="'+esc(name)+'">📤 خروجی نقاط</button>'+
+        '<button class="btn gray job-delete-362" type="button" data-job-name="'+esc(name)+'">حذف</button>'+
+        '</div></div>';
+    }).join('');
+
+    Array.prototype.forEach.call(box.querySelectorAll('.job-recall-362'),function(btn){
+      btn.addEventListener('click',function(){ recall(btn.getAttribute('data-job-name')||''); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.job-rename-362'),function(btn){
+      btn.addEventListener('click',function(){ renameArchivedJob(btn.getAttribute('data-job-name')||''); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.job-jump-import-34'),function(btn){
+      btn.addEventListener('click',function(){ jumpToJobSection34(btn.getAttribute('data-job-name')||'', 'jobPointInputTop34'); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.job-jump-export-34'),function(btn){
+      btn.addEventListener('click',function(){ jumpToJobSection34(btn.getAttribute('data-job-name')||'', 'jobOutput363'); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.job-delete-362'),function(btn){
+      btn.addEventListener('click',function(){
+        var n=btn.getAttribute('data-job-name')||'';
+        if(confirm('JOB «'+n+'» حذف شود؟')) removeJob(n);
+      });
+    });
+  }
+
+
+  window.miladJobRefreshQuickCards390=renderList;
+  window.miladJobSaveArchive362=saveArchive;
+  window.miladJobRecall362=recall;
+  window.miladJobRename362=renameArchivedJob;
+  window.miladJobDelete362=function(n){
+    if(confirm('JOB «'+n+'» حذف شود؟')) removeJob(n);
+  };
+
+  var oldSave=window.saveJob;
+  window.saveJob=function(){
+    /* If the operator typed a different JOB name, archive the old live JOB
+       before the core saveJob() clears its points/setup for the new JOB. */
+    try{
+      var before=window.miladGeoGetJobState&&window.miladGeoGetJobState();
+      var oldName=before&&before.job&&String(before.job.name||'').trim();
+      var requested=currentName();
+      if(oldName && requested && oldName.toLowerCase()!==requested.toLowerCase()){
+        window.miladJobArchiveCurrent362();
+      }
+    }catch(e){console.warn('JOB pre-switch archive',e);}
+
+    var result=true;
+    try{if(typeof oldSave==='function')result=oldSave.apply(this,arguments);}catch(e){console.warn('existing saveJob',e);}
+    setTimeout(function(){saveArchive();},120);
+    return result;
+  };
+
+  window.addEventListener('load',function(){
+    try{if(window.miladJobAutoSync362)window.miladJobAutoSync362('load');}catch(e){}
+    renderList();
+    var n=activeName();
+    if(n && el('jobName') && !el('jobName').value) el('jobName').value=n;
+  });
+})();
+</script>
+<style id="miladgeo-mainmenu-language-399">
+#main .miladgeo-lang-gear-wrap{display:flex;direction:ltr;justify-content:space-between;align-items:center;gap:5px;margin:-2px 0 6px;flex-wrap:nowrap;width:100%;box-sizing:border-box}
+#main .miladgeo-lang-gear{width:42px;height:42px;flex:0 0 42px;border-radius:50%;border:2px solid #3f6f3f;background:#5f8f5f;color:#fff;font-size:22px;font-weight:bold;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25)}
+#main .mg-top-action{width:38px;height:38px;flex:0 1 38px;min-width:0;border-radius:50%;border:2px solid #3f6f3f;background:linear-gradient(145deg,#f4f8ed,#dbe9d3);color:#24452a;font-size:19px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;padding:0;margin:0;box-shadow:0 2px 5px rgba(0,0,0,.18);cursor:pointer;touch-action:manipulation;box-sizing:border-box}
+#main .mg-top-action:active{transform:scale(.96)}
+#main .mg-top-action[aria-label]{position:relative}
+@media(max-width:390px){#main .miladgeo-lang-gear-wrap{gap:3px}#main .miladgeo-lang-gear{width:36px;height:36px;flex-basis:36px;font-size:19px}#main .mg-top-action{width:34px;height:34px;flex-basis:34px;font-size:17px}}
+#mgToolSearchOverlay{position:fixed;inset:0;z-index:2147482000;background:#07120dcc;display:none;align-items:center;justify-content:center;padding:10px 12px;padding-top:env(safe-area-inset-top,10px);padding-bottom:env(safe-area-inset-bottom,10px);box-sizing:border-box;font-family:Tahoma,Arial,sans-serif;direction:rtl;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#mgToolSearchOverlay.open{display:flex}#mgToolSearchCard{width:min(440px,100%);max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);display:flex;flex-direction:column;min-height:0;background:#f3f7ee;color:#203321;border:2px solid #6d9565;border-radius:16px;padding:12px;box-sizing:border-box;box-shadow:0 15px 45px #0008;overflow:hidden}
+#mgToolSearchCard h3{margin:0 0 8px;text-align:center;flex:0 0 auto}#mgToolSearchInput{width:100%;flex:0 0 auto;box-sizing:border-box;border:1px solid #899a83;border-radius:10px;padding:12px;font:16px Tahoma,Arial,sans-serif;background:white;color:#172317}
+#mgToolSearchResults{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:10px;max-height:65vh;max-height:65dvh;min-height:100px;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px}
+#mgToolSearchResults button{display:block;width:100%;min-height:54px;flex:0 0 auto;box-sizing:border-box;padding:10px;border:1px solid #aab9a4;border-radius:9px;background:white;color:#203321;text-align:right;font:700 13px Tahoma,Arial,sans-serif;white-space:normal;line-height:1.45;touch-action:manipulation}#mgToolSearchClose{display:block;flex:0 0 auto;margin:8px auto 0;padding:8px 16px;border:0;border-radius:9px;background:#dce7d7;color:#203321;font-weight:800}
+#main .miladgeo-lang-panel{display:none;margin:0 0 9px;padding:8px;border:1px solid #657565;border-radius:10px;background:#e7eee4;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#main .miladgeo-lang-panel.open{display:grid}
+#main .miladgeo-lang-panel .mg-settings-share{background:#d8e9d4;border-color:#4f8055;color:#18351e}#main .miladgeo-lang-panel .mg-settings-reset{background:#f2e8d5;border-color:#9a8050;color:#45351a}#main .miladgeo-lang-panel .mg-settings-share,#main .miladgeo-lang-panel .mg-settings-reset{min-height:40px;white-space:normal;line-height:1.3}
+#main .miladgeo-lang-panel .mg-settings-reset{background:#b8b8b8!important;background-image:none!important;border:1px solid #666!important;color:#111!important;box-shadow:inset 0 1px 0 #eee!important;font-weight:900!important;}
+#main .miladgeo-lang-panel .mg-settings-reset:active{background:#a5a5a5!important;} 
+
+#main .miladgeo-lang-panel button{border:1px solid #879487;border-radius:8px;background:#f4f7f2;padding:8px 5px;font-weight:bold;cursor:pointer}
+#main .miladgeo-lang-panel .mg-theme-heading{grid-column:1/-1;text-align:center;font-size:13px;font-weight:900;padding:7px 4px 3px;border-top:1px solid #bdcbb8;margin-top:3px;color:#263b28}
+#main .miladgeo-lang-panel .mg-theme-choice{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;box-sizing:border-box}
+#main .miladgeo-lang-panel .mg-theme-dot{width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:1px solid #0003;display:inline-block}
+#main .miladgeo-lang-panel .mg-theme-choice[aria-pressed="true"],
+#main .miladgeo-lang-panel .mg-font-choice[aria-pressed="true"],
+#main .miladgeo-lang-panel .mg-font-size-choice[aria-pressed="true"],
+#main .miladgeo-lang-panel .mg-language-choice[aria-pressed="true"]{outline:2px solid #000!important;outline-offset:0!important;border:2px solid #000!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)!important;position:relative}
+:root{--mg-user-bg:#f0f5ed;--mg-user-btn:#5f8f5f;--mg-user-btn-border:#3f6f3f;--mg-user-btn-text:#fff}
+#main{background-color:var(--mg-user-bg)!important}
+#main .menu-btn,
+.page .submenu-item,
+.page .m4-submenu-btn,
+.page [class*="submenu"] button,
+.page [class*="sub-menu"] button,
+.page [class*="subnav"] button,
+.page [class*="-tabs"] button,
+.page [class*="-tabs"] .v8-tab{
+  background:var(--mg-user-btn)!important;
+  background-image:none!important;
+  border-color:var(--mg-user-btn-border)!important;
+  color:var(--mg-user-btn-text)!important;
+}
+#main .menu-btn .menu-label{display:block}
+#main .menu-btn .menu-state,
+#main .menu-btn .menu-num,
+.page .m4-submenu-btn span,
+.page .m4-submenu-btn b{color:var(--mg-user-btn-text)!important}
+.page .m4-submenu-btn:active,
+.page [class*="submenu"] button:active,
+.page [class*="-tabs"] button:active{filter:brightness(.92)}
+
+/* V438 — Menu 4 rebuilt on the exact V8 visual system */
+.p4v8-shell{display:grid;gap:10px}.p4v8-panel{overflow:hidden}.p4v8-tabs{grid-template-columns:repeat(5,minmax(64px,1fr))}.p4v8-form5{grid-template-columns:1fr 1fr}.p4v8-coord-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.p4v8-coord-grid label,.p4v8-form5 label{display:block;font-size:9px;font-weight:900;margin-bottom:4px}.p4v8-coord-grid input,.p4v8-form5 input{width:100%;height:40px;box-sizing:border-box;border:1px solid #cbd3ca;border-radius:9px;background:#fff;padding:8px}.p4v8-search{display:grid;grid-template-columns:1fr 44px;gap:7px;margin-top:8px}.p4v8-search input{width:100%;height:42px;box-sizing:border-box;border:1px solid #cbd3ca;border-radius:9px;padding:8px;background:#fff}.p4v8-list{margin-top:8px;display:grid;gap:6px;max-height:360px;overflow:auto}.p4v8-file{width:100%;box-sizing:border-box}.p4v8-preview{white-space:pre-wrap;overflow:auto;max-height:220px;padding:9px;border-radius:10px;background:#f5f8f3;border:1px solid #aeb9aa;font-size:10px}.p4v8-opgrid{grid-template-columns:repeat(3,1fr)}
+@media(max-width:560px){.p4v8-coord-grid{grid-template-columns:1fr}.p4v8-form5{grid-template-columns:1fr}.p4v8-opgrid{grid-template-columns:1fr}.p4v8-tabs{overflow:auto}}
+
+/* V444 — MENU 4 FINAL MOBILE TAB + POINT TABLE FIX */
+.p4v8-tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important;overflow:visible!important;width:100%!important;box-sizing:border-box!important;position:relative;z-index:20}
+.p4v8-tabs .v8-tab{min-width:0!important;width:100%!important;box-sizing:border-box!important;padding:7px 2px!important;font-size:12px!important;line-height:1.15!important;white-space:normal!important;overflow:visible!important;pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important}
+.p4v8-tabs .v8-tab small{font-size:8px!important;white-space:nowrap!important}
+.p4v8-tabs .v8-tab.active{box-shadow:0 0 0 2px #5f8d64 inset!important;font-weight:900!important}
+.p4v8-panel{position:relative;z-index:2}
+.p4-point-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #9daa9b;border-radius:12px;background:#f7faf6;margin-top:8px}
+.p4-point-table{width:100%;min-width:560px;border-collapse:separate;border-spacing:0;font-size:9px;direction:ltr}
+.p4-point-table th{position:sticky;top:0;z-index:2;background:#dce7da;color:#1f2b21;font-weight:900;padding:7px 5px;border-bottom:2px solid #849383;white-space:nowrap}
+.p4-point-table td{padding:7px 5px;border-bottom:1px solid #d2dbd0;text-align:center;white-space:nowrap;direction:ltr}
+.p4-point-table tr:last-child td{border-bottom:0}
+.p4-point-table .p4-actions-cell{direction:rtl;white-space:nowrap}
+.p4-mini-btn{border:1px solid #7e8c7d;border-radius:7px;background:#eef3ec;padding:5px 7px;font-size:8px;font-weight:800;margin:1px;touch-action:manipulation}
+.p4-mini-btn.danger{background:#f4e7e5;border-color:#a98680}
+.p4-output-grid-final{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+.p4-output-btn{min-height:72px;border:1px solid #7d8c7b;border-radius:12px;background:linear-gradient(#fff,#e5eee3);font-weight:900;font-size:12px;touch-action:manipulation}
+.p4-output-btn small{display:block;font-size:8px;font-weight:500;margin-top:5px;color:#657064}
+@media(max-width:390px){.p4v8-tabs{gap:3px!important}.p4v8-tabs .v8-tab{font-size:10px!important;padding:6px 1px!important}.p4v8-tabs .v8-tab small{font-size:7px!important}.p4-output-grid-final{grid-template-columns:1fr 1fr}}
+</style>
+<script id="miladgeo-mainmenu-language-399-script">
+(function(){
+  'use strict';
+  var main=document.getElementById('main');
+  if(!main)return;
+  var allButtons=Array.prototype.slice.call(main.querySelectorAll('.menu-grid > .menu-btn'));
+  /* Menu 20 is intentionally outside the language list; keep this runtime on menus 1–19 only. */
+  if(allButtons.length<19)return;
+  var buttons=allButtons.slice(0,19);
+  var data={
+    fa:{labels:['شبیه‌ساز لایکا','برداشت','پیاده‌سازی','ترازیابی / توپوگرافی','نقاط / TXT','اکسل','مساحت / چندضلعی','حجم / عملیات خاکی','Mini Autocad','DXF ← PDF','تبدیل مختصات','تبدیل واحدها','محاسبات نقشه‌برداری','ماشین‌حساب مهندسی','سرگرمی مهندس','کتابخانه مهندس','گوگل ارث و ترسیم','مرکز جهت‌یابی','دوربین نقشه‌برداری'],states:['ایستگاه / برداشت / پیاده‌سازی','برداشت واقعی زمینی','پیاده‌سازی زنده با GPS','ارتفاع / اختلاف ارتفاع / توپوگرافی','۰ نقطه','ورود / خروجی نقاط','۳+ نقطه','خاکبرداری / خاکریزی','UTM / WGS84','نقشه قابل چاپ','تبدیل سیستم مختصات','طول / مساحت / زاویه','محاسبات مهندسی نقشه‌برداری','محاسبات مهندسی','بازی‌های فکری و سرگرمی','مرجع و آموزش مهندسی','نقشه ماهواره‌ای','قطب‌نما / سرعت‌سنج / قبله‌نما','ثبت عکس / نقطه / پروژه'],nums:['۱','۲','۳','۴','۵','۶','۷','۸','۹','۱۰','۱۱','۱۲','۱۳','۱۴','۱۵','۱۶','۱۷','۱۸','۱۹']},
+    en:{labels:['Leica Simulator','Measurement','Stake Out','Leveling / Topography','Points / TXT','Excel','Area / Polygon','Volume / Earthwork','Mini Autocad','DXF → PDF','Coordinate Converter','Unit Converter','Survey Calculations','Engineering Calculator','Engineer Entertainment','Engineering Library','Google Earth & Drawing','Navigation Center','Survey Camera'],states:['Station / Measure / Stake Out','Real Field Measurement','Live GPS Stake Out','Height / Rise & Fall / Topography','0 Points','Import / Export Points','3+ Points','Cut / Fill','UTM / WGS84','Printable Map','Coordinate System Conversion','Length / Area / Angle','Survey Engineering Calculations','Engineering Calculations','Games & Puzzles','Engineering Reference / Learning','Satellite Map','Compass / Speed / Qibla','Photo / Point / Project'],nums:['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19']},
+    ar:{labels:['محاكي لايكا','الرفع المساحي','التوقيع','التسوية / الطبوغرافيا','النقاط / TXT','إكسل','المساحة / المضلع','الحجم / الأعمال الترابية','Mini Autocad','DXF ← PDF','تحويل الإحداثيات','تحويل الوحدات','حسابات المساحة','الحاسبة الهندسية','ترفيه المهندس','التدريب / المكتبة','جوجل إيرث والرسم','البوصلة','كاميرا مساحية'],states:['المحطة / الرفع / التوقيع','الرفع الميداني الحقيقي','توقيع مباشر عبر GPS','الارتفاع / فرق الارتفاع / الطبوغرافيا','٠ نقطة','استيراد / تصدير النقاط','٣+ نقاط','حفر / ردم','UTM / WGS84','خريطة قابلة للطباعة','تحويل نظام الإحداثيات','الطول / المساحة / الزاوية','حسابات هندسية مساحية','الحسابات الهندسية','ألعاب وألغاز','تعلم / اختبار / مكتبة','خريطة القمر الصناعي','بوصلة رقمية / سمت','صورة / نقطة / مشروع'],nums:['١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١','١٢','١٣','١٤','١٥','١٦','١٧','١٨','١٩']},
+    survey:{labels:['LEICA SIMULATOR','MEASURE','STAKE OUT','ترازیابی / توپوگرافی','POINT / TXT','EXCEL','AREA / POLYGON','VOLUME / EARTHWORK','MINI AUTOCAD','DXF → PDF','تبدیل مختصات','تبدیل واحد','COGO','Calculate','سرگرمی مهندس','آموزش / کتابخانه','GOOGLE EARTH','COMPASS / قطب‌نما','SURVEY CAMERA'],states:['STATION / MEASURE / STAKE OUT','REAL FIELD MEASUREMENT','LIVE GPS IMPLEMENTATION','HI / RISE & FALL / LEVELING','0 POINTS','IMPORT / EXPORT POINTS','3+ POINTS','CUT / FILL','UTM / WGS84','PRINTABLE MAP','انتقال نقاط / تبدیل سیستم مختصات','LENGTH / AREA / ANGLE','SURVEY CALCULATIONS','ماشین‌حساب مهندسی','بازی‌های فکری و سرگرمی','LEARN / QUIZ / LIBRARY','SATELLITE MAP','DIGITAL / AZIMUTH','PHOTO / POINT / PROJECT'],nums:['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19']}
+  };
+  function ensureLabel(btn){
+    var label=btn.querySelector('.menu-label');
+    if(!label){
+      label=document.createElement('span');label.className='menu-label';
+      var num=btn.querySelector('.menu-num');
+      if(num&&num.nextSibling)btn.insertBefore(label,num.nextSibling);else btn.appendChild(label);
+      Array.prototype.slice.call(btn.childNodes).forEach(function(n){if(n.nodeType===3&&n.nodeValue.trim())n.nodeValue='';});
+    }
+    return label;
+  }
+  function apply(lang){
+    var d=data[lang]||data.fa;
+    buttons.forEach(function(btn,i){
+      var n=btn.querySelector('.menu-num'); if(n)n.textContent=d.nums[i];
+      ensureLabel(btn).textContent=d.labels[i];
+      var st=btn.querySelector('.menu-state'); if(st)st.textContent=d.states[i];
+    });
+    /* X9: Menu 20 uses the same numeral system as the selected main-menu language. */
+    var menu20=main.querySelector('.menu-grid > .menu-btn[href*="menu20"], .menu-grid > .menu-btn[onclick*="menu20"]');
+    if(menu20){var num20=menu20.querySelector('.menu-num');if(num20)num20.textContent=(lang==='en'||lang==='survey')?'20':'٢٠';}
+    try{localStorage.setItem('miladgeo-main-language-399',lang)}catch(e){}
+    panel.querySelectorAll('.mg-language-choice').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-language')===lang?'true':'false')});
+    panel.classList.remove('open');
+  }
+  var wrap=document.createElement('div');wrap.className='miladgeo-lang-gear-wrap';
+  var gear=document.createElement('button');gear.type='button';gear.className='miladgeo-lang-gear';gear.textContent='⚙';gear.setAttribute('aria-label','زبان منوی اصلی');
+  var panel=document.createElement('div');panel.className='miladgeo-lang-panel';
+  /* X15: removed Bluetooth sharing because this HTML page cannot send the installed APK. */
+  var resetBtn=document.createElement('button');resetBtn.type='button';resetBtn.className='mg-settings-reset';resetBtn.textContent='بازگشت تنظیمات به حالت پیش‌فرض';resetBtn.style.gridColumn='1/-1';
+  resetBtn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(!confirm('تنظیمات زبان، رنگ، قلم و اندازه نوشته به حالت پیش‌فرض برگردد؟'))return;try{localStorage.setItem('miladgeo-main-language-399','fa');localStorage.setItem('miladgeo-main-theme-399','original');localStorage.setItem('miladgeo-font-choice-x4','estedadneon');localStorage.setItem('miladgeo-font-size-choice-x4','normal');}catch(err){}location.reload();});
+  panel.appendChild(resetBtn);
+  [['fa','فارسی'],['en','English'],['ar','العربية'],['survey','زبان نقشه‌برداری']].forEach(function(x){var b=document.createElement('button');b.type='button';b.className='mg-language-choice';b.setAttribute('data-language',x[0]);b.setAttribute('aria-pressed','false');b.textContent=x[1];b.addEventListener('click',function(){apply(x[0]);});panel.appendChild(b);});
+  var themeHeading=document.createElement('div');themeHeading.className='mg-theme-heading';themeHeading.textContent='رنگ صفحه';panel.appendChild(themeHeading);
+  var themes=[
+    {id:'original',label:'رنگ اصلی',bg:'#eef2ea',btn:'#d3dbce',border:'#4d5b4d',text:'#172018'},
+    {id:'green',label:'سبز ارتشی',bg:'#e8eadf',btn:'#687449',border:'#424b2e',text:'#ffffff',bgImage:'radial-gradient(ellipse at 18% 12%,rgba(255,255,255,.82),transparent 38%),linear-gradient(145deg,#f0f1e8 0%,#d9ddca 52%,#e9eadf 100%)',btnImage:'linear-gradient(135deg,rgba(255,255,255,.38),transparent 34%),linear-gradient(145deg,#84915e 0%,#657044 55%,#4e5935 100%)'},
+    {id:'sky',label:'صورتی مرمری',bg:'#f8e8ee',btn:'#e8c4d1',border:'#b88a68',text:'#563a43',bgImage:'radial-gradient(ellipse at 18% 20%,rgba(255,255,255,.92),transparent 38%),linear-gradient(135deg,#f9edf1 0%,#e9cbd6 48%,#fff5f0 100%)',btnImage:'linear-gradient(132deg,transparent 0 22%,rgba(255,255,255,.9) 23%,transparent 25% 53%,rgba(185,137,77,.48) 54%,transparent 56%),linear-gradient(35deg,transparent 0 62%,rgba(255,255,255,.8) 63%,transparent 65%),linear-gradient(145deg,#fff5f8,#e6b9ca 54%,#f8e8ee)'},
+    {id:'silver',label:'نقره‌ای',bg:'#e8edf2',btn:'#d4dce4',border:'#8998a7',text:'#273440',bgImage:'radial-gradient(circle at 13% 18%,rgba(255,255,255,.96) 0 1px,transparent 1.9px),radial-gradient(circle at 76% 36%,rgba(255,255,255,.82) 0 1px,transparent 1.8px),radial-gradient(circle at 46% 82%,rgba(255,255,255,.78) 0 1px,transparent 1.8px),radial-gradient(ellipse at 18% 10%,rgba(255,255,255,.95),transparent 37%),linear-gradient(140deg,#fbfcfd 0%,#c3ccd5 38%,#f3f6f8 64%,#b9c3cd 100%)',btnImage:'radial-gradient(circle at 12% 19%,rgba(255,255,255,.98) 0 1px,transparent 1.9px),radial-gradient(circle at 78% 27%,rgba(255,255,255,.92) 0 1px,transparent 1.8px),radial-gradient(circle at 48% 77%,rgba(255,255,255,.86) 0 1px,transparent 1.8px),radial-gradient(circle at 88% 82%,rgba(255,255,255,.76) 0 1px,transparent 1.7px),linear-gradient(118deg,transparent 0 34%,rgba(255,255,255,.9) 47%,transparent 60%),linear-gradient(145deg,#ffffff 0%,#c3ccd5 36%,#edf2f6 58%,#aebac5 100%)'},
+    {id:'graphiteMarble',label:'خاکستری مرمری',bg:'#dfe3df',btn:'#aeb8b2',border:'#476b59',text:'#1e3028',bgImage:'radial-gradient(ellipse at 15% 18%,rgba(255,255,255,.92),transparent 35%),linear-gradient(135deg,#eef0ed 0%,#bfc8c1 48%,#e4e8e4 100%)',btnImage:'linear-gradient(128deg,transparent 0 18%,rgba(255,255,255,.88) 19%,transparent 21% 46%,rgba(52,111,79,.58) 47%,transparent 49% 77%,rgba(255,255,255,.7) 78%,transparent 80%),linear-gradient(145deg,#f4f6f3,#aab5ae 55%,#dce2dd)'},
+    {id:'muddyGreen',label:'سبز لجنی',bg:'#d5d8c5',btn:'#777b4b',border:'#4b5030',text:'#f7f7eb',bgImage:'radial-gradient(ellipse at 17% 22%,rgba(91,99,54,.28) 0 10%,transparent 24%),radial-gradient(ellipse at 76% 18%,rgba(126,119,69,.22) 0 9%,transparent 23%),radial-gradient(ellipse at 54% 72%,rgba(73,82,45,.24) 0 12%,transparent 27%),radial-gradient(ellipse at 91% 82%,rgba(151,139,86,.22) 0 8%,transparent 21%),radial-gradient(ellipse at 27% 83%,rgba(112,116,68,.20) 0 8%,transparent 20%),repeating-linear-gradient(117deg,rgba(255,255,255,.035) 0 1px,rgba(35,42,25,.025) 1px 3px),linear-gradient(145deg,#e3e3d2 0%,#c7c9ad 48%,#d9d8c2 100%)',btnImage:'radial-gradient(ellipse at 18% 22%,#a0a16c 0 11%,transparent 24%),radial-gradient(ellipse at 77% 17%,#535b35 0 12%,transparent 25%),radial-gradient(ellipse at 55% 74%,#929064 0 13%,transparent 27%),radial-gradient(ellipse at 92% 83%,#454d2d 0 9%,transparent 22%),radial-gradient(ellipse at 27% 84%,#777c4d 0 10%,transparent 22%),repeating-linear-gradient(117deg,rgba(255,255,255,.045) 0 1px,rgba(0,0,0,.035) 1px 3px),linear-gradient(145deg,#85895b,#62683f 55%,#77794d)'},
+    {id:'digital',label:'دیجیتالی',bg:'#e0e4e7',btn:'#a3adb4',border:'#7a858d',text:'#111111',bgImage:"url(\"data:image/svg+xml,%3Csvg%20opacity%3D%220.72%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22512%22%20height%3D%22512%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20d%3D%22M96%20496h16v16h-16zM112%20496h16v16h-16zM128%20496h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M384%2064h16v16h-16zM384%2080h16v16h-16zM400%2080h16v16h-16zM336%2096h16v16h-16zM352%2096h16v16h-16zM368%2096h16v16h-16zM384%2096h16v16h-16zM400%2096h16v16h-16zM336%20112h16v16h-16zM352%20112h16v16h-16zM368%20112h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.97%22%2F%3E%3Cpath%20d%3D%22M464%20320h16v16h-16zM400%20336h16v16h-16zM416%20336h16v16h-16zM432%20336h16v16h-16zM448%20336h16v16h-16zM464%20336h16v16h-16zM400%20352h16v16h-16zM416%20352h16v16h-16zM432%20352h16v16h-16zM448%20352h16v16h-16zM464%20352h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.89%22%2F%3E%3Cpath%20d%3D%22M384%20480h16v16h-16zM400%20480h16v16h-16zM384%20496h16v16h-16zM400%20496h16v16h-16zM416%20496h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.86%22%2F%3E%3Cpath%20d%3D%22M288%20464h16v16h-16zM240%20480h16v16h-16zM256%20480h16v16h-16zM272%20480h16v16h-16zM288%20480h16v16h-16zM224%20496h16v16h-16zM240%20496h16v16h-16zM256%20496h16v16h-16zM272%20496h16v16h-16zM288%20496h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.77%22%2F%3E%3Cpath%20d%3D%22M224%20368h16v16h-16zM208%20384h16v16h-16zM224%20384h16v16h-16zM240%20384h16v16h-16zM256%20384h16v16h-16zM208%20400h16v16h-16zM224%20400h16v16h-16zM240%20400h16v16h-16zM256%20400h16v16h-16zM224%20416h16v16h-16zM224%20432h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.80%22%2F%3E%3Cpath%20d%3D%22M288%20224h16v16h-16zM288%20240h16v16h-16zM304%20240h16v16h-16zM320%20240h16v16h-16zM288%20256h16v16h-16zM304%20256h16v16h-16zM272%20272h16v16h-16zM288%20272h16v16h-16zM304%20272h16v16h-16zM304%20288h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.97%22%2F%3E%3Cpath%20d%3D%22M416%20304h16v16h-16zM400%20320h16v16h-16zM416%20320h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.78%22%2F%3E%3Cpath%20d%3D%22M176%20448h16v16h-16zM192%20448h16v16h-16zM208%20448h16v16h-16zM192%20464h16v16h-16zM208%20464h16v16h-16zM176%20480h16v16h-16zM192%20480h16v16h-16zM176%20496h16v16h-16zM192%20496h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.87%22%2F%3E%3Cpath%20d%3D%22M64%20400h16v16h-16zM80%20400h16v16h-16zM48%20416h16v16h-16zM64%20416h16v16h-16zM48%20432h16v16h-16zM64%20432h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.77%22%2F%3E%3Cpath%20d%3D%22M448%2096h16v16h-16zM480%2096h16v16h-16zM416%20112h16v16h-16zM432%20112h16v16h-16zM448%20112h16v16h-16zM464%20112h16v16h-16zM480%20112h16v16h-16zM416%20128h16v16h-16zM448%20128h16v16h-16zM464%20128h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.96%22%2F%3E%3Cpath%20d%3D%22M64%20288h16v16h-16zM48%20304h16v16h-16zM64%20304h16v16h-16zM80%20304h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.76%22%2F%3E%3Cpath%20d%3D%22M48%2016h16v16h-16zM32%2032h16v16h-16zM48%2032h16v16h-16zM64%2032h16v16h-16zM80%2032h16v16h-16zM32%2048h16v16h-16zM48%2048h16v16h-16zM64%2048h16v16h-16zM64%2064h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.93%22%2F%3E%3Cpath%20d%3D%22M128%20352h16v16h-16zM144%20352h16v16h-16zM160%20352h16v16h-16zM128%20368h16v16h-16zM144%20368h16v16h-16zM160%20368h16v16h-16zM128%20384h16v16h-16zM160%20384h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.97%22%2F%3E%3Cpath%20d%3D%22M144%20112h16v16h-16zM128%20128h16v16h-16zM144%20128h16v16h-16zM112%20144h16v16h-16zM128%20144h16v16h-16zM144%20144h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.89%22%2F%3E%3Cpath%20d%3D%22M48%20144h16v16h-16zM32%20160h16v16h-16zM48%20160h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.84%22%2F%3E%3Cpath%20d%3D%22M384%20432h16v16h-16zM400%20432h16v16h-16zM416%20432h16v16h-16zM384%20448h16v16h-16zM400%20448h16v16h-16zM416%20448h16v16h-16zM432%20448h16v16h-16zM384%20464h16v16h-16zM400%20464h16v16h-16zM416%20464h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.77%22%2F%3E%3Cpath%20d%3D%22M416%20208h16v16h-16zM400%20224h16v16h-16zM416%20224h16v16h-16zM416%20240h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.95%22%2F%3E%3Cpath%20d%3D%22M192%20304h16v16h-16zM208%20304h16v16h-16zM192%20320h16v16h-16zM208%20320h16v16h-16zM224%20320h16v16h-16zM176%20336h16v16h-16zM192%20336h16v16h-16zM208%20336h16v16h-16zM224%20336h16v16h-16zM224%20352h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.79%22%2F%3E%3Cpath%20d%3D%22M416%2016h16v16h-16zM432%2016h16v16h-16zM400%2032h16v16h-16zM416%2032h16v16h-16zM432%2032h16v16h-16zM400%2048h16v16h-16zM416%2048h16v16h-16zM400%2064h16v16h-16zM416%2064h16v16h-16zM432%2064h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.93%22%2F%3E%3Cpath%20d%3D%22M240%20432h16v16h-16zM256%20432h16v16h-16zM224%20448h16v16h-16zM240%20448h16v16h-16zM256%20448h16v16h-16zM240%20464h16v16h-16zM256%20464h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.97%22%2F%3E%3Cpath%20d%3D%22M256%20352h16v16h-16zM272%20352h16v16h-16zM272%20368h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.86%22%2F%3E%3Cpath%20d%3D%22M288%20416h16v16h-16zM304%20416h16v16h-16zM272%20432h16v16h-16zM288%20432h16v16h-16zM304%20432h16v16h-16zM272%20448h16v16h-16zM288%20448h16v16h-16zM304%20448h16v16h-16zM304%20464h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.90%22%2F%3E%3Cpath%20d%3D%22M208%20208h16v16h-16zM208%20224h16v16h-16zM224%20224h16v16h-16zM208%20240h16v16h-16zM224%20240h16v16h-16zM208%20256h16v16h-16zM224%20256h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.88%22%2F%3E%3Cpath%20d%3D%22M480%20192h16v16h-16zM480%20208h16v16h-16zM496%20208h16v16h-16zM480%20224h16v16h-16zM496%20224h16v16h-16zM496%20240h16v16h-16zM464%20256h16v16h-16zM480%20256h16v16h-16zM496%20256h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M496%20288h16v16h-16zM480%20304h16v16h-16zM496%20304h16v16h-16zM480%20320h16v16h-16zM496%20320h16v16h-16zM480%20336h16v16h-16zM496%20336h16v16h-16zM480%20352h16v16h-16zM496%20352h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.86%22%2F%3E%3Cpath%20d%3D%22M480%20160h16v16h-16zM496%20160h16v16h-16zM496%20176h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.96%22%2F%3E%3Cpath%20d%3D%22M208%2032h16v16h-16zM224%2032h16v16h-16zM192%2048h16v16h-16zM208%2048h16v16h-16zM224%2048h16v16h-16zM240%2048h16v16h-16zM208%2064h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.83%22%2F%3E%3Cpath%20d%3D%22M48%200h16v16h-16zM64%200h16v16h-16zM80%200h16v16h-16zM96%200h16v16h-16zM112%200h16v16h-16zM112%2016h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.94%22%2F%3E%3Cpath%20d%3D%22M256%20240h16v16h-16zM256%20256h16v16h-16zM272%20256h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.81%22%2F%3E%3Cpath%20d%3D%22M96%20432h16v16h-16zM112%20432h16v16h-16zM128%20432h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.87%22%2F%3E%3Cpath%20d%3D%22M256%20304h16v16h-16zM272%20304h16v16h-16zM288%20304h16v16h-16zM304%20304h16v16h-16zM320%20304h16v16h-16zM272%20320h16v16h-16zM288%20320h16v16h-16zM304%20320h16v16h-16zM320%20320h16v16h-16zM288%20336h16v16h-16zM304%20336h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.91%22%2F%3E%3Cpath%20d%3D%22M320%20112h16v16h-16zM288%20128h16v16h-16zM304%20128h16v16h-16zM320%20128h16v16h-16zM336%20128h16v16h-16zM304%20144h16v16h-16zM320%20144h16v16h-16zM336%20144h16v16h-16zM304%20160h16v16h-16zM320%20160h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.79%22%2F%3E%3Cpath%20d%3D%22M368%20160h16v16h-16zM384%20160h16v16h-16zM336%20176h16v16h-16zM352%20176h16v16h-16zM368%20176h16v16h-16zM384%20176h16v16h-16zM352%20192h16v16h-16zM368%20192h16v16h-16zM384%20192h16v16h-16zM368%20208h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.82%22%2F%3E%3Cpath%20d%3D%22M144%20432h16v16h-16zM160%20432h16v16h-16zM128%20448h16v16h-16zM144%20448h16v16h-16zM160%20448h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.97%22%2F%3E%3Cpath%20d%3D%22M32%20416h16v16h-16zM0%20432h16v16h-16zM16%20432h16v16h-16zM32%20432h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.80%22%2F%3E%3Cpath%20d%3D%22M432%20192h16v16h-16zM448%20192h16v16h-16zM432%20208h16v16h-16zM448%20208h16v16h-16zM464%20208h16v16h-16zM432%20224h16v16h-16zM448%20224h16v16h-16zM432%20240h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M384%20240h16v16h-16zM400%20240h16v16h-16zM368%20256h16v16h-16zM384%20256h16v16h-16zM400%20256h16v16h-16zM416%20256h16v16h-16zM432%20256h16v16h-16zM384%20272h16v16h-16zM416%20272h16v16h-16zM432%20272h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.77%22%2F%3E%3Cpath%20d%3D%22M368%20432h16v16h-16zM336%20448h16v16h-16zM352%20448h16v16h-16zM368%20448h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.89%22%2F%3E%3Cpath%20d%3D%22M400%20400h16v16h-16zM416%20400h16v16h-16zM432%20400h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M48%20208h16v16h-16zM32%20224h16v16h-16zM48%20224h16v16h-16zM64%20224h16v16h-16zM80%20224h16v16h-16zM32%20240h16v16h-16zM48%20240h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.79%22%2F%3E%3Cpath%20d%3D%22M0%20256h16v16h-16zM16%20256h16v16h-16zM0%20272h16v16h-16zM16%20272h16v16h-16zM32%20272h16v16h-16zM0%20288h16v16h-16zM16%20288h16v16h-16zM32%20288h16v16h-16zM48%20288h16v16h-16zM0%20304h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.84%22%2F%3E%3Cpath%20d%3D%22M80%20112h16v16h-16zM80%20128h16v16h-16zM96%20128h16v16h-16zM80%20144h16v16h-16zM96%20144h16v16h-16zM96%20160h16v16h-16zM80%20176h16v16h-16zM96%20176h16v16h-16zM112%20176h16v16h-16zM112%20192h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.89%22%2F%3E%3Cpath%20d%3D%22M448%20464h16v16h-16zM464%20464h16v16h-16zM480%20464h16v16h-16zM480%20480h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.78%22%2F%3E%3Cpath%20d%3D%22M416%20144h16v16h-16zM432%20144h16v16h-16zM448%20144h16v16h-16zM464%20144h16v16h-16zM416%20160h16v16h-16zM432%20160h16v16h-16zM448%20160h16v16h-16zM464%20160h16v16h-16zM448%20176h16v16h-16zM464%20176h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.81%22%2F%3E%3Cpath%20d%3D%22M48%2096h16v16h-16zM64%2096h16v16h-16zM80%2096h16v16h-16zM96%2096h16v16h-16zM48%20112h16v16h-16zM64%20112h16v16h-16zM48%20128h16v16h-16zM64%20128h16v16h-16zM64%20144h16v16h-16zM64%20160h16v16h-16zM80%20160h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.82%22%2F%3E%3Cpath%20d%3D%22M256%2080h16v16h-16zM272%2080h16v16h-16zM288%2080h16v16h-16zM304%2080h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.78%22%2F%3E%3Cpath%20d%3D%22M48%20480h16v16h-16zM48%20496h16v16h-16zM64%20496h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.91%22%2F%3E%3Cpath%20d%3D%22M208%20112h16v16h-16zM192%20128h16v16h-16zM208%20128h16v16h-16zM208%20144h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.78%22%2F%3E%3Cpath%20d%3D%22M128%20192h16v16h-16zM128%20208h16v16h-16zM128%20224h16v16h-16zM144%20224h16v16h-16zM160%20224h16v16h-16zM128%20240h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.97%22%2F%3E%3Cpath%20d%3D%22M128%2064h16v16h-16zM144%2064h16v16h-16zM96%2080h16v16h-16zM112%2080h16v16h-16zM128%2080h16v16h-16zM144%2080h16v16h-16zM112%2096h16v16h-16zM128%2096h16v16h-16zM144%2096h16v16h-16zM96%20112h16v16h-16zM112%20112h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.96%22%2F%3E%3Cpath%20d%3D%22M272%20384h16v16h-16zM272%20400h16v16h-16zM288%20400h16v16h-16zM304%20400h16v16h-16zM240%20416h16v16h-16zM256%20416h16v16h-16zM272%20416h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.80%22%2F%3E%3Cpath%20d%3D%22M64%20240h16v16h-16zM80%20240h16v16h-16zM96%20240h16v16h-16zM64%20256h16v16h-16zM80%20256h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.83%22%2F%3E%3Cpath%20d%3D%22M208%200h16v16h-16zM224%200h16v16h-16zM224%2016h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.81%22%2F%3E%3Cpath%20d%3D%22M0%20160h16v16h-16zM16%20160h16v16h-16zM0%20176h16v16h-16zM0%20192h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.84%22%2F%3E%3Cpath%20d%3D%22M80%20192h16v16h-16zM96%20192h16v16h-16zM96%20208h16v16h-16zM112%20208h16v16h-16zM112%20224h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.94%22%2F%3E%3Cpath%20d%3D%22M384%200h16v16h-16zM400%200h16v16h-16zM416%200h16v16h-16zM432%200h16v16h-16zM448%200h16v16h-16zM464%200h16v16h-16zM480%200h16v16h-16zM496%200h16v16h-16zM400%2016h16v16h-16zM480%2016h16v16h-16zM480%2032h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.83%22%2F%3E%3Cpath%20d%3D%22M448%2064h16v16h-16zM432%2080h16v16h-16zM448%2080h16v16h-16zM464%2080h16v16h-16zM480%2080h16v16h-16zM432%2096h16v16h-16zM464%2096h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.87%22%2F%3E%3Cpath%20d%3D%22M336%20464h16v16h-16zM352%20464h16v16h-16zM368%20464h16v16h-16zM336%20480h16v16h-16zM352%20480h16v16h-16zM368%20480h16v16h-16zM336%20496h16v16h-16zM352%20496h16v16h-16zM368%20496h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.86%22%2F%3E%3Cpath%20d%3D%22M320%20368h16v16h-16zM336%20368h16v16h-16zM352%20368h16v16h-16zM368%20368h16v16h-16zM336%20384h16v16h-16zM352%20384h16v16h-16zM368%20384h16v16h-16zM336%20400h16v16h-16zM352%20400h16v16h-16zM336%20416h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.94%22%2F%3E%3Cpath%20d%3D%22M176%2048h16v16h-16zM176%2064h16v16h-16zM160%2080h16v16h-16zM176%2080h16v16h-16zM192%2080h16v16h-16zM176%2096h16v16h-16zM192%2096h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.90%22%2F%3E%3Cpath%20d%3D%22M208%2096h16v16h-16zM224%2096h16v16h-16zM240%2096h16v16h-16zM256%2096h16v16h-16zM224%20112h16v16h-16zM240%20112h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.95%22%2F%3E%3Cpath%20d%3D%22M336%20224h16v16h-16zM336%20240h16v16h-16zM320%20256h16v16h-16zM336%20256h16v16h-16zM352%20256h16v16h-16zM320%20272h16v16h-16zM352%20272h16v16h-16zM368%20272h16v16h-16zM368%20288h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.83%22%2F%3E%3Cpath%20d%3D%22M240%20304h16v16h-16zM240%20320h16v16h-16zM256%20320h16v16h-16zM240%20336h16v16h-16zM256%20336h16v16h-16zM272%20336h16v16h-16zM240%20352h16v16h-16zM240%20368h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.96%22%2F%3E%3Cpath%20d%3D%22M96%20256h16v16h-16zM64%20272h16v16h-16zM80%20272h16v16h-16zM96%20272h16v16h-16zM112%20272h16v16h-16zM128%20272h16v16h-16zM80%20288h16v16h-16zM96%20288h16v16h-16zM112%20288h16v16h-16zM96%20304h16v16h-16zM112%20304h16v16h-16z%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.91%22%2F%3E%3Cpath%20d%3D%22M320%20448h16v16h-16zM320%20464h16v16h-16zM320%20480h16v16h-16zM320%20496h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.81%22%2F%3E%3Cpath%20d%3D%22M160%2096h16v16h-16zM160%20112h16v16h-16zM176%20112h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M336%20272h16v16h-16zM320%20288h16v16h-16zM336%20288h16v16h-16zM336%20304h16v16h-16zM352%20304h16v16h-16zM336%20320h16v16h-16zM352%20320h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.76%22%2F%3E%3Cpath%20d%3D%22M224%20464h16v16h-16zM208%20480h16v16h-16zM224%20480h16v16h-16zM208%20496h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.93%22%2F%3E%3Cpath%20d%3D%22M272%2048h16v16h-16zM288%2048h16v16h-16zM304%2048h16v16h-16zM256%2064h16v16h-16zM272%2064h16v16h-16zM288%2064h16v16h-16zM304%2064h16v16h-16zM320%2064h16v16h-16zM336%2064h16v16h-16zM320%2080h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.83%22%2F%3E%3Cpath%20d%3D%22M144%2048h16v16h-16zM160%2048h16v16h-16zM160%2064h16v16h-16z%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M240%2016h16v16h-16zM240%2032h16v16h-16zM256%2032h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.90%22%2F%3E%3Cpath%20d%3D%22M0%200h16v16h-16zM16%200h16v16h-16zM32%200h16v16h-16zM0%2016h16v16h-16zM16%2016h16v16h-16zM32%2016h16v16h-16zM0%2032h16v16h-16zM16%2032h16v16h-16zM0%2048h16v16h-16zM0%2064h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.87%22%2F%3E%3Cpath%20d%3D%22M160%20272h16v16h-16zM160%20288h16v16h-16zM176%20288h16v16h-16zM192%20288h16v16h-16zM144%20304h16v16h-16zM160%20304h16v16h-16zM176%20304h16v16h-16zM160%20320h16v16h-16zM176%20320h16v16h-16zM144%20336h16v16h-16zM160%20336h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.90%22%2F%3E%3Cpath%20d%3D%22M256%20288h16v16h-16zM272%20288h16v16h-16zM288%20288h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M144%20384h16v16h-16zM144%20400h16v16h-16zM160%20400h16v16h-16zM112%20416h16v16h-16zM128%20416h16v16h-16zM144%20416h16v16h-16zM160%20416h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.84%22%2F%3E%3Cpath%20d%3D%22M272%2096h16v16h-16zM272%20112h16v16h-16zM288%20112h16v16h-16zM272%20128h16v16h-16zM272%20144h16v16h-16zM288%20144h16v16h-16zM272%20160h16v16h-16z%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.79%22%2F%3E%3Cpath%20d%3D%22M80%20336h16v16h-16zM96%20336h16v16h-16zM112%20336h16v16h-16zM64%20352h16v16h-16zM80%20352h16v16h-16zM48%20368h16v16h-16zM64%20368h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.90%22%2F%3E%3Cpath%20d%3D%22M288%20160h16v16h-16zM272%20176h16v16h-16zM288%20176h16v16h-16zM304%20176h16v16h-16zM304%20192h16v16h-16z%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M496%20432h16v16h-16zM464%20448h16v16h-16zM480%20448h16v16h-16zM496%20448h16v16h-16zM496%20464h16v16h-16zM496%20480h16v16h-16zM496%20496h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.80%22%2F%3E%3Cpath%20d%3D%22M96%20352h16v16h-16zM96%20368h16v16h-16zM96%20384h16v16h-16zM96%20400h16v16h-16zM112%20400h16v16h-16zM128%20400h16v16h-16zM96%20416h16v16h-16z%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M32%20464h16v16h-16zM48%20464h16v16h-16zM32%20480h16v16h-16z%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.86%22%2F%3E%3Crect%20x%3D%22336%22%20y%3D%22464%22%20width%3D%2248%22%20height%3D%2216%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.62%22%2F%3E%3Crect%20x%3D%220%22%20y%3D%22384%22%20width%3D%2248%22%20height%3D%2216%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.73%22%2F%3E%3Crect%20x%3D%2280%22%20y%3D%22224%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.52%22%2F%3E%3Crect%20x%3D%22112%22%20y%3D%22368%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.73%22%2F%3E%3Crect%20x%3D%22416%22%20y%3D%220%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.77%22%2F%3E%3Crect%20x%3D%22224%22%20y%3D%22160%22%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.60%22%2F%3E%3Crect%20x%3D%22448%22%20y%3D%22464%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.52%22%2F%3E%3Crect%20x%3D%22448%22%20y%3D%2216%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.65%22%2F%3E%3Crect%20x%3D%22480%22%20y%3D%22320%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.71%22%2F%3E%3Crect%20x%3D%22192%22%20y%3D%22272%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.67%22%2F%3E%3Crect%20x%3D%22128%22%20y%3D%22400%22%20width%3D%2248%22%20height%3D%2232%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.67%22%2F%3E%3Crect%20x%3D%22352%22%20y%3D%22272%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.61%22%2F%3E%3Crect%20x%3D%22416%22%20y%3D%220%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.58%22%2F%3E%3Crect%20x%3D%22464%22%20y%3D%22224%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.74%22%2F%3E%3Crect%20x%3D%22400%22%20y%3D%22160%22%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.61%22%2F%3E%3Crect%20x%3D%22336%22%20y%3D%22384%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.56%22%2F%3E%3Crect%20x%3D%22160%22%20y%3D%22192%22%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.56%22%2F%3E%3Crect%20x%3D%22272%22%20y%3D%22208%22%20width%3D%2248%22%20height%3D%2216%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.67%22%2F%3E%3Crect%20x%3D%22192%22%20y%3D%22176%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.77%22%2F%3E%3Crect%20x%3D%2248%22%20y%3D%22224%22%20width%3D%2248%22%20height%3D%2216%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.75%22%2F%3E%3Crect%20x%3D%2216%22%20y%3D%22160%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.52%22%2F%3E%3Crect%20x%3D%22448%22%20y%3D%2280%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.76%22%2F%3E%3Crect%20x%3D%22224%22%20y%3D%22144%22%20width%3D%2248%22%20height%3D%2216%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.54%22%2F%3E%3Crect%20x%3D%22176%22%20y%3D%22272%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.60%22%2F%3E%3Crect%20x%3D%2216%22%20y%3D%2264%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23606b73%22%20fill-opacity%3D%220.76%22%2F%3E%3Crect%20x%3D%22464%22%20y%3D%2296%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.61%22%2F%3E%3Crect%20x%3D%22416%22%20y%3D%22112%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.67%22%2F%3E%3Crect%20x%3D%22208%22%20y%3D%2216%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.67%22%2F%3E%3Crect%20x%3D%22352%22%20y%3D%22224%22%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%237c878f%22%20fill-opacity%3D%220.67%22%2F%3E%3Crect%20x%3D%22112%22%20y%3D%22304%22%20width%3D%2248%22%20height%3D%2232%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.56%22%2F%3E%3Crect%20x%3D%22112%22%20y%3D%22288%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.69%22%2F%3E%3Crect%20x%3D%22352%22%20y%3D%22224%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.73%22%2F%3E%3Crect%20x%3D%22224%22%20y%3D%22336%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.52%22%2F%3E%3Crect%20x%3D%22160%22%20y%3D%2216%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.59%22%2F%3E%3Crect%20x%3D%2216%22%20y%3D%22144%22%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.61%22%2F%3E%3Crect%20x%3D%22496%22%20y%3D%22496%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.66%22%2F%3E%3Crect%20x%3D%22192%22%20y%3D%22160%22%20width%3D%2248%22%20height%3D%2216%22%20fill%3D%22%23d5dade%22%20fill-opacity%3D%220.59%22%2F%3E%3Crect%20x%3D%22432%22%20y%3D%2296%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.73%22%2F%3E%3Crect%20x%3D%2216%22%20y%3D%2232%22%20width%3D%2232%22%20height%3D%2232%22%20fill%3D%22%239da6ad%22%20fill-opacity%3D%220.57%22%2F%3E%3Crect%20x%3D%2248%22%20y%3D%22416%22%20width%3D%2232%22%20height%3D%2216%22%20fill%3D%22%23edf0f2%22%20fill-opacity%3D%220.76%22%2F%3E%3Crect%20x%3D%22240%22%20y%3D%22224%22%20width%3D%2216%22%20height%3D%2232%22%20fill%3D%22%23c7cdd1%22%20fill-opacity%3D%220.63%22%2F%3E%3C%2Fsvg%3E\")"+',linear-gradient(145deg,#e0e3e5 0%,#b9c0c5 52%,#d2d7da 100%)',btnImage:"url(\"data:image/svg+xml,%3Csvg%20opacity%3D%220.72%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%220%200%20240%20240%22%3E%3Cpath%20d%3D%22M48%2060h12v12h-12zM60%2060h12v12h-12zM24%2072h12v12h-12zM36%2072h12v12h-12zM48%2072h12v12h-12zM60%2072h12v12h-12zM72%2072h12v12h-12zM36%2084h12v12h-12zM48%2084h12v12h-12z%22%20fill%3D%22%23c1c8cd%22%20fill-opacity%3D%220.75%22%2F%3E%3Cpath%20d%3D%22M204%2072h12v12h-12zM204%2084h12v12h-12zM216%2084h12v12h-12zM192%2096h12v12h-12zM204%2096h12v12h-12zM216%2096h12v12h-12zM228%2096h12v12h-12zM216%20108h12v12h-12z%22%20fill%3D%22%2369737b%22%20fill-opacity%3D%220.74%22%2F%3E%3Cpath%20d%3D%22M0%2024h12v12h-12zM0%2036h12v12h-12zM0%2048h12v12h-12zM12%2048h12v12h-12zM0%2060h12v12h-12zM12%2060h12v12h-12zM0%2072h12v12h-12zM12%2072h12v12h-12zM0%2084h12v12h-12zM12%2084h12v12h-12zM12%2096h12v12h-12z%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.86%22%2F%3E%3Cpath%20d%3D%22M156%2012h12v12h-12zM156%2024h12v12h-12zM168%2024h12v12h-12zM144%2036h12v12h-12zM156%2036h12v12h-12zM156%2048h12v12h-12z%22%20fill%3D%22%23aeb6bc%22%20fill-opacity%3D%220.93%22%2F%3E%3Cpath%20d%3D%22M72%2096h12v12h-12zM84%2096h12v12h-12zM72%20108h12v12h-12zM84%20108h12v12h-12zM60%20120h12v12h-12zM72%20120h12v12h-12z%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.87%22%2F%3E%3Cpath%20d%3D%22M120%20132h12v12h-12zM132%20132h12v12h-12zM120%20144h12v12h-12zM132%20144h12v12h-12zM120%20156h12v12h-12zM132%20156h12v12h-12zM144%20156h12v12h-12zM132%20168h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.91%22%2F%3E%3Cpath%20d%3D%22M60%20168h12v12h-12zM72%20168h12v12h-12zM72%20180h12v12h-12zM84%20180h12v12h-12zM96%20180h12v12h-12z%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.88%22%2F%3E%3Cpath%20d%3D%22M132%2036h12v12h-12zM132%2048h12v12h-12zM144%2048h12v12h-12zM132%2060h12v12h-12zM144%2060h12v12h-12zM156%2060h12v12h-12zM168%2060h12v12h-12zM156%2072h12v12h-12z%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.76%22%2F%3E%3Cpath%20d%3D%22M192%20180h12v12h-12zM192%20192h12v12h-12zM204%20192h12v12h-12zM204%20204h12v12h-12zM216%20204h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.84%22%2F%3E%3Cpath%20d%3D%22M156%20168h12v12h-12zM168%20168h12v12h-12zM156%20180h12v12h-12zM168%20180h12v12h-12zM180%20180h12v12h-12z%22%20fill%3D%22%2369737b%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M132%2012h12v12h-12zM120%2024h12v12h-12zM132%2024h12v12h-12zM144%2024h12v12h-12zM96%2036h12v12h-12zM108%2036h12v12h-12zM120%2036h12v12h-12zM96%2048h12v12h-12zM120%2048h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.86%22%2F%3E%3Cpath%20d%3D%22M204%20120h12v12h-12zM216%20120h12v12h-12zM228%20120h12v12h-12zM204%20132h12v12h-12zM216%20132h12v12h-12zM228%20132h12v12h-12zM216%20144h12v12h-12zM228%20144h12v12h-12zM228%20156h12v12h-12zM228%20168h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.75%22%2F%3E%3Cpath%20d%3D%22M168%2072h12v12h-12zM180%2072h12v12h-12zM144%2084h12v12h-12zM156%2084h12v12h-12zM168%2084h12v12h-12zM180%2084h12v12h-12zM156%2096h12v12h-12zM168%2096h12v12h-12zM180%2096h12v12h-12z%22%20fill%3D%22%2369737b%22%20fill-opacity%3D%220.88%22%2F%3E%3Cpath%20d%3D%22M120%200h12v12h-12zM132%200h12v12h-12zM144%200h12v12h-12zM156%200h12v12h-12zM168%200h12v12h-12zM180%200h12v12h-12zM192%200h12v12h-12zM204%200h12v12h-12zM144%2012h12v12h-12z%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.76%22%2F%3E%3Cpath%20d%3D%22M156%20120h12v12h-12zM144%20132h12v12h-12zM156%20132h12v12h-12zM168%20132h12v12h-12zM180%20132h12v12h-12zM144%20144h12v12h-12zM156%20144h12v12h-12zM168%20144h12v12h-12zM180%20144h12v12h-12zM168%20156h12v12h-12zM180%20156h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.83%22%2F%3E%3Cpath%20d%3D%22M108%20168h12v12h-12zM120%20168h12v12h-12zM108%20180h12v12h-12zM120%20180h12v12h-12zM132%20180h12v12h-12zM108%20192h12v12h-12zM120%20192h12v12h-12zM120%20204h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.89%22%2F%3E%3Cpath%20d%3D%22M84%2060h12v12h-12zM96%2060h12v12h-12zM108%2060h12v12h-12zM84%2072h12v12h-12zM96%2072h12v12h-12zM108%2072h12v12h-12zM96%2084h12v12h-12z%22%20fill%3D%22%23aeb6bc%22%20fill-opacity%3D%220.77%22%2F%3E%3Cpath%20d%3D%22M204%2012h12v12h-12zM216%2012h12v12h-12zM228%2012h12v12h-12zM228%2024h12v12h-12z%22%20fill%3D%22%23c1c8cd%22%20fill-opacity%3D%220.86%22%2F%3E%3Cpath%20d%3D%22M12%200h12v12h-12zM24%200h12v12h-12zM12%2012h12v12h-12z%22%20fill%3D%22%23aeb6bc%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M204%20168h12v12h-12zM204%20180h12v12h-12zM216%20180h12v12h-12z%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.91%22%2F%3E%3Cpath%20d%3D%22M60%200h12v12h-12zM72%200h12v12h-12zM84%200h12v12h-12zM48%2012h12v12h-12zM60%2012h12v12h-12zM36%2024h12v12h-12zM48%2024h12v12h-12zM60%2024h12v12h-12zM36%2036h12v12h-12zM48%2036h12v12h-12z%22%20fill%3D%22%2369737b%22%20fill-opacity%3D%220.93%22%2F%3E%3Cpath%20d%3D%22M132%20216h12v12h-12zM120%20228h12v12h-12zM132%20228h12v12h-12zM144%20228h12v12h-12z%22%20fill%3D%22%2369737b%22%20fill-opacity%3D%220.90%22%2F%3E%3Cpath%20d%3D%22M0%20132h12v12h-12zM12%20132h12v12h-12zM24%20132h12v12h-12zM0%20144h12v12h-12zM12%20144h12v12h-12zM24%20144h12v12h-12z%22%20fill%3D%22%23c1c8cd%22%20fill-opacity%3D%220.72%22%2F%3E%3Cpath%20d%3D%22M168%20204h12v12h-12zM180%20204h12v12h-12zM192%20204h12v12h-12zM168%20216h12v12h-12zM180%20216h12v12h-12zM192%20216h12v12h-12zM180%20228h12v12h-12zM192%20228h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.85%22%2F%3E%3Cpath%20d%3D%22M36%2048h12v12h-12zM48%2048h12v12h-12zM36%2060h12v12h-12z%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.90%22%2F%3E%3Cpath%20d%3D%22M204%20216h12v12h-12zM228%20216h12v12h-12zM204%20228h12v12h-12zM216%20228h12v12h-12zM228%20228h12v12h-12z%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.75%22%2F%3E%3Cpath%20d%3D%22M72%2012h12v12h-12zM84%2012h12v12h-12zM72%2024h12v12h-12zM84%2024h12v12h-12zM60%2036h12v12h-12zM72%2036h12v12h-12zM84%2036h12v12h-12zM60%2048h12v12h-12zM72%2048h12v12h-12zM84%2048h12v12h-12zM72%2060h12v12h-12z%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.73%22%2F%3E%3Cpath%20d%3D%22M216%200h12v12h-12zM228%200h12v12h-12z%22%20fill%3D%22%23aeb6bc%22%20fill-opacity%3D%220.77%22%2F%3E%3Cpath%20d%3D%22M96%20204h12v12h-12zM108%20204h12v12h-12zM96%20216h12v12h-12zM108%20216h12v12h-12zM120%20216h12v12h-12zM84%20228h12v12h-12zM96%20228h12v12h-12zM108%20228h12v12h-12z%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.90%22%2F%3E%3Crect%20x%3D%22168%22%20y%3D%2284%22%20width%3D%2236%22%20height%3D%2224%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.77%22%2F%3E%3Crect%20x%3D%22192%22%20y%3D%2224%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.61%22%2F%3E%3Crect%20x%3D%22192%22%20y%3D%2224%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.70%22%2F%3E%3Crect%20x%3D%22204%22%20y%3D%2272%22%20width%3D%2224%22%20height%3D%2212%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.69%22%2F%3E%3Crect%20x%3D%22192%22%20y%3D%22108%22%20width%3D%2212%22%20height%3D%2224%22%20fill%3D%22%23aeb6bc%22%20fill-opacity%3D%220.58%22%2F%3E%3Crect%20x%3D%22120%22%20y%3D%22216%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%2369737b%22%20fill-opacity%3D%220.73%22%2F%3E%3Crect%20x%3D%22156%22%20y%3D%2236%22%20width%3D%2236%22%20height%3D%2224%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.65%22%2F%3E%3Crect%20x%3D%22216%22%20y%3D%2272%22%20width%3D%2236%22%20height%3D%2224%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.58%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%22192%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23515c64%22%20fill-opacity%3D%220.75%22%2F%3E%3Crect%20x%3D%2296%22%20y%3D%22204%22%20width%3D%2224%22%20height%3D%2212%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.73%22%2F%3E%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%2236%22%20height%3D%2212%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.63%22%2F%3E%3Crect%20x%3D%22204%22%20y%3D%22180%22%20width%3D%2236%22%20height%3D%2224%22%20fill%3D%22%23d8dde0%22%20fill-opacity%3D%220.58%22%2F%3E%3Crect%20x%3D%22108%22%20y%3D%2272%22%20width%3D%2212%22%20height%3D%2224%22%20fill%3D%22%23aeb6bc%22%20fill-opacity%3D%220.57%22%2F%3E%3Crect%20x%3D%2236%22%20y%3D%2248%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23879199%22%20fill-opacity%3D%220.54%22%2F%3E%3C%2Fsvg%3E\")"+',linear-gradient(145deg,#d4dade 0%,#a3adb3 56%,#c5cdd2 100%)'},
+    {id:'white',label:'سفید',bg:'#f5fbff',btn:'#f8fdff',border:'#bdcfdd',text:'#253644',bgImage:'radial-gradient(ellipse at 14% 12%,rgba(255,255,255,.98),transparent 38%),radial-gradient(ellipse at 88% 88%,rgba(211,234,247,.62),transparent 43%),linear-gradient(145deg,#ffffff 0%,#edf7fc 48%,#fbfeff 100%)',btnImage:'linear-gradient(155deg,rgba(255,255,255,.98) 0%,rgba(255,255,255,.68) 18%,transparent 43%),linear-gradient(145deg,#ffffff 0%,#f4fbff 48%,#dfeef6 100%)'}
+  ];
+  function applyTheme(t){
+    document.documentElement.style.setProperty('--mg-user-bg',t.bg);document.documentElement.style.setProperty('--mg-user-btn',t.btn);document.documentElement.style.setProperty('--mg-user-btn-border',t.border);document.documentElement.style.setProperty('--mg-user-btn-text',t.text||'#ffffff');
+    main.style.backgroundColor=t.bg;if(t.bgImage)main.style.backgroundImage=t.bgImage;else main.style.removeProperty('background-image');
+    try{localStorage.setItem('miladgeo-main-theme-399',t.id)}catch(e){}
+    Array.prototype.slice.call(panel.querySelectorAll('.mg-theme-choice')).forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-theme')===t.id?'true':'false')});
+    panel.classList.remove('open');
+  }
+  themes.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='mg-theme-choice';b.setAttribute('data-theme',t.id);b.setAttribute('aria-pressed','false');var dot=document.createElement('span');dot.className='mg-theme-dot';dot.style.background=t.btn;if(t.btnImage)dot.style.backgroundImage=t.btnImage;var label=document.createElement('span');label.textContent=t.label;b.appendChild(dot);b.appendChild(label);b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();applyTheme(t)});panel.appendChild(b)});
+  /* X4: font and size controls live inside the existing settings panel. */
+  var fontHeading=document.createElement('div');fontHeading.className='mg-theme-heading';fontHeading.textContent='قلم فارسی';panel.appendChild(fontHeading);
+  var fontChoices=[
+    {id:'kufi',label:'نوتو سنس عربی (فارسی)'},
+    {id:'vazirbold',label:'وزیرمتن ضخیم'},
+    {id:'estedad',label:'استعداد'},
+    {id:'estedadneon',label:'استعداد نئونی'},
+    {id:'handwrite',label:'دست‌نویس'},
+    {id:'tahoma',label:'قلم پیش‌فرض گوشی'}
+  ];
+  function applyFont(id){if(id==='vazir')id='vazirbold';if(id==='naskh')id='estedad';if(!fontChoices.some(function(x){return x.id===id}))id='tahoma';document.documentElement.setAttribute('data-mg-font',id);try{localStorage.setItem('miladgeo-font-choice-x4',id)}catch(e){}panel.querySelectorAll('.mg-font-choice').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-font')===id?'true':'false')});}
+  fontChoices.forEach(function(f){var b=document.createElement('button');b.type='button';b.className='mg-font-choice';b.textContent=f.label;b.setAttribute('data-font',f.id);b.setAttribute('aria-pressed','false');b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();applyFont(f.id)});panel.appendChild(b)});
+  var sizeHeading=document.createElement('div');sizeHeading.className='mg-theme-heading';sizeHeading.textContent='اندازه نوشته';panel.appendChild(sizeHeading);
+  function applyFontSize(id){
+    var valid=['normal','minus10'];
+    if(!valid.includes(id)&&!/^manual-(?:-?\d+)$/.test(id))id='normal';
+    if(id.indexOf('manual-')===0){var pct=parseInt(id.slice(7),10);if(!Number.isFinite(pct)||pct < -15||pct > 15)pct=0;document.documentElement.style.setProperty('--mg-manual-font-scale',String(1+pct/100));document.documentElement.style.setProperty('--mg-manual-font-base',document.documentElement.getAttribute('data-mg-font')==='estedadneon'?'16.2px':'18px');}
+    document.documentElement.setAttribute('data-mg-font-size',id);try{localStorage.setItem('miladgeo-font-size-choice-x4',id)}catch(e){}panel.querySelectorAll('.mg-font-size-choice').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-size')===id?'true':'false')});
+  }
+  [{id:'normal',label:'متن استاندارد'},{id:'minus10',label:'۱۰٪ کوچک‌تر'}].forEach(function(f){var b=document.createElement('button');b.type='button';b.className='mg-font-size-choice';b.textContent=f.label;b.setAttribute('data-size',f.id);b.setAttribute('aria-pressed','false');b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();applyFontSize(f.id)});panel.appendChild(b)});
+  var manualHeading=document.createElement('div');manualHeading.className='mg-theme-heading';manualHeading.textContent='تنظیم دستی اندازه';panel.appendChild(manualHeading);
+  var manualRow=document.createElement('div');manualRow.style.cssText='grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px';panel.appendChild(manualRow);
+  [{dir:'up',label:'افزایش +۲٪'},{dir:'down',label:'کاهش −۲٪'}].forEach(function(f){var b=document.createElement('button');b.type='button';b.className='mg-font-size-choice';b.textContent=f.label;b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var cur=document.documentElement.getAttribute('data-mg-font-size')||'normal';var pct=cur.indexOf('manual-')===0?parseInt(cur.slice(7),10):0;if(!Number.isFinite(pct))pct=0;pct=f.dir==='up'?Math.min(15,pct+2):Math.max(-15,pct-2);if(pct===14&&f.dir==='up')pct=15;if(pct===-14&&f.dir==='down')pct=-15;applyFontSize('manual-'+pct)});manualRow.appendChild(b)});
+  var savedFont='estedadneon',savedFontSize='normal';try{savedFont=localStorage.getItem('miladgeo-font-choice-x4')||'estedadneon';savedFontSize=localStorage.getItem('miladgeo-font-size-choice-x4')||'normal'}catch(e){}applyFont(savedFont);applyFontSize(savedFontSize);
+  var mgSettingsCloseTimer=null;
+  gear.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();panel.classList.toggle('open');if(mgSettingsCloseTimer){clearTimeout(mgSettingsCloseTimer);mgSettingsCloseTimer=null;}if(panel.classList.contains('open')){mgSettingsCloseTimer=setTimeout(function(){panel.classList.remove('open');mgSettingsCloseTimer=null;},15000);}});
+  panel.addEventListener('click',function(e){if(e.target.closest('.mg-font-choice')||e.target.closest('.mg-font-size-choice')){if(mgSettingsCloseTimer)clearTimeout(mgSettingsCloseTimer);mgSettingsCloseTimer=setTimeout(function(){panel.classList.remove('open');mgSettingsCloseTimer=null;},15000);}});
+  wrap.appendChild(gear);
+  var title=main.querySelector('.title');
+  if(title&&title.parentNode){title.parentNode.insertBefore(wrap,title.nextSibling);title.parentNode.insertBefore(panel,wrap.nextSibling);}else{main.insertBefore(wrap,main.firstChild);main.insertBefore(panel,wrap.nextSibling);}
+  var saved='fa';try{saved=localStorage.getItem('miladgeo-main-language-399')||'fa'}catch(e){}
+  apply(saved);
+  var chosenTheme=themes[0];try{var savedThemeId=localStorage.getItem('miladgeo-main-theme-399')||'original';chosenTheme=themes.find(function(t){return t.id===savedThemeId})||themes[0]}catch(e){}
+  applyTheme(chosenTheme);
+})();
+</script>
+<script id="m4p-root-runtime-live">
+/* V444 — definitive Menu 4 runtime. No dependency on legacy menu-4 handlers. */
+(function(){
+'use strict';
+function q(id){return document.getElementById(id)}
+function fa(n){return Number(n||0).toLocaleString('fa-IR')}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function arr(){return Array.isArray(window.points)?window.points:[]}
+function persist(){try{if(typeof saveJSON==='function')saveJSON(POINTS_KEY,window.points);else localStorage.setItem(POINTS_KEY,JSON.stringify(window.points));}catch(e){console.error('M4 persist',e)}}
+function refresh(){try{if(typeof refreshPoints==='function')refreshPoints()}catch(e){}try{if(typeof updateAllUI==='function')updateAllUI()}catch(e){}try{if(typeof updateStakeSelect==='function')updateStakeSelect()}catch(e){}}
+
+window.m4pTab=function(name){
+  var tabs=document.querySelectorAll('.p4v8-tabs .v8-tab');
+  for(var i=0;i<tabs.length;i++){
+    var on=tabs[i].getAttribute('data-tab')===name;
+    tabs[i].classList.toggle('active',on);
+    tabs[i].setAttribute('aria-selected',on?'true':'false');
+  }
+  var panels=document.querySelectorAll('.p4v8-panel');
+  for(var j=0;j<panels.length;j++){
+    var show=panels[j].id==='m4p-'+name;
+    panels[j].classList.toggle('active',show);
+    panels[j].style.display=show?'block':'none';
+  }
+  if(name==='manage')window.m4pRender();
+  if(name==='import')window.m4pLoadJob();
+  if(name==='control'){window.m4pRenderControl();window.m4pRenderStats();}
+  if(name==='output')window.m4pRenderOutput();
+  return false;
+};
+
+window.m4pRender=function(){
+ var a=arr(),box=q('m4pList'),search=q('m4pSearch'),term=search?String(search.value||'').trim().toLowerCase():'';
+ if(q('m4pCount'))q('m4pCount').textContent=fa(a.length)+' POINT';
+ if(q('pointsMenuState'))q('pointsMenuState').textContent=a.length+' POINTS';
+ var f=a.filter(function(p){return !term||String(p.no||'').toLowerCase().indexOf(term)>=0||String(p.dp||'').toLowerCase().indexOf(term)>=0});
+ if(!box)return;
+ if(!f.length){box.innerHTML='<div class="v8-empty">'+(a.length?'نقطه‌ای با این جستجو پیدا نشد.':'هنوز نقطه‌ای ثبت نشده است.')+'</div>';return;}
+ var h='<div class="p4-point-table-wrap"><table class="p4-point-table"><thead><tr><th>Point</th><th>Code</th><th>X</th><th>Y</th><th>Z</th><th>عملیات</th></tr></thead><tbody>';
+ for(var i=0;i<f.length;i++){
+   var p=f[i];
+   h+='<tr><td><b>'+esc(p.no||'-')+'</b></td><td>'+esc(p.dp||'-')+'</td><td>'+Number(p.x||0).toFixed(3)+'</td><td>'+Number(p.y||0).toFixed(3)+'</td><td>'+Number(p.z||0).toFixed(3)+'</td><td class="p4-actions-cell"><button class="p4-mini-btn" type="button" data-edit="'+esc(p.id)+'">ویرایش</button><button class="p4-mini-btn danger" type="button" data-del="'+esc(p.id)+'">حذف</button></td></tr>';
+ }
+ h+='</tbody></table></div>';
+ box.innerHTML=h;
+ var edits=box.querySelectorAll('[data-edit]');for(i=0;i<edits.length;i++)edits[i].addEventListener('click',function(){window.m4pBeginEdit(this.getAttribute('data-edit'));});
+ var dels=box.querySelectorAll('[data-del]');for(i=0;i<dels.length;i++)dels[i].addEventListener('click',function(){window.m4pDelete(this.getAttribute('data-del'));});
+};
+window.m4pClearSearch=function(){if(q('m4pSearch'))q('m4pSearch').value='';window.m4pRender();return false;};
+window.m4pEditingId=null;
+window.m4pBeginEdit=function(id){var a=arr(),p=null;for(var i=0;i<a.length;i++)if(String(a[i].id)===String(id)){p=a[i];break;}if(!p){showToast('نقطه پیدا نشد');return false;}window.m4pEditingId=p.id;q('manualPENZDNo').value=p.no||'';q('manualPENZDDP').value=p.dp||'';q('manualPENZDX').value=p.x;q('manualPENZDY').value=p.y;q('manualPENZDZ').value=p.z;var b=document.querySelector('[data-m4-save]');if(b)b.innerHTML='✓ ذخیره ویرایش';if(q('penzdInputStatus'))q('penzdInputStatus').textContent='در حال ویرایش '+(p.no||'')+' — ذخیره کن.';window.m4pTab('manage');setTimeout(function(){var e=q('manualPENZDNo');if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth',block:'center'});},60);return false;};
+window.m4pCancelEdit=function(){window.m4pEditingId=null;var ids=['manualPENZDNo','manualPENZDDP','manualPENZDX','manualPENZDY','manualPENZDZ'];for(var i=0;i<ids.length;i++){var e=q(ids[i]);if(e)e.value='';}var b=document.querySelector('[data-m4-save]');if(b)b.innerHTML='＋ ثبت نقطه';if(q('penzdInputStatus'))q('penzdInputStatus').textContent='آماده ثبت نقطه جدید.';return false;};
+window.m4pSavePoint=function(){
+ var no=String(q('manualPENZDNo')?q('manualPENZDNo').value:'').trim(),dp=String(q('manualPENZDDP')?q('manualPENZDDP').value:'').trim();
+ var x=parseFloat(q('manualPENZDX')?q('manualPENZDX').value:''),y=parseFloat(q('manualPENZDY')?q('manualPENZDY').value:''),z=parseFloat(q('manualPENZDZ')?q('manualPENZDZ').value:'');
+ if(!no){showToast('شماره نقطه را وارد کن');return false;}if(!isFinite(x)||!isFinite(y)||!isFinite(z)){showToast('مختصات X / Y / Z را کامل وارد کن');return false;}
+ var a=arr(),i,target=null;
+ if(window.m4pEditingId!==null){for(i=0;i<a.length;i++)if(String(a[i].id)===String(window.m4pEditingId)){target=a[i];break;}if(!target){window.m4pEditingId=null;showToast('نقطه مورد نظر پیدا نشد');return false;}}
+ for(i=0;i<a.length;i++){
+   if(target&&a[i]===target)continue;
+   if(String(a[i].no||'').trim().toUpperCase()===no.toUpperCase()){showToast('شماره نقطه تکراری است');return false;}
+   if(Number(a[i].x).toFixed(6)===x.toFixed(6)&&Number(a[i].y).toFixed(6)===y.toFixed(6)&&Number(a[i].z).toFixed(6)===z.toFixed(6)){showToast('مختصات این نقطه تکراری است');return false;}
+ }
+ if(target){target.no=no;target.dp=dp;target.x=x;target.y=y;target.z=z;showToast(no+' ویرایش شد ✓');}
+ else {a.push({id:Date.now()+Math.floor(Math.random()*100000),no:no,dp:dp,x:x,y:y,z:z,distance:null,azimuth:null,manual:true,penzd:true});showToast(no+' ثبت شد ✓');}
+ window.points=a;persist();refresh();window.m4pEditingId=null;
+ var b=document.querySelector('[data-m4-save]');if(b)b.innerHTML='＋ ثبت نقطه';
+ if(q('penzdInputStatus'))q('penzdInputStatus').textContent=(target?'✓ ویرایش ذخیره شد.':'✓ '+no+' به Point List اضافه شد.');
+ window.m4pRender();window.m4pRenderStats();return false;
+};
+window.m4pDelete=function(id){var a=arr(),idx=-1;for(var i=0;i<a.length;i++)if(String(a[i].id)===String(id)){idx=i;break;}if(idx<0){showToast('نقطه پیدا نشد');return false;}var p=a[idx];if(!confirm('نقطه '+(p.no||'')+' حذف شود؟'))return false;a.splice(idx,1);window.points=a;persist();refresh();window.m4pRender();window.m4pRenderStats();showToast((p.no||'نقطه')+' حذف شد ✓');return false;};
+window.m4pLoadJob=function(){var a=arr();if(q('m4pJobImportStatus'))q('m4pJobImportStatus').textContent=a.length?'✓ '+fa(a.length)+' نقطه در JOB فعال موجود است.':'در جاب فعال نقطه‌ای وجود ندارد.';return false;};
+window.m4pRenderControl=function(){var a=arr(),seenNo={},seenC={},dupNo=0,dupC=0,bad=0,empty=0;for(var i=0;i<a.length;i++){var p=a[i],n=String(p.no||'').trim().toUpperCase(),c=[Number(p.x),Number(p.y),Number(p.z)].join('|');if(!n)bad++;else if(seenNo[n])dupNo++;else seenNo[n]=1;if(seenC[c])dupC++;else seenC[c]=1;if(!isFinite(Number(p.x))||!isFinite(Number(p.y))||!isFinite(Number(p.z)))bad++;if(!String(p.dp||'').trim())empty++;}var g=q('m4pControlGrid');if(g)g.innerHTML=[['تعداد نقاط',a.length],['شماره تکراری',dupNo],['مختصات تکراری',dupC],['مختصات نامعتبر',bad],['کد خالی',empty]].map(function(x){return '<div class="v8-stat"><b>'+fa(x[1])+'</b><span>'+x[0]+'</span></div>';}).join('');var box=q('m4pControlPointScroll');if(box){if(!a.length){box.innerHTML='<div class="v8-empty">هنوز نقطه‌ای ثبت نشده است.</div>';}else{var h='<div class="m4p-control-table-wrap"><table class="m4p-control-table"><thead><tr><th>Point</th><th>Code</th><th>X</th><th>Y</th><th>Z</th></tr></thead><tbody>';for(var j=0;j<a.length;j++){var p=a[j];h+='<tr><td>'+esc(p.no||'-')+'</td><td>'+esc(p.dp||'-')+'</td><td>'+Number(p.x||0).toFixed(3)+'</td><td>'+Number(p.y||0).toFixed(3)+'</td><td>'+Number(p.z||0).toFixed(3)+'</td></tr>';}h+='</tbody></table></div>';box.innerHTML=h;}}};
+window.m4pRenderStats=function(){var a=arr(),box=q('m4pStats');if(!box)return;if(!a.length){box.innerHTML='<div class="p4-empty">اطلاعات آماری پس از ورود نقاط نمایش داده می‌شود.</div>';return;}function mn(k){return Math.min.apply(null,a.map(function(p){return Number(p[k])}))}function mx(k){return Math.max.apply(null,a.map(function(p){return Number(p[k])}))}box.innerHTML=[['X min',mn('x').toFixed(3)],['X max',mx('x').toFixed(3)],['Y min',mn('y').toFixed(3)],['Y max',mx('y').toFixed(3)],['Z min',mn('z').toFixed(3)],['Z max',mx('z').toFixed(3)]].map(function(x){return '<div class="p4-stat"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>'}).join('');};
+window.m4pRunControl=function(){window.m4pRenderControl();window.m4pRenderStats();if(q('m4pControlResult'))q('m4pControlResult').innerHTML='✓ کنترل نقاط انجام شد.';return false;};
+window.m4pRenderOutput=function(){var out=q('m4pOutputStatus');if(out)out.textContent=arr().length?'✓ '+fa(arr().length)+' نقطه آماده خروجی است.':'هنوز نقطه‌ای برای خروجی وجود ندارد.';};
+window.m4pExportCSV=function(){var a=arr();if(!a.length){showToast('هنوز نقطه‌ای ثبت نشده است');return false;}var s='Point,Easting,Northing,Elevation,Description\r\n'+a.map(function(p){return [p.no,p.x,p.y,p.z,p.dp||''].map(function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'}).join(',')}).join('\r\n');saveBlobLikeMenu17(sanitizeFileName(job.name)+'_POINTS.csv',new Blob(['\ufeff'+s],{type:'text/csv;charset=utf-8'}));showToast('CSV آماده شد ✓');return false;};
+window.m4pExportTXT=function(){return typeof exportCodeTXT==='function'?exportCodeTXT():false;};
+window.m4pExportExcel=function(){return typeof exportPointsXLSX==='function'?exportPointsXLSX():false;};
+window.m4pExportPDF=function(){return typeof window.printPointsPDF==='function'?window.printPointsPDF():miladgeoPointListPDF();};
+window.m4pExportDXF=function(){return typeof exportDXF==='function'?exportDXF():false;};
+window.m4pExportKML=function(){return typeof exportKML==='function'?exportKML():false;};
+
+/* Make tabs reliable even if an older runtime installed competing handlers. */
+function bindTabs(){var tabs=document.querySelectorAll('.p4v8-tabs .v8-tab');for(var i=0;i<tabs.length;i++){(function(b){b.onclick=function(e){if(e)e.preventDefault();window.m4pTab(b.getAttribute('data-tab'));return false;};})(tabs[i]);}}
+window.addEventListener('load',function(){bindTabs();window.m4pTab('manage');window.m4pRender();window.m4pRenderControl();window.m4pRenderStats();window.m4pRenderOutput();});
+})();
+</script>
+<style id="m4-v450-fixes">
+#points #m4p-import{overflow:hidden!important;min-width:0}
+#points #v5ImportPreview{display:block!important;width:100%!important;max-width:none!important;box-sizing:border-box!important;overflow-x:auto!important;overflow-y:auto!important;white-space:pre!important;word-break:normal!important;overflow-wrap:normal!important;direction:ltr!important;-webkit-overflow-scrolling:touch!important}
+#points .p4v8-preview{min-width:680px!important;width:max-content!important}
+#points .p4v8-list{overflow-x:auto!important;overflow-y:auto!important;max-width:100%!important}
+#points .p4-point-table-wrap{width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important}
+#points .p4-point-table{min-width:590px!important;width:max-content!important}
+#points .p4-point-table th,#points .p4-point-table td{white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important}
+
+/* V451: reliable horizontal scroll + visible point list in Control */
+#points .m4p-import-preview-scroll{width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-x:contain!important;border-radius:10px}
+#points .m4p-import-preview-scroll #v5ImportPreview{display:block!important;width:max-content!important;min-width:900px!important;max-width:none!important;box-sizing:border-box!important;margin:0!important;overflow:visible!important;white-space:pre!important;word-break:normal!important;overflow-wrap:normal!important;direction:ltr!important}
+#points .m4p-control-point-scroll{width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-x:contain!important}
+#points .m4p-control-table-wrap{min-width:100%!important;width:max-content!important}
+#points .m4p-control-table{min-width:680px!important;border-collapse:collapse;width:max-content!important;font-size:12px;background:#f7faf6}
+#points .m4p-control-table th,#points .m4p-control-table td{border:1px solid #8a9488;padding:7px 9px;text-align:center;white-space:nowrap}
+#points .m4p-control-table th{background:#dfe7dc;font-weight:900}
+</style>
+<script id="m4-v450-runtime">
+(function(){
+'use strict';
+function q(id){return document.getElementById(id)}
+function A(){return Array.isArray(window.points)?window.points:[]}
+function save(){try{if(typeof saveJSON==='function')saveJSON(POINTS_KEY,window.points);else localStorage.setItem(POINTS_KEY,JSON.stringify(window.points));}catch(e){console.error(e)}}
+function redraw(){try{window.m4pRender&&window.m4pRender()}catch(e){}try{window.m4pRenderControl&&window.m4pRenderControl()}catch(e){}try{window.m4pRenderStats&&window.m4pRenderStats()}catch(e){}try{window.m4pRenderOutput&&window.m4pRenderOutput()}catch(e){}try{typeof refreshPoints==='function'&&refreshPoints()}catch(e){}try{typeof updateAllUI==='function'&&updateAllUI()}catch(e){}}
+function findNo(no){var a=A();for(var i=0;i<a.length;i++)if(String(a[i].no||'').trim().toUpperCase()===String(no||'').trim().toUpperCase())return a[i];return null}
+window.m4pOpRenumber=function(){var old=prompt('شماره فعلی نقطه را وارد کن:');if(old===null)return false;var p=findNo(old);if(!p){showToast('نقطه پیدا نشد');return false;}var n=prompt('شماره جدید را وارد کن:',p.no||'');if(n===null)return false;n=String(n).trim();if(!n){showToast('شماره جدید خالی است');return false;}var dup=findNo(n);if(dup&&dup!==p){showToast('شماره جدید تکراری است');return false;}p.no=n;save();redraw();showToast('شماره نقطه تغییر کرد ✓');return false;};
+window.m4pOpCode=function(){var no=prompt('شماره نقطه را وارد کن:');if(no===null)return false;var p=findNo(no);if(!p){showToast('نقطه پیدا نشد');return false;}var code=prompt('کد / DP جدید:',p.dp||'');if(code===null)return false;p.dp=String(code).trim();save();redraw();showToast('کد نقطه تغییر کرد ✓');return false;};
+window.m4pOpTranslate=function(){var dx=parseFloat(prompt('مقدار انتقال X را وارد کن:','0'));if(!isFinite(dx)){showToast('مقدار X نامعتبر است');return false;}var dy=parseFloat(prompt('مقدار انتقال Y را وارد کن:','0'));if(!isFinite(dy)){showToast('مقدار Y نامعتبر است');return false;}var dz=parseFloat(prompt('مقدار انتقال Z را وارد کن:','0'));if(!isFinite(dz)){showToast('مقدار Z نامعتبر است');return false;}var a=A();if(!a.length){showToast('هنوز نقطه‌ای وجود ندارد');return false;}if(!confirm('انتقال همه '+a.length+' نقطه انجام شود؟'))return false;for(var i=0;i<a.length;i++){a[i].x=Number(a[i].x)+dx;a[i].y=Number(a[i].y)+dy;a[i].z=Number(a[i].z)+dz;}window.points=a;save();redraw();showToast('انتقال مختصات انجام شد ✓');return false;};
+})();
+</script>
+<style id="m4-v452-control-fix">
+#points .m4p-control-point-scroll{display:block!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}
+#points .m4p-control-table-wrap{display:block!important;width:max-content!important;min-width:100%!important}
+#points .m4p-control-table{display:table!important;width:max-content!important;min-width:720px!important;border-collapse:collapse!important}
+</style>
+<script id="m4-v452-control-fix">
+(function(){
+'use strict';
+function q(id){return document.getElementById(id)}
+function mainPoints(){
+  try{if(typeof points!=='undefined' && Array.isArray(points))return points;}catch(e){}
+  return Array.isArray(window.points)?window.points:[];
+}
+function fa(n){return Number(n||0).toLocaleString('fa-IR')}
+function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+window.m4pRenderControl=function(){
+  var a=mainPoints(),seenNo={},seenC={},dupNo=0,dupC=0,bad=0,empty=0;
+  for(var i=0;i<a.length;i++){
+    var p=a[i],n=String(p.no||'').trim().toUpperCase();
+    var c=[Number(p.x),Number(p.y),Number(p.z)].join('|');
+    if(!n)bad++;else if(seenNo[n])dupNo++;else seenNo[n]=1;
+    if(seenC[c])dupC++;else seenC[c]=1;
+    if(!isFinite(Number(p.x))||!isFinite(Number(p.y))||!isFinite(Number(p.z)))bad++;
+    if(!String(p.dp||'').trim())empty++;
+  }
+  var g=q('m4pControlGrid');
+  if(g)g.innerHTML=[['تعداد نقاط',a.length],['شماره تکراری',dupNo],['مختصات تکراری',dupC],['مختصات نامعتبر',bad],['کد خالی',empty]].map(function(x){return '<div class="v8-stat"><b>'+fa(x[1])+'</b><span>'+x[0]+'</span></div>';}).join('');
+  var box=q('m4pControlPointScroll');
+  if(!box)return;
+  if(!a.length){box.innerHTML='<div class="v8-empty">هنوز نقطه‌ای ثبت نشده است.</div>';return;}
+  var h='<div class="m4p-control-table-wrap"><table class="m4p-control-table"><thead><tr><th>Point</th><th>Code</th><th>X</th><th>Y</th><th>Z</th></tr></thead><tbody>';
+  for(var j=0;j<a.length;j++){
+    var p2=a[j];
+    h+='<tr><td>'+esc2(p2.no||'-')+'</td><td>'+esc2(p2.dp||'-')+'</td><td>'+Number(p2.x||0).toFixed(3)+'</td><td>'+Number(p2.y||0).toFixed(3)+'</td><td>'+Number(p2.z||0).toFixed(3)+'</td></tr>';
+  }
+  h+='</tbody></table></div>';box.innerHTML=h;
+};
+window.m4pRunControl=function(){window.m4pRenderControl();if(window.m4pRenderStats)window.m4pRenderStats();var r=q('m4pControlResult');if(r)r.innerHTML='✓ کنترل نقاط انجام شد — '+fa(mainPoints().length)+' نقطه بررسی شد.';return false;};
+window.addEventListener('load',function(){setTimeout(function(){window.m4pRenderControl&&window.m4pRenderControl();},80);});
+})();
+</script>
+<script id="miladgeo-menu11-v2-runtime">
+
+function m11v2EnsureXLSX(done){
