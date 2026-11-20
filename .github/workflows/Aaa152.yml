@@ -54,7 +54,7 @@ jobs:
           bad = sum(1 for c in source if ord(c) < 32 and c not in '\t\n\r')
           if bad:
               source = ''.join(('\\x%02x' % ord(c)) if ord(c) < 32 and c not in '\t\n\r' else c for c in source)
-              p.write_text(source, encoding='utf-8')
+          p.write_text(source, encoding='utf-8')
           print(f'Escaped {bad} embedded control bytes without changing their runtime values.')
           PY_FIX
           git config user.name 'github-actions[bot]'
