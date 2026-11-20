@@ -41,10 +41,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ -d .miladgeo149_parts ]; then
+          if [ -f .miladgeo149_parts/part_000.txt ]; then
             cat .miladgeo149_parts/part_*.txt > Indexxx149.html
-            rm -rf .miladgeo149_parts
           fi
+          rm -rf .miladgeo149_parts
           test -s Indexxx149.html
           python3 - <<'PY_FIX'
           from pathlib import Path
