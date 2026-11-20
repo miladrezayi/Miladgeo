@@ -37,21 +37,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Reassemble and publish Indexxx149.html
+      - name: Assemble and normalize Indexxx149.html
         shell: bash
         run: |
           set -euo pipefail
-          test -d .miladgeo149_parts
-          cat .miladgeo149_parts/part_*.txt > Indexxx149.html
+          if [ -d .miladgeo149_parts ]; then
+            cat .miladgeo149_parts/part_*.txt > Indexxx149.html
+            rm -rf .miladgeo149_parts
+          fi
           test -s Indexxx149.html
-          echo "Reassembled Indexxx149.html ($(wc -c < Indexxx149.html) bytes)"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python3 - <<'PY_FIX'
+          from pathlib import Path
+          p = Path('Indexxx149.html')
+          source = p.read_text(encoding='utf-8')
+          bad = sum(1 for c in source if ord(c) < 32 and c not in '\\t\\n\\r')
+          if bad:
+              source = ''.join(('\\x%02x' % ord(c)) if ord(c) < 32 and c not in '\\t\\n\\r' else c for c in source)
+              p.write_text(source, encoding='utf-8')
+          print(f'Escaped {bad} embedded control bytes without changing their runtime values.')
+          PY_FIX
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add Indexxx149.html
-          git rm -r .miladgeo149_parts
-          git commit -m "Publish Indexxx149.html source"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-
+          if ! git diff --cached --quiet; then
+            git commit -m 'Fix escaped control bytes in Indexxx149.html'
+            git push origin HEAD:main
+          else
+            echo 'Indexxx149.html is already normalized.'
+          fi
       - name: Prepare offline DWG engine
         run: |
           set -euo pipefail
