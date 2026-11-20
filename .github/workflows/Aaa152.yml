@@ -50,7 +50,7 @@ jobs:
           from pathlib import Path
           p = Path('Indexxx149.html')
           source = p.read_text(encoding='utf-8')
-          source = source.replace('\\x0a', '\n')
+          source = source.replace(chr(92) + 'x0a', chr(10))
           bad = sum(1 for c in source if ord(c) < 32 and c not in '\t\n\r')
           if bad:
               source = ''.join(('\\x%02x' % ord(c)) if ord(c) < 32 and c not in '\t\n\r' else c for c in source)
