@@ -180,50 +180,17 @@ jobs:
           grep -q 'window.ensureMiladGeoXLSX=ensureMiladGeoXLSX' Indexxx149.html
           python3 - <<'PY_XLSX_CHECK'
           from pathlib import Path
-          import re
-          from html.parser import HTMLParser
-
-          class SheetJSScriptExtractor(HTMLParser):
-              def __init__(self):
-                  super().__init__(convert_charrefs=False)
-                  self.in_script = False
-                  self.capture = False
-                  self.parts = []
-                  self.found = False
-              def handle_starttag(self, tag, attrs):
-                  if tag.lower() == 'script':
-                      self.in_script = True
-                      self.capture = False
-              def handle_data(self, data):
-                  if self.in_script:
-                      if not self.capture and data.lstrip().startswith('/* MiladGeo V28: inline SheetJS engine'):
-                          self.capture = True
-                          self.found = True
-                      if self.capture:
-                          self.parts.append(data)
-              def handle_endtag(self, tag):
-                  if tag.lower() == 'script' and self.in_script:
-                      self.in_script = False
-                      self.capture = False
-
-          source_path = Path('Indexxx149.html')
-          source = source_path.read_text(encoding='utf-8')
-          # Repair a newline-bearing annotation that was inserted inside
-          # SheetJS's single-quoted HTML template string. This fixes the
-          # actual app HTML before it is copied into Android assets.
-          source, repaired = re.subn(
-              r'<!-- MiladGeo Indexxx\d+: Android date-picker safe-area \+ assistant sleep setting -->\r?\n',
-              '',
-              source
-          )
-          if repaired:
-              source_path.write_text(source, encoding='utf-8')
-          extractor = SheetJSScriptExtractor()
-          extractor.feed(source)
-          extractor.close()
-          if not extractor.found or not extractor.parts:
-              raise SystemExit('Inline SheetJS engine block was not found')
-          engine = ''.join(extractor.parts)
+          source = Path('Indexxx149.html').read_text(encoding='utf-8')
+          marker = '/* MiladGeo V28: inline SheetJS engine'
+          pos = source.find(marker)
+          if pos < 0:
+              raise SystemExit('Inline SheetJS engine marker was not found')
+          opening = source.rfind('<script', 0, pos)
+          opening_end = source.find('>', opening) + 1
+          closing = source.find('</script>', pos)
+          if opening < 0 or opening_end <= 0 or closing < 0:
+              raise SystemExit('Could not isolate the inline SheetJS script element')
+          engine = source[opening_end:closing]
           Path('/tmp/miladgeo-sheetjs-engine.js').write_text(engine, encoding='utf-8')
           PY_XLSX_CHECK
           node --check /tmp/miladgeo-sheetjs-engine.js
