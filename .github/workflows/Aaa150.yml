@@ -3549,7 +3549,13 @@ jobs:
           if old_block.search(java):
               java = old_block.sub(lambda _m: new_block, java, count=1)
           elif 'extractMiladGeoIncomingUri(intent)' not in java:
-              raise SystemExit('Could not locate onNewIntent incoming-file block')
+              # The widget integration already provides onNewIntent with an ACTION_VIEW-only URI line.
+              # Upgrade that exact URI extraction without replacing the widget dispatch logic.
+              view_line = 'Uri incoming = intent != null && Intent.ACTION_VIEW.equals(intent.getAction()) ? intent.getData() : null;'
+              if view_line in java:
+                  java = java.replace(view_line, 'Uri incoming = extractMiladGeoIncomingUri(intent);', 1)
+              else:
+                  raise SystemExit('Could not safely locate the existing incoming URI line in onNewIntent')
 
           helper_marker = 'private void openIncomingDocument() {'
           helper = '''// Receive shared files from Android file managers and other apps.
