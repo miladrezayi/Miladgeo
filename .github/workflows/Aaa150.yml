@@ -3946,21 +3946,23 @@ jobs:
           java = java_path.read_text(encoding='utf-8')
           method_at = java.find('public void scheduleSarresidReminder(')
           if method_at < 0:
-              raise SystemExit('AndroidBridge scheduleSarresidReminder method was not found')
-          method_start = java.rfind('@JavascriptInterface', 0, method_at)
-          cancel_at = java.find('public void cancelSarresidReminder(', method_at)
-          if method_start < 0:
-              raise SystemExit('Could not locate AndroidBridge reminder scheduling method')
-          # Some earlier generated projects did not contain the cancel bridge yet.
-          # In that case replace only the scheduling method and add cancel beside it.
-          if cancel_at >= 0:
-              method_end = java.rfind('@JavascriptInterface', 0, cancel_at)
-              add_cancel_method = False
-          else:
-              method_end = java.find('@JavascriptInterface', method_at)
-              if method_end < 0:
-                  raise SystemExit('Could not find the next AndroidBridge method boundary')
+              method_start = -1
+              method_end = -1
               add_cancel_method = True
+          else:
+              method_start = java.rfind('@JavascriptInterface', 0, method_at)
+              cancel_at = java.find('public void cancelSarresidReminder(', method_at)
+              if method_start < 0:
+                  raise SystemExit('Could not locate AndroidBridge reminder scheduling method')
+              # Some generated projects did not contain the cancel bridge yet.
+              if cancel_at >= 0:
+                  method_end = java.rfind('@JavascriptInterface', 0, cancel_at)
+                  add_cancel_method = False
+              else:
+                  method_end = java.find('@JavascriptInterface', method_at)
+                  if method_end < 0:
+                      raise SystemExit('Could not find the next AndroidBridge method boundary')
+                  add_cancel_method = True
 
           schedule_method = '''        @JavascriptInterface
                   public void scheduleSarresidReminder(String key, String triggerAtMillis, String title, String body) {
@@ -4026,7 +4028,13 @@ jobs:
                   }
 
           '''
-          java = java[:method_start] + schedule_method + (cancel_method if add_cancel_method else '') + java[method_end:]
+          if method_at >= 0:
+              java = java[:method_start] + schedule_method + (cancel_method if add_cancel_method else '') + java[method_end:]
+          else:
+              bridge_marker = '// Return directly to MiladGeo without closing the Android app.'
+              if bridge_marker not in java:
+                  raise SystemExit('Could not locate AndroidBridge insertion point for reminder methods')
+              java = java.replace(bridge_marker, schedule_method + cancel_method + '                  ' + bridge_marker, 1)
 
           diagnostics_methods = '''        @JavascriptInterface
                   public String getSarresidDiagnostics() {
@@ -4301,7 +4309,7 @@ jobs:
           if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
           if 'versionCode 322' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.147'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 161 metadata was not applied')
+              raise SystemExit('Version 162 metadata was not applied')
           print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 161 is ready with the JavaScript leak guard.')
           PY_DIAG
           grep -q 'versionCode 322' app/build.gradle
