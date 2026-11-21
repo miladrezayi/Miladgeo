@@ -3576,7 +3576,7 @@ jobs:
             p.querySelector('#mg-sarresid-test').onclick=function(){try{window.AndroidBridge.sendSarresidTestNotification();document.getElementById('mg-sarresid-info').textContent+=' | درخواست اعلان آزمایشی ارسال شد. نوار اعلان را بررسی کن.';}catch(e){document.getElementById('mg-sarresid-info').textContent+=' | خطا در ارسال آزمایشی: '+e;}};
             p.querySelector('#mg-sarresid-close').onclick=function(){p.style.display='none';};
           })();'''
-          page_replacement = 'view.evaluateJavascript(' + json.dumps(panel_js, ensure_ascii=False) + ', null);\\n                              webPageReady = true;'
+          page_replacement = 'view.evaluateJavascript(' + json.dumps(panel_js, ensure_ascii=False) + ', null);' + chr(10) + '                              webPageReady = true;'
           if page_marker in java:
               java = java.replace(page_marker, page_replacement, 1)
           elif "mg-sarresid-diag" not in java:
