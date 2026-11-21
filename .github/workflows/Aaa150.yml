@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx151 APK
+name: Build MiladGeo Indexxx152 APK
 
 on:
   workflow_dispatch:
@@ -86,6 +86,65 @@ jobs:
           p.write_text(s, encoding="utf-8")
           print("Removed the fake in-app plus buttons and web-only widget panel.")
           PY_WIDGET_HTML
+          test -s Indexxx150.html
+
+      - name: Connect embedded Sarresid calendar to native Android alarms
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SARRESID_BRIDGE'
+          from pathlib import Path
+          import base64
+
+          path = Path("Indexxx150.html")
+          html = path.read_text(encoding="utf-8")
+          prefix = "var bin=atob('"
+          pos = html.find(prefix)
+          if pos < 0:
+              raise SystemExit("Could not locate the embedded Sarresid calendar payload.")
+          b64_start = pos + len(prefix)
+          b64_end = html.find("'),buf=", b64_start)
+          if b64_end < 0:
+              raise SystemExit("The embedded Sarresid calendar payload is incomplete.")
+          inner = base64.b64decode(html[b64_start:b64_end]).decode("utf-8")
+          start = inner.find("function scheduleAndroidReminder(k,x){")
+          end = inner.find("function escapeHtml(v){", start)
+          if start < 0 or end < 0:
+              raise SystemExit("Could not locate Sarresid Android reminder functions.")
+          replacement = """function nativeAndroidBridge(){try{return window.AndroidBridge||(window.parent&&window.parent.AndroidBridge)||(window.top&&window.top.AndroidBridge)||null}catch(e){return null}}
+          function scheduleAndroidReminder(k,x){
+           const body=reminderPayload(x),bridge=nativeAndroidBridge();
+           try{
+            if(!body){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
+            const p=k.split('/').map(Number),hm=String(x.remindTime||'09:00').split(':').map(Number);
+            if(p.length!==3||hm.length!==2||!Number.isFinite(hm[0])||!Number.isFinite(hm[1]))return;
+            const g=d2g(j2d(p[0],p[1],p[2]));
+            const when=new Date(g.gy,g.gm-1,g.gd,hm[0],hm[1],0,0).getTime();
+            if(when<=Date.now()){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
+            if(bridge&&typeof bridge.scheduleSarresidReminder==='function')bridge.scheduleSarresidReminder(k,String(when),'یادآوری سررسید مهندس',body);
+           }catch(e){console.warn('MiladGeo Sarresid Android reminder:',e);}
+          }
+          function syncAllAndroidReminders(){
+           const bridge=nativeAndroidBridge();
+           if(!bridge||typeof bridge.scheduleSarresidReminder!=='function')return;
+           try{Object.keys(data).forEach(k=>scheduleAndroidReminder(k,data[k]||{}));}catch(e){}
+          }
+          """
+          inner = inner[:start] + replacement + inner[end:]
+          old_status = "const native=!!(window.AndroidBridge&&typeof window.AndroidBridge.scheduleSarresidReminder==='function');"
+          new_status = "const bridge=nativeAndroidBridge();const native=!!(bridge&&typeof bridge.scheduleSarresidReminder==='function');"
+          if old_status in inner:
+              inner = inner.replace(old_status, new_status, 1)
+          elif new_status not in inner:
+              raise SystemExit("Could not update the Sarresid native status check.")
+          if "installMonthSwipe();syncAllAndroidReminders();" not in inner:
+              raise SystemExit("Startup synchronization of saved Sarresid reminders is missing.")
+          if "window.parent&&window.parent.AndroidBridge" not in inner:
+              raise SystemExit("The embedded calendar cannot reach the native Android bridge.")
+          encoded = base64.b64encode(inner.encode("utf-8")).decode("ascii")
+          html = html[:b64_start] + encoded + html[b64_end:]
+          path.write_text(html, encoding="utf-8")
+          print("Connected iframe save, cancel and startup sync to Android alarm scheduling.")
+          PY_SARRESID_BRIDGE
           test -s Indexxx150.html
 
       - name: Prepare offline DWG engine
@@ -619,8 +678,8 @@ jobs:
                   applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'
                   minSdk 23
                   targetSdk 36
-                  versionCode 313
-                  versionName '2.0.138'
+                  versionCode 314
+                  versionName '2.0.139'
               }
 
               signingConfigs {
@@ -3277,12 +3336,9 @@ jobs:
                       + "var m=/^menu(\\d{2})$/.exec(k);var n=m?parseInt(m[1],10):map[k];if(!n||n<1||n>20)return;"
                       + "var fa='۰۱۲۳۴۵۶۷۸۹',en='0123456789';"
                       + "function norm(s){return (s||'').toLowerCase().replace(/[۰-۹]/g,function(c){return en.charAt(fa.indexOf(c));}).replace(/[\\\\s\\\\u200c]+/g,' ').trim();}"
-                      + "var id='menu'+n;"
-                      + "var target=document.querySelector('.menu-grid > .menu-btn[href=\\\"#'+id+'\\\"], .menu-btn[href=\\\"#'+id+'\\\"]');"
+                      + "var target=null,links=document.querySelectorAll('.menu-grid .menu-btn');for(var i=0;i<links.length;i++){var num=links[i].querySelector('.menu-num');if(num&&parseInt(norm(num.textContent).replace(/[^0-9]/g,''),10)===n){target=links[i];break;}}"
                       + "if(target){target.click();return;}"
-                      + "if(typeof window.goPage==='function'){window.goPage(id);return;}"
-                      + "var page=document.getElementById(id);if(page){window.location.hash=id;page.scrollIntoView({behavior:'auto',block:'start'});return;}"
-                      + "console.warn('MiladGeo exact widget destination not found',id,k);"
+                      + "console.warn('MiladGeo exact widget destination not found',n,k);"
                       + "}catch(e){console.error('MiladGeo widget dispatch failed',e);}})();";
                   webView.evaluateJavascript(js, null);
               }
