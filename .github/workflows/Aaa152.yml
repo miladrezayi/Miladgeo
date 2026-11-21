@@ -57,15 +57,7 @@ jobs:
           p.write_text(source, encoding='utf-8')
           print(f'Escaped {bad} embedded control bytes without changing their runtime values.')
           PY_FIX
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Indexxx149.html
-          if ! git diff --cached --quiet; then
-            git commit -m 'Fix escaped control bytes in Indexxx149.html'
-            git push origin HEAD:main
-          else
-            echo 'Indexxx149.html is already normalized.'
-          fi
+          echo 'Indexxx149.html normalized for this build only; repository branches remain unchanged.'
       - name: Prepare offline DWG engine
         run: |
           set -euo pipefail
