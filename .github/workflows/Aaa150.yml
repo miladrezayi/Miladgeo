@@ -756,6 +756,7 @@ jobs:
                       android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.BOOT_COMPLETED" />
+                          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                           <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
                       </intent-filter>
                   </receiver>
@@ -1280,27 +1281,20 @@ jobs:
                           prefs.edit().putString("items", all.toString()).apply();
                           SarresidAlarmReceiver.schedule(MainActivity.this, key, when, item.optString("title"), item.optString("body"));
                           runOnUiThread(() -> {
-                              if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                                  SharedPreferences ask = getSharedPreferences("miladgeo_sarresid_alarms", MODE_PRIVATE);
-                                  if (!ask.getBoolean("notification_permission_asked", false)) {
+                              SharedPreferences ask = getSharedPreferences("miladgeo_sarresid_alarms", MODE_PRIVATE);
+                              if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED && !sarresidPermissionRequestInFlight) {
+                                  boolean askedBefore = ask.getBoolean("notification_permission_asked", false);
+                                  if (!askedBefore || shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                                       ask.edit().putBoolean("notification_permission_asked", true).apply();
+                                      sarresidPermissionRequestInFlight = true;
                                       requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1013);
+                                  } else {
+                                      showSarresidSettingsDialog(false);
                                   }
                               }
-                              if (Build.VERSION.SDK_INT >= 31) {
+                              if (Build.VERSION.SDK_INT >= 31 && !sarresidPermissionRequestInFlight) {
                                   AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                                  SharedPreferences ask = getSharedPreferences("miladgeo_sarresid_alarms", MODE_PRIVATE);
-                                  if (manager != null && !manager.canScheduleExactAlarms() && !ask.getBoolean("exact_alarm_access_prompted", false)) {
-                                      ask.edit().putBoolean("exact_alarm_access_prompted", true).apply();
-                                      new AlertDialog.Builder(MainActivity.this)
-                                          .setTitle("فعال‌سازی یادآوری دقیق")
-                                          .setMessage("برای نمایش اعلان در ساعت تعیین‌شده، اجازه «هشدارها و یادآورها» را در صفحه بعد فعال کنید. در غیر این صورت اندروید ممکن است اعلان را با کمی تأخیر نمایش دهد.")
-                                          .setPositiveButton("باز کردن تنظیمات", (dialog, which) -> {
-                                              try { startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) {}
-                                          })
-                                          .setNegativeButton("فعلاً نه", null)
-                                          .show();
-                                  }
+                                  if (manager != null && !manager.canScheduleExactAlarms()) showSarresidSettingsDialog(true);
                               }
                           });
                       } catch (Exception ignored) {}
@@ -2100,7 +2094,7 @@ jobs:
               public void onReceive(Context context, Intent intent) {
                   if (intent == null) return;
                   String action = intent.getAction();
-                  if (Intent.ACTION_BOOT_COMPLETED.equals(action) || "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED".equals(action)) {
+                  if (Intent.ACTION_BOOT_COMPLETED.equals(action) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) || "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED".equals(action)) {
                       rescheduleAll(context);
                       return;
                   }
@@ -2674,33 +2668,33 @@ jobs:
               };
               static final String[] TOOL_LABELS = {
                   "＋ انتخاب ابزار",
-                  "🎯 منو ۱: شبیه‌ساز لایکا",
-                  "📍 منو ۲: برداشت زمینی",
-                  "📌 منو ۳: پیاده‌سازی",
-                  "📐 منو ۴: توپوگرافی و ترازیابی",
-                  "📄 منو ۵: ورود نقاط TXT",
-                  "📊 منو ۶: ورود و خروجی Excel",
-                  "📏 منو ۷: مساحت و پلیگون",
-                  "🧊 منو ۸: حجم و عملیات خاکی",
-                  "🖥️ منو ۹: مینی اتوکد",
-                  "📐 منو ۱۰: DXF و PDF",
-                  "🌐 منو ۱۱: تبدیل مختصات",
-                  "🔁 منو ۱۲: تبدیل واحدها",
-                  "🧮 منو ۱۳: محاسبات COGO",
-                  "🧮 منو ۱۴: ماشین‌حساب مهندسی",
-                  "🎮 منو ۱۵: بازی‌ها و سرگرمی",
-                  "📚 منو ۱۶: کتابخانه مهندسی",
-                  "🌍 منو ۱۷: گوگل ارث و ترسیم",
-                  "🧭 منو ۱۸: جهت‌یابی و قطب‌نما",
-                  "📷 منو ۱۹: دوربین نقشه‌برداری",
-                  "🗒️ منو ۲۰: دفتر مهندس",
-                  "🎯 منو ۱: شبیه‌ساز لایکا TS02",
-                  "📍 منو ۲: برداشت زمینی",
-                  "📌 منو ۳: پیاده‌سازی نقاط",
-                  "📐 منو ۴: توپو و ترازیابی",
-                  "📄 منو ۵: ورودی TXT",
-                  "📊 منو ۶: ورودی Excel",
-                  "🖥️ منو ۹: مینی اتوکد",
+                  "🎯 ۰۱ | شبیه‌ساز لایکا",
+                  "📍 ۰۲ | برداشت زمینی",
+                  "📌 ۰۳ | پیاده‌سازی",
+                  "📐 ۰۴ | توپوگرافی و ترازیابی",
+                  "📄 ۰۵ | ورود نقاط TXT",
+                  "📊 ۰۶ | ورود و خروجی Excel",
+                  "📏 ۰۷ | مساحت و پلیگون",
+                  "🧊 ۰۸ | حجم و عملیات خاکی",
+                  "🖥️ ۰۹ | مینی اتوکد",
+                  "📐 ۱۰ | DXF و PDF",
+                  "🌐 ۱۱ | تبدیل مختصات",
+                  "🔁 ۱۲ | تبدیل واحدها",
+                  "🧮 ۱۳ | محاسبات COGO",
+                  "🧮 ۱۴ | ماشین‌حساب مهندسی",
+                  "🎮 ۱۵ | بازی‌ها و سرگرمی",
+                  "📚 ۱۶ | کتابخانه مهندسی",
+                  "🌍 ۱۷ | گوگل ارث و ترسیم",
+                  "🧭 ۱۸ | جهت‌یابی و قطب‌نما",
+                  "📷 ۱۹ | دوربین نقشه‌برداری",
+                  "🗒️ ۲۰ | دفتر مهندس",
+                  "🎯 ۰۱ | شبیه‌ساز لایکا TS02",
+                  "📍 ۰۲ | برداشت زمینی",
+                  "📌 ۰۳ | پیاده‌سازی نقاط",
+                  "📐 ۰۴ | توپو و ترازیابی",
+                  "📄 ۰۵ | ورودی TXT",
+                  "📊 ۰۶ | ورودی Excel",
+                  "🖥️ ۰۹ | مینی اتوکد",
                   "↔ تبدیل مختصات",
                   "🔁 تبدیل واحدها",
                   "🧮 ماشین‌حساب مهندسی",
@@ -3159,9 +3153,10 @@ jobs:
                   "}\n",
                   encoding="utf-8"
               )
-              label = f"MiladGeo · منوی {n}: {title}"
+              fa_number = str(n).translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
+              label = f"{fa_number} | {title}"
               string_entries.append(f'    <string name="widget_menu_{two}_label">{label}</string>')
-              string_entries.append(f'    <string name="widget_menu_{two}_description">میانبر یک‌لمسی به {title} در برنامه میلادژئو</string>')
+              string_entries.append(f'    <string name="widget_menu_{two}_description">باز کردن مستقیم منوی {fa_number}: {title}</string>')
               info = (
                   '<?xml version="1.0" encoding="utf-8"?>\n'
                   '<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"\n'
@@ -3240,7 +3235,9 @@ jobs:
           if "private String pendingWidgetTool;" not in java:
               if field_marker not in java:
                   raise SystemExit("Could not find existing MainActivity URI state field.")
-              java = java.replace(field_marker, field_marker + "\n    private String pendingWidgetTool;", 1)
+              java = java.replace(field_marker, field_marker + "\n    private String pendingWidgetTool;\n    private boolean sarresidPermissionRequestInFlight = false;\n    private boolean sarresidPermissionDialogShowing = false;", 1)
+          elif "sarresidPermissionRequestInFlight" not in java:
+              java = java.replace(field_marker, field_marker + "\n    private boolean sarresidPermissionRequestInFlight = false;\n    private boolean sarresidPermissionDialogShowing = false;", 1)
 
           oncreate_marker = "pendingOpenUri = getIntent() != null && Intent.ACTION_VIEW.equals(getIntent().getAction()) ? getIntent().getData() : null;"
           if 'pendingWidgetTool = getIntent() != null ? getIntent().getStringExtra("widget_tool") : null;' not in java:
@@ -3280,14 +3277,73 @@ jobs:
                       + "var m=/^menu(\\\\d{2})$/.exec(k);var n=m?parseInt(m[1],10):map[k];if(!n||n<1||n>20)return;"
                       + "var fa='۰۱۲۳۴۵۶۷۸۹',en='0123456789';"
                       + "function norm(s){return (s||'').toLowerCase().replace(/[۰-۹]/g,function(c){return en.charAt(fa.indexOf(c));}).replace(/[\\\\s\\\\u200c]+/g,' ').trim();}"
-                      + "var nodes=document.querySelectorAll('button,a,[role=button],[onclick],.menu-item,.menu-card,.menu-box,.menu-option');"
-                      + "var target=null;for(var i=0;i<nodes.length;i++){var t=norm(nodes[i].innerText||nodes[i].textContent);if((t.indexOf('منو '+n)>=0)||(t.indexOf('menu '+n)>=0)){target=nodes[i];break;}}"
+                      + "var id='menu'+n;"
+                      + "var target=document.querySelector('.menu-grid > .menu-btn[href=\\\"#'+id+'\\\"], .menu-btn[href=\\\"#'+id+'\\\"]');"
                       + "if(target){target.click();return;}"
-                      + "console.warn('MiladGeo widget menu target not found',n,k);"
+                      + "if(typeof window.goPage==='function'){window.goPage(id);return;}"
+                      + "var page=document.getElementById(id);if(page){window.location.hash=id;page.scrollIntoView({behavior:'auto',block:'start'});return;}"
+                      + "console.warn('MiladGeo exact widget destination not found',id,k);"
                       + "}catch(e){console.error('MiladGeo widget dispatch failed',e);}})();";
                   webView.evaluateJavascript(js, null);
               }
           '''
+          if "private void showSarresidSettingsDialog(boolean exactAlarm)" not in java:
+              marker = "private void openIncomingDocument() {"
+              at = java.find(marker)
+              if at < 0:
+                  raise SystemExit("Could not locate document handler for reminder settings helper.")
+              helper = r'''
+              private void showSarresidSettingsDialog(boolean exactAlarm) {
+                  if (sarresidPermissionDialogShowing) return;
+                  sarresidPermissionDialogShowing = true;
+                  String title = exactAlarm ? "فعال‌سازی یادآوری دقیق" : "فعال‌سازی اعلان‌های سررسید";
+                  String message = exactAlarm
+                      ? "برای نمایش یادآوری در ساعت انتخاب‌شده، اجازه «هشدارها و یادآورها» را فعال کنید. بدون آن ممکن است اعلان دیرتر برسد."
+                      : "اعلان‌های میلادژئو در اندروید غیرفعال‌اند. برای دریافت زنگ سررسید حتی وقتی برنامه بسته است، مجوز اعلان برنامه را فعال کنید.";
+                  AlertDialog dialog = new AlertDialog.Builder(this)
+                      .setTitle(title)
+                      .setMessage(message)
+                      .setPositiveButton(exactAlarm ? "فعال‌سازی هشدار دقیق" : "تنظیمات اعلان‌ها", (d, which) -> {
+                          sarresidPermissionDialogShowing = false;
+                          try {
+                              Intent settings;
+                              if (exactAlarm && Build.VERSION.SDK_INT >= 31) {
+                                  settings = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName()));
+                              } else if (Build.VERSION.SDK_INT >= 26) {
+                                  settings = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                                  settings.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                              } else {
+                                  settings = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+                              }
+                              startActivity(settings);
+                          } catch (Exception ignored) {
+                              try { startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); } catch (Exception ignoredAgain) {}
+                          }
+                      })
+                      .setNegativeButton("فعلاً نه", (d, which) -> sarresidPermissionDialogShowing = false)
+                      .setOnCancelListener(d -> sarresidPermissionDialogShowing = false)
+                      .create();
+                  dialog.show();
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode != 1013) return;
+                  sarresidPermissionRequestInFlight = false;
+                  if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                      try { SarresidAlarmReceiver.rescheduleAll(this); } catch (Exception ignored) {}
+                      if (Build.VERSION.SDK_INT >= 31) {
+                          AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                          if (manager != null && !manager.canScheduleExactAlarms()) showSarresidSettingsDialog(true);
+                      }
+                  } else {
+                      showSarresidSettingsDialog(false);
+                  }
+              }
+
+              '''
+              java = java[:at] + helper + java[at:]
           if "protected void onNewIntent(Intent intent)" not in java:
               marker = "private void openIncomingDocument() {"
               at = java.find(marker)
@@ -3350,6 +3406,10 @@ jobs:
           grep -q 'class QuickToolsWidgetProvider' app/src/main/java/com/miladgeo/app/QuickToolsWidgetProvider.java
           grep -q 'class QuickToolsWidgetConfigActivity' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
           grep -q 'pendingWidgetTool' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'exact widget destination not found' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'showSarresidSettingsDialog' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'MY_PACKAGE_REPLACED' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
+          grep -q 'منوی ۰۱ | شبیه‌ساز لایکا' app/src/main/java/com/miladgeo/app/QuickToolsWidgetProvider.java
           test -s app/src/main/res/layout/widget_quick_tools.xml
           test -s app/src/main/res/xml/quick_tools_widget_info.xml
           test -s app/src/main/res/values/widget_styles.xml
