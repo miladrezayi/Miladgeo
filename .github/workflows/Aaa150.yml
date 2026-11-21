@@ -3326,24 +3326,34 @@ jobs:
                   dialog.show();
               }
 
-              @Override
-              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-                  if (requestCode != 1013) return;
-                  sarresidPermissionRequestInFlight = false;
-                  if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                      try { SarresidAlarmReceiver.rescheduleAll(this); } catch (Exception ignored) {}
-                      if (Build.VERSION.SDK_INT >= 31) {
-                          AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                          if (manager != null && !manager.canScheduleExactAlarms()) showSarresidSettingsDialog(true);
+              '''
+              java = java[:at] + helper + java[at:]
+
+          permission_marker = 'webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(" + granted + ")", null);\\n                  }\\n              }\\n\\n              @Override\\n              protected void onActivityResult'
+          permission_branch = """webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(" + granted + ")", null);
+                  }
+                  if (requestCode == 1013) {
+                      sarresidPermissionRequestInFlight = false;
+                      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                          try { SarresidAlarmReceiver.rescheduleAll(this); } catch (Exception ignored) {}
+                          if (Build.VERSION.SDK_INT >= 31) {
+                              AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                              if (manager != null && !manager.canScheduleExactAlarms()) showSarresidSettingsDialog(true);
+                          }
+                      } else {
+                          showSarresidSettingsDialog(false);
                       }
-                  } else {
-                      showSarresidSettingsDialog(false);
+                      return;
                   }
               }
 
-              '''
-              java = java[:at] + helper + java[at:]
+              @Override
+              protected void onActivityResult"""
+          if "if (requestCode == 1013)" not in java:
+              if permission_marker not in java:
+                  raise SystemExit("Could not locate the existing permission-result handler to merge Sarresid notification handling.")
+              java = java.replace(permission_marker, permission_branch, 1)
+
           if "protected void onNewIntent(Intent intent)" not in java:
               marker = "private void openIncomingDocument() {"
               at = java.find(marker)
