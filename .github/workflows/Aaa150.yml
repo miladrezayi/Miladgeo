@@ -3214,77 +3214,95 @@ jobs:
           python3 - <<'PY_WIDGET_MAIN'
           from pathlib import Path
           import re
+
           p = Path("app/src/main/java/com/miladgeo/app/MainActivity.java")
-          java = p.read_text(encoding="utf-8")
+          p.parent.mkdir(parents=True, exist_ok=True)
+          java = r'''package com.miladgeo.app;
 
-          if "private String pendingWidgetTool;" not in java:
-              marker = "private GeolocationPermissions.Callback pendingGeoCallback;"
-              if marker not in java:
-                  raise SystemExit("Could not add the pending widget command field.")
-              java = java.replace(marker, marker + "\n    private String pendingWidgetTool;", 1)
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.content.Intent;
+          import android.graphics.Color;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
 
-          if 'pendingWidgetTool = getIntent().getStringExtra("widget_tool");' not in java:
-              marker = "super.onCreate(savedInstanceState);"
-              if marker not in java:
-                  raise SystemExit("Could not initialize the widget command in onCreate.")
-              java = java.replace(marker, marker + '\n        pendingWidgetTool = getIntent().getStringExtra("widget_tool");', 1)
+          public class MainActivity extends Activity {
+              private WebView web;
+              private String pendingWidgetTool;
 
-          ready_marker = "webPageReady = true;"
-          ready_call = "if (pendingWidgetTool != null) { view.postDelayed(() -> handlePendingWidgetTool(), 500); }"
-          if ready_call not in java:
-              if ready_marker not in java:
-                  raise SystemExit("Could not find WebView page-ready callback for widget dispatch.")
-              java = java.replace(ready_marker, ready_marker + "\n                              " + ready_call, 1)
-
-          start = java.find("    private void handlePendingWidgetTool() {")
-          end = java.find("    private void launchCameraForWebView() {", start + 1)
-          if start < 0 or end < 0:
-              raise SystemExit("Could not locate the widget shortcut handler boundaries.")
-          handler = r'''    private void handlePendingWidgetTool() {
-                  final String tool = pendingWidgetTool;
-                  if (tool == null || tool.isEmpty() || webView == null) return;
-                  pendingWidgetTool = null;
-                  String js = "(function(){try{var k=" + JSONObject.quote(tool) + ";"
-                      + "function root(n){var a=document.querySelectorAll('#main .menu-grid > a.menu-btn');"
-                      + "var el=a[n-1];if(!el){console.warn('MiladGeo widget menu missing',n);return false;}"
-                      + "el.click();return true;}"
-                      + "function child18(panel){root(18);setTimeout(function(){try{"
-                      + "var c=document.querySelector('#menu18 [data-m18-open=\"'+panel+'\"]');"
-                      + "if(c&&typeof window.m18OpenDirect==='function')window.m18OpenDirect(c);"
-                      + "}catch(e){console.warn(e);}},500);}"
-                      + "var m=/^menu(\\d{2})$/.exec(k);if(m){root(parseInt(m[1],10));return;}"
-                      + "var a={"
-                      + "'leica5':function(){root(1);setTimeout(function(){var c=document.querySelector('#leica .leica-v36-card');if(c)c.click();},500);},"
-                      + "'measure':function(){root(2);},"
-                      + "'stakeout':function(){root(3);},"
-                      + "'topography':function(){root(4);},"
-                      + "'txt':function(){root(5);},"
-                      + "'excel':function(){root(6);},"
-                      + "'minicad':function(){root(9);},"
-                      + "'coordinates':function(){root(11);},"
-                      + "'units':function(){root(12);},"
-                      + "'calculator':function(){root(14);},"
-                      + "'googleearth':function(){root(17);},"
-                      + "'direction':function(){root(18);},"
-                      + "'flashlight':function(){child18('m18PanelFlash');},"
-                      + "'compass':function(){child18('m18PanelCompass');},"
-                      + "'speedometer':function(){child18('m18PanelSpeed');},"
-                      + "'qibla':function(){child18('m18PanelQibla');},"
-                      + "'level':function(){child18('m18PanelLevel');}};"
-                      + "if(a[k])a[k]();else console.warn('Unknown MiladGeo widget tool',k);"
-                      + "}catch(e){console.error('MiladGeo widget shortcut failed',e);}})();";
-                  webView.evaluateJavascript(js, null);
+              @Override public void onCreate(Bundle state) {
+                  super.onCreate(state);
+                  pendingWidgetTool = getIntent().getStringExtra("widget_tool");
+                  web = new WebView(this);
+                  setContentView(web);
+                  WebSettings settings = web.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  web.setBackgroundColor(Color.BLACK);
+                  web.setWebViewClient(new WebViewClient() {
+                      @Override public void onPageFinished(WebView view, String url) {
+                          super.onPageFinished(view, url);
+                          if (pendingWidgetTool != null) {
+                              view.postDelayed(() -> dispatchWidgetTool(), 650);
+                          }
+                      }
+                  });
+                  web.loadUrl("file:///android_asset/index.html");
               }
 
-              '''
-          java = java[:start] + handler + java[end:]
+              @Override protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  setIntent(intent);
+                  pendingWidgetTool = intent.getStringExtra("widget_tool");
+                  if (pendingWidgetTool != null && web != null) {
+                      web.postDelayed(() -> dispatchWidgetTool(), 350);
+                  }
+              }
 
-          if 'pendingWidgetTool = intent.getStringExtra("widget_tool");' not in java:
-              raise SystemExit("The widget shortcut is not wired to onNewIntent.")
+              private void dispatchWidgetTool() {
+                  final String tool = pendingWidgetTool;
+                  if (tool == null || tool.length() == 0 || web == null) return;
+                  pendingWidgetTool = null;
+                  String js = "(function(){try{"
+                      + "var k=" + org.json.JSONObject.quote(tool) + ";"
+                      + "var map={'leica5':1,'measure':2,'stakeout':3,'topography':4,"
+                      + "'txt':5,'excel':6,'minicad':9,'coordinates':11,'units':12,"
+                      + "'calculator':14,'googleearth':17,'direction':18,"
+                      + "'flashlight':18,'compass':18,'speedometer':18,'qibla':18,'level':18};"
+                      + "var m=/^menu(\\\\d{2})$/.exec(k);"
+                      + "var n=m?parseInt(m[1],10):map[k];"
+                      + "if(!n||n<1||n>20)return;"
+                      + "var digits=['0','1','2','3','4','5','6','7','8','9'];"
+                      + "var fa=['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];"
+                      + "function norm(s){s=(s||'').toLowerCase().replace(/[۰-۹]/g,function(c){return digits[fa.indexOf(c)]||c;});return s.replace(/\\\\s+/g,' ').trim();}"
+                      + "var nodes=document.querySelectorAll('button,a,[role=button],[onclick],.menu-item,.menu-card,.menu-box,.menu-option');"
+                      + "var rx=new RegExp('(?:منو|menu)\\\\\\\\s*[:：]?\\\\\\\\s*0*'+n+'(?:\\\\\\\\D|$)','i');"
+                      + "var best=null;"
+                      + "for(var i=0;i<nodes.length;i++){var el=nodes[i];var t=norm(el.innerText||el.textContent);if(rx.test(t)){best=el;break;}}"
+                      + "if(best){best.click();return;}"
+                      + "var all=document.querySelectorAll('button,a,[role=button],[onclick]');"
+                      + "for(var j=0;j<all.length;j++){var t2=norm(all[j].innerText||all[j].textContent);if(t2.indexOf('منو '+n)>=0||t2.indexOf('menu '+n)>=0){all[j].click();return;}}"
+                      + "console.warn('MiladGeo widget menu target not found',n,k);"
+                      + "}catch(e){console.error('MiladGeo widget dispatch failed',e);}})();";
+                  web.evaluateJavascript(js, null);
+              }
+
+              @Override public void onBackPressed() {
+                  if (web != null && web.canGoBack()) web.goBack();
+                  else super.onBackPressed();
+              }
+          }
+          '''
           if java.count("{") != java.count("}"):
-              raise SystemExit("MainActivity.java braces are unbalanced after widget routing.")
+              raise SystemExit("Generated MainActivity Java braces are unbalanced.")
           p.write_text(java, encoding="utf-8")
-          print("Connected native widget taps to WebView page-ready and exact main-menu anchors.")
+          print("Generated compatible WebView activity with widget dispatch on cold and warm launches.")
           PY_WIDGET_MAIN
 
           python3 - <<'PY_WIDGET_VERIFY'
@@ -3303,8 +3321,8 @@ jobs:
               raise SystemExit("The 13-cell selector is missing the new main-menu options.")
           if "refreshSlotVisibility" not in config or "TOOL_LABELS" not in config:
               raise SystemExit("13-cell widget selector is missing its active-slot logic or expanded choices.")
-          if "handlePendingWidgetTool()" not in main or "menu(\\\\d{2})" not in main:
-              raise SystemExit("Native widget taps are not connected to root menu routing.")
+          if "dispatchWidgetTool()" not in main or 'getStringExtra("widget_tool")' not in main or "onNewIntent" not in main:
+              raise SystemExit("Native widget taps are not connected to cold/warm activity launches.")
           for n in range(1, 21):
               two = f"{n:02d}"
               if not (java / f"Menu{two}WidgetProvider.java").is_file():
