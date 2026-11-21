@@ -3203,11 +3203,29 @@ jobs:
 
           manifest_path = Path("app/src/main/AndroidManifest.xml")
           manifest = manifest_path.read_text(encoding="utf-8")
+          base_widget_components = """
+              <activity
+                  android:name=".QuickToolsWidgetConfigActivity"
+                  android:exported="true" />
+              <receiver
+                  android:name=".QuickToolsWidgetProvider"
+                  android:label="@string/quick_tools_widget_label"
+                  android:exported="true">
+                  <intent-filter>
+                      <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                  </intent-filter>
+                  <meta-data
+                      android:name="android.appwidget.provider"
+                      android:resource="@xml/quick_tools_widget_info" />
+              </receiver>
+          """
+          if ".QuickToolsWidgetProvider" not in manifest:
+              manifest = manifest.replace("</application>", "\\n" + base_widget_components + "\\n</application>")
           if ".Menu01WidgetProvider" not in manifest:
-              manifest = manifest.replace("</application>", "\n" + "\n".join(manifest_receivers) + "\n</application>")
-              manifest_path.write_text(manifest, encoding="utf-8")
-          if ".Menu20WidgetProvider" not in manifest_path.read_text(encoding="utf-8"):
-              raise SystemExit("Not all 20 single-menu widget receivers were registered.")
+              manifest = manifest.replace("</application>", "\\n" + "\\n".join(manifest_receivers) + "\\n</application>")
+          manifest_path.write_text(manifest, encoding="utf-8")
+          if ".Menu20WidgetProvider" not in manifest or ".QuickToolsWidgetProvider" not in manifest:
+              raise SystemExit("Widget receivers were not all registered in AndroidManifest.xml.")
           print("Generated 20 individual 1x1 Android AppWidget providers and their picker entries.")
           PY_SINGLE_PROVIDERS
 
