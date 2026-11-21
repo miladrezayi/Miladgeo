@@ -2620,6 +2620,7 @@ jobs:
           cat > app/src/main/res/values/widget_strings.xml <<'EOF_WIDGET_STRINGS'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
+              <string name="quick_tools_widget_label">ابزارهای سریع میلادژئو</string>
               <string name="quick_tools_widget_description">میان‌برهای قابل تنظیم جعبه‌ابزار نقشه‌بردار</string>
           </resources>
           EOF_WIDGET_STRINGS
