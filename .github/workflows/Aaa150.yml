@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx161 APK
+name: Build MiladGeo Indexxx162 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -118,14 +118,17 @@ jobs:
           replacement = """function nativeAndroidBridge(){
            try{
             const parent=window.parent;
-            if(parent&&parent!==window)return {
-             scheduleSarresidReminder:function(k,when,title,body){
-              parent.postMessage({type:'MILADGEO_SARRESID_NATIVE_V158',action:'schedule',key:String(k),triggerAtMillis:String(when),title:String(title||'یادآوری سررسید مهندس'),body:String(body||'')},'*');
-             },
-             cancelSarresidReminder:function(k){
-              parent.postMessage({type:'MILADGEO_SARRESID_NATIVE_V158',action:'cancel',key:String(k)},'*');
-             }
-            };
+            if(parent&&parent!==window){
+             if(parent.AndroidBridge)return parent.AndroidBridge;
+             return {
+              scheduleSarresidReminder:function(k,when,title,body){
+               parent.postMessage({type:'MILADGEO_SARRESID_NATIVE_V158',action:'schedule',key:String(k),triggerAtMillis:String(when),title:String(title||'یادآوری سررسید مهندس'),body:String(body||'')},'*');
+              },
+              cancelSarresidReminder:function(k){
+               parent.postMessage({type:'MILADGEO_SARRESID_NATIVE_V158',action:'cancel',key:String(k)},'*');
+              }
+             };
+            }
             return window.AndroidBridge||null;
            }catch(e){return window.AndroidBridge||null;}
           }
@@ -2311,7 +2314,7 @@ jobs:
                           .setPriority(Notification.PRIORITY_HIGH)
                           .build();
                       manager.notify(key == null ? (int) System.currentTimeMillis() : key.hashCode(), notification);
-                  } catch (SecurityException ignored) {}
+                  } catch (SecurityException ignored) { return; }
                   try {
                       SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
                       JSONObject all = new JSONObject(prefs.getString("items", "{}"));
@@ -4248,8 +4251,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 322', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.147'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 323', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.148'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4303,7 +4306,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx161-APK
+          name: MiladGeo-Indexxx162-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4311,7 +4314,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx161-AAB
+          name: MiladGeo-Indexxx162-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
