@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx155 APK
+name: Build MiladGeo Indexxx156 APK
 # Clean rebuild after removing faulty diagnostics injection
 # Notification diagnostics insertion marker corrected
 
@@ -121,7 +121,7 @@ jobs:
             if(p.length!==3||hm.length!==2||!Number.isFinite(hm[0])||!Number.isFinite(hm[1]))return;
             const g=d2g(j2d(p[0],p[1],p[2]));
             const when=new Date(g.gy,g.gm-1,g.gd,hm[0],hm[1],0,0).getTime();
-            if(when<=Date.now()){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
+            if(when<=Date.now()){return;}
             if(bridge&&typeof bridge.scheduleSarresidReminder==='function')bridge.scheduleSarresidReminder(k,String(when),'یادآوری سررسید مهندس',body);
            }catch(e){console.warn('MiladGeo Sarresid Android reminder:',e);}
           }
@@ -689,8 +689,8 @@ jobs:
                   applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'
                   minSdk 23
                   targetSdk 36
-                  versionCode 317
-                  versionName '2.0.142'
+                  versionCode 318
+                  versionName '2.0.143'
               }
 
               signingConfigs {
@@ -3473,8 +3473,8 @@ jobs:
       - name: Verify generated project
         run: |
           set -euxo pipefail
-          grep -q 'versionCode 317' app/build.gradle
-          grep -q "versionName '2.0.142'" app/build.gradle
+          grep -q 'versionCode 318' app/build.gradle
+          grep -q "versionName '2.0.143'" app/build.gradle
           grep -q 'android.permission.POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECEIVE_BOOT_COMPLETED' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.SCHEDULE_EXACT_ALARM' app/src/main/AndroidManifest.xml
@@ -3503,7 +3503,7 @@ jobs:
           grep -q 'widgetTile12' app/src/main/res/layout/widget_quick_tools.xml
           grep -q 'countSpinner' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
           grep -q 'putInt("count_"' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
-          grep -q "versionName '2.0.142'" app/build.gradle
+          grep -q "versionName '2.0.143'" app/build.gradle
           grep -q "applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'" app/build.gradle
           grep -q 'android.permission.CAMERA' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECORD_AUDIO' app/src/main/AndroidManifest.xml
@@ -3565,7 +3565,7 @@ jobs:
           test -s app/src/main/assets/dwg/wasm/libredwg-web.wasm
           grep -q 'getMiladDwgEngine' app/src/main/assets/index.html
           grep -q 'processCadChatFile' app/src/main/assets/index.html
-          grep -q 'versionCode 317' app/build.gradle
+          grep -q 'versionCode 318' app/build.gradle
           test -s app/src/main/assets/index858.html
           test -s app/src/main/assets/Index880.html
           test -s app/src/main/assets/Index885robot13.html
@@ -3795,7 +3795,7 @@ jobs:
 
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
-          if "versionName '2.0.142'" not in gradle:
+          if "versionName '2.0.143'" not in gradle:
               raise SystemExit('Expected versionName 2.0.136 was not generated in app/build.gradle')
           gradle_path.write_text(gradle, encoding='utf-8')
           print('Share-sheet integration and version 2.0.129 (303) applied.')
@@ -3814,8 +3814,8 @@ jobs:
           grep -q 'extractMiladGeoIncomingUri' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'uriDisplayName' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'Preserve the file extension' app/src/main/java/com/miladgeo/app/MainActivity.java
-          grep -q 'versionCode 317' app/build.gradle
-          grep -q "versionName '2.0.142'" app/build.gradle
+          grep -q 'versionCode 318' app/build.gradle
+          grep -q "versionName '2.0.143'" app/build.gradle
 
       - name: Build Release APK and AAB
         env:
@@ -3839,7 +3839,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx155-APK
+          name: MiladGeo-Indexxx156-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -3847,7 +3847,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx155-AAB
+          name: MiladGeo-Indexxx156-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
