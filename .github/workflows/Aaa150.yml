@@ -619,8 +619,8 @@ jobs:
                   applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'
                   minSdk 23
                   targetSdk 36
-                  versionCode 312
-                  versionName '2.0.137'
+                  versionCode 313
+                  versionName '2.0.138'
               }
 
               signingConfigs {
@@ -3406,8 +3406,8 @@ jobs:
       - name: Verify generated project
         run: |
           set -euxo pipefail
-          grep -q 'versionCode 312' app/build.gradle
-          grep -q "versionName '2.0.137'" app/build.gradle
+          grep -q 'versionCode 313' app/build.gradle
+          grep -q "versionName '2.0.138'" app/build.gradle
           grep -q 'android.permission.POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECEIVE_BOOT_COMPLETED' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.SCHEDULE_EXACT_ALARM' app/src/main/AndroidManifest.xml
@@ -3436,7 +3436,7 @@ jobs:
           grep -q 'widgetTile12' app/src/main/res/layout/widget_quick_tools.xml
           grep -q 'countSpinner' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
           grep -q 'putInt("count_"' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
-          grep -q "versionName '2.0.137'" app/build.gradle
+          grep -q "versionName '2.0.138'" app/build.gradle
           grep -q "applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'" app/build.gradle
           grep -q 'android.permission.CAMERA' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECORD_AUDIO' app/src/main/AndroidManifest.xml
@@ -3498,7 +3498,7 @@ jobs:
           test -s app/src/main/assets/dwg/wasm/libredwg-web.wasm
           grep -q 'getMiladDwgEngine' app/src/main/assets/index.html
           grep -q 'processCadChatFile' app/src/main/assets/index.html
-          grep -q 'versionCode 312' app/build.gradle
+          grep -q 'versionCode 313' app/build.gradle
           test -s app/src/main/assets/index858.html
           test -s app/src/main/assets/Index880.html
           test -s app/src/main/assets/Index885robot13.html
@@ -3669,7 +3669,7 @@ jobs:
 
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
-          if "versionName '2.0.137'" not in gradle:
+          if "versionName '2.0.138'" not in gradle:
               raise SystemExit('Expected versionName 2.0.136 was not generated in app/build.gradle')
           gradle_path.write_text(gradle, encoding='utf-8')
           print('Share-sheet integration and version 2.0.129 (303) applied.')
@@ -3688,8 +3688,8 @@ jobs:
           grep -q 'extractMiladGeoIncomingUri' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'uriDisplayName' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'Preserve the file extension' app/src/main/java/com/miladgeo/app/MainActivity.java
-          grep -q 'versionCode 312' app/build.gradle
-          grep -q "versionName '2.0.137'" app/build.gradle
+          grep -q 'versionCode 313' app/build.gradle
+          grep -q "versionName '2.0.138'" app/build.gradle
 
       - name: Build Release APK and AAB
         env:
