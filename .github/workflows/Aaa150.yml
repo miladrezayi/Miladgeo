@@ -3630,7 +3630,7 @@ jobs:
           elif 'checkSarresidPermissionsIfNeeded();' not in java:
               raise SystemExit('Could not locate MainActivity.onResume for Sarresid permission guard')
           helper_marker = 'private void openIncomingDocument() {'
-          helper = r\'''private void checkSarresidPermissionsIfNeeded() {
+          helper = r'''private void checkSarresidPermissionsIfNeeded() {
                   try {
                       SharedPreferences prefs = getSharedPreferences("miladgeo_sarresid_alarms", MODE_PRIVATE);
                       JSONObject items = new JSONObject(prefs.getString("items", "{}"));
