@@ -58,12 +58,12 @@ jobs:
           def escaped(value):
               return "".join((chr(92) + "x%02X" % ord(ch)) if ord(ch) < 32 else ch for ch in value)
           block, codepage_count = re.subn(
-              r'var e="([\\s\\S]*?)",r=\\[\\],t=\\{\\};',
+              r'var e="([\s\S]*?)",r=\[\],t=\{\};',
               lambda m: 'var e="' + escaped(m.group(1)) + '",r=[],t={};',
               block
           )
           block, table_count = re.subn(
-              r'(t\\[\\d+\\]=")((?:\\\\.|[^"\\\\])*)("(?:\\.split\\(\\"\\"\\);))',
+              r'(t\[\d+\]=")((?:\\.|[^"\\])*)("\.split\(""\);)',
               lambda m: m.group(1) + escaped(m.group(2)) + m.group(3),
               block
           )
