@@ -4308,12 +4308,12 @@ jobs:
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
           if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
-          if 'versionCode 322' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.147'" not in gradle_path.read_text(encoding='utf-8'):
+          if 'versionCode 323' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.148'" not in gradle_path.read_text(encoding='utf-8'):
               raise SystemExit('Version 162 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 161 is ready with the JavaScript leak guard.')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 162 is ready with the JavaScript leak guard.')
           PY_DIAG
-          grep -q 'versionCode 322' app/build.gradle
-          grep -q "versionName '2.0.147'" app/build.gradle
+          grep -q 'versionCode 323' app/build.gradle
+          grep -q "versionName '2.0.148'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
