@@ -6,6 +6,7 @@ on:
     paths:
       - 'Index880.html'
       - 'Indexxx150.html'
+      - 'Indexxx150.part004'
       - 'icon.png'
       - 'Index885robot13.html'
       - 'Index885robot14.html'
@@ -32,6 +33,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Assemble Indexxx150 source HTML
+        run: |
+          set -euo pipefail
+          cat Indexxx150.part001 Indexxx150.part002 Indexxx150.part003 Indexxx150.part004 > Indexxx150.html
+          test -s Indexxx150.html
 
       - name: Prepare offline DWG engine
         run: |
