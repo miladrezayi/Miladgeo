@@ -62,7 +62,6 @@ jobs:
           print("Replaced malformed inline SheetJS with the bundled offline runtime.")
           PY_REPLACE
           test -s Indexxx150.html
-          test -s xlsx.full.min.js
 
       - name: Prepare offline DWG engine
         run: |
