@@ -46,84 +46,25 @@ jobs:
           set -euo pipefail
           python3 - <<'PY_REPAIR'
           from pathlib import Path
+          import re
           p = Path("Indexxx150.html")
           s = p.read_text(encoding="utf-8")
           marker = "/* MiladGeo V28: inline SheetJS engine"
           start = s.find(marker)
-          if start < 0:
-              raise SystemExit("Embedded SheetJS marker not found")
           end = s.find("</script>", start)
-          if end < 0:
-              raise SystemExit("Embedded SheetJS script end not found")
+          if start < 0 or end < 0:
+              raise SystemExit("Embedded SheetJS block not found")
           block = s[start:end]
-          out = []
-          quote = None
-          escaped = False
-          line_comment = False
-          block_comment = False
-          repaired = 0
-          i = 0
-          while i < len(block):
-              ch = block[i]
-              nxt = block[i + 1] if i + 1 < len(block) else ""
-              if line_comment:
-                  out.append(ch)
-                  if ch == "\\n":
-                      line_comment = False
-                  i += 1
-                  continue
-              if block_comment:
-                  out.append(ch)
-                  if ch == "*" and nxt == "/":
-                      out.append(nxt)
-                      i += 2
-                      block_comment = False
-                  else:
-                      i += 1
-                  continue
-              if quote is not None:
-                  if escaped:
-                      out.append(ch)
-                      escaped = False
-                      i += 1
-                      continue
-                  if ch == chr(92):
-                      out.append(ch)
-                      escaped = True
-                      i += 1
-                      continue
-                  if ch == quote:
-                      out.append(ch)
-                      quote = None
-                      i += 1
-                      continue
-                  if quote != "`" and ord(ch) < 32:
-                      out.append(chr(92) + "x%02X" % ord(ch))
-                      repaired += 1
-                      i += 1
-                      continue
-                  out.append(ch)
-                  i += 1
-                  continue
-              if ch == "/" and nxt == "/":
-                  out.extend((ch, nxt))
-                  line_comment = True
-                  i += 2
-                  continue
-              if ch == "/" and nxt == "*":
-                  out.extend((ch, nxt))
-                  block_comment = True
-                  i += 2
-                  continue
-              if ch in ("'", '"', "`"):
-                  quote = ch
-              out.append(ch)
-              i += 1
-          if quote is not None:
-              raise SystemExit("Unterminated JavaScript string while repairing SheetJS")
-          s = s[:start] + "".join(out) + s[end:]
-          p.write_text(s, encoding="utf-8")
-          print(f"Escaped {repaired} raw control characters inside SheetJS string literals.")
+          pattern = re.compile(r'var e="([\s\S]*?)",r=\[\],t=\{\};')
+          def repair(match):
+              value = match.group(1)
+              fixed = "".join((chr(92) + "x%02X" % ord(ch)) if ord(ch) < 32 else ch for ch in value)
+              return 'var e="' + fixed + '",r=[],t={};'
+          fixed, count = pattern.subn(repair, block)
+          if count != 27:
+              raise SystemExit(f"Expected 27 SheetJS codepage tables, found {count}")
+          p.write_text(s[:start] + fixed + s[end:], encoding="utf-8")
+          print(f"Repaired raw control characters in {count} SheetJS codepage tables.")
           PY_REPAIR
           test -s Indexxx150.html
 
