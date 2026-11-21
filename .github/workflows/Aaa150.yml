@@ -7,6 +7,7 @@ on:
       - 'Index880.html'
       - 'Indexxx150.html'
       - 'Indexxx150.part004'
+      - '.github/workflows/Aaa150.yml'
       - 'icon.png'
       - 'Index885robot13.html'
       - 'Index885robot14.html'
