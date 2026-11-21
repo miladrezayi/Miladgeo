@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx153 APK
+name: Build MiladGeo Indexxx154 APK
 
 on:
   workflow_dispatch:
@@ -115,7 +115,7 @@ jobs:
            const body=reminderPayload(x),bridge=nativeAndroidBridge();
            try{
             if(!body){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
-            const p=k.split('/').map(Number),hm=String(x.remindTime||'09:00').split(':').map(Number);
+            const p=String(k).split(/[\\/\\-]/).map(Number),hm=String(x.remindTime||'09:00').split(':').map(Number);
             if(p.length!==3||hm.length!==2||!Number.isFinite(hm[0])||!Number.isFinite(hm[1]))return;
             const g=d2g(j2d(p[0],p[1],p[2]));
             const when=new Date(g.gy,g.gm-1,g.gd,hm[0],hm[1],0,0).getTime();
@@ -136,7 +136,16 @@ jobs:
               inner = inner.replace(old_status, new_status, 1)
           elif new_status not in inner:
               raise SystemExit("Could not update the Sarresid native status check.")
-          if "installMonthSwipe();syncAllAndroidReminders();" not in inner:
+          # Keep the native alarm queue synchronized after calendar edits as well as at startup.
+          sync_marker = "function syncAllAndroidReminders(){"
+          sync_end = "          }\\n          "
+          sync_at = inner.find(sync_marker)
+          escape_at = inner.find("function escapeHtml(v){", sync_at)
+          if sync_at < 0 or escape_at < 0:
+              raise SystemExit("Could not locate the calendar sync function for live-save synchronization.")
+          if "setInterval(syncAllAndroidReminders,2000)" not in inner:
+              inner = inner[:escape_at] + "setInterval(syncAllAndroidReminders,2000);\\n          " + inner[escape_at:]
+                    if "installMonthSwipe();syncAllAndroidReminders();" not in inner:
               raise SystemExit("Startup synchronization of saved Sarresid reminders is missing.")
           if "window.parent&&window.parent.AndroidBridge" not in inner:
               raise SystemExit("The embedded calendar cannot reach the native Android bridge.")
@@ -678,8 +687,8 @@ jobs:
                   applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'
                   minSdk 23
                   targetSdk 36
-                  versionCode 315
-                  versionName '2.0.140'
+                  versionCode 316
+                  versionName '2.0.141'
               }
 
               signingConfigs {
@@ -3462,8 +3471,8 @@ jobs:
       - name: Verify generated project
         run: |
           set -euxo pipefail
-          grep -q 'versionCode 315' app/build.gradle
-          grep -q "versionName '2.0.140'" app/build.gradle
+          grep -q 'versionCode 316' app/build.gradle
+          grep -q "versionName '2.0.141'" app/build.gradle
           grep -q 'android.permission.POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECEIVE_BOOT_COMPLETED' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.SCHEDULE_EXACT_ALARM' app/src/main/AndroidManifest.xml
@@ -3492,7 +3501,7 @@ jobs:
           grep -q 'widgetTile12' app/src/main/res/layout/widget_quick_tools.xml
           grep -q 'countSpinner' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
           grep -q 'putInt("count_"' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
-          grep -q "versionName '2.0.140'" app/build.gradle
+          grep -q "versionName '2.0.141'" app/build.gradle
           grep -q "applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'" app/build.gradle
           grep -q 'android.permission.CAMERA' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECORD_AUDIO' app/src/main/AndroidManifest.xml
@@ -3554,7 +3563,7 @@ jobs:
           test -s app/src/main/assets/dwg/wasm/libredwg-web.wasm
           grep -q 'getMiladDwgEngine' app/src/main/assets/index.html
           grep -q 'processCadChatFile' app/src/main/assets/index.html
-          grep -q 'versionCode 315' app/build.gradle
+          grep -q 'versionCode 316' app/build.gradle
           test -s app/src/main/assets/index858.html
           test -s app/src/main/assets/Index880.html
           test -s app/src/main/assets/Index885robot13.html
@@ -3784,7 +3793,7 @@ jobs:
 
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
-          if "versionName '2.0.140'" not in gradle:
+          if "versionName '2.0.141'" not in gradle:
               raise SystemExit('Expected versionName 2.0.136 was not generated in app/build.gradle')
           gradle_path.write_text(gradle, encoding='utf-8')
           print('Share-sheet integration and version 2.0.129 (303) applied.')
@@ -3803,8 +3812,8 @@ jobs:
           grep -q 'extractMiladGeoIncomingUri' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'uriDisplayName' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'Preserve the file extension' app/src/main/java/com/miladgeo/app/MainActivity.java
-          grep -q 'versionCode 315' app/build.gradle
-          grep -q "versionName '2.0.140'" app/build.gradle
+          grep -q 'versionCode 316' app/build.gradle
+          grep -q "versionName '2.0.141'" app/build.gradle
 
       - name: Build Release APK and AAB
         env:
@@ -3828,7 +3837,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx153-APK
+          name: MiladGeo-Indexxx154-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -3836,7 +3845,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx153-AAB
+          name: MiladGeo-Indexxx154-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
