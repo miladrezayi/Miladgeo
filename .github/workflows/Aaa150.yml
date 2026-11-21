@@ -4190,7 +4190,7 @@ jobs:
           panel_marker = 'id="mg-sarresid-native-diagnostics-v158"'
           if panel_marker not in inner:
               panel = r"""
-          <div id="mg-sarresid-native-diagnostics-v157" dir="rtl" style="position:fixed;z-index:2147483000;right:10px;bottom:10px;font-family:Tahoma,Arial,sans-serif;color:#172033;">
+          <div id="mg-sarresid-native-diagnostics-v158" dir="rtl" style="position:fixed;z-index:2147483000;right:10px;bottom:10px;font-family:Tahoma,Arial,sans-serif;color:#172033;">
             <button id="mg-sarresid-diag-open" type="button" style="border:0;border-radius:22px;padding:10px 14px;background:#263b58;color:#fff;font-size:12px;font-weight:700;box-shadow:0 3px 12px #0003;">🔔 عیب‌یابی اعلان</button>
             <section id="mg-sarresid-diag-card" style="display:none;margin-top:7px;width:min(92vw,360px);max-height:55vh;overflow:auto;background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:12px;box-shadow:0 8px 28px #0004;">
               <div style="font-weight:800;font-size:14px;margin-bottom:8px;">گزارش فنی اعلان سررسید</div>
@@ -4202,9 +4202,9 @@ jobs:
               <pre id="mg-sarresid-diag-output" style="white-space:pre-wrap;overflow-wrap:anywhere;direction:rtl;text-align:right;font:11px/1.8 Tahoma,Arial,sans-serif;margin:0;color:#111827;">برای دریافت گزارش، روی به‌روزرسانی بزن.</pre>
             </section>
           </div>
-          <script id="mg-sarresid-native-diagnostics-script-v157">
+          <script id="mg-sarresid-native-diagnostics-script-v158">
           (function(){
-            var root=document.getElementById('mg-sarresid-native-diagnostics-v157');
+            var root=document.getElementById('mg-sarresid-native-diagnostics-v158');
             if(!root||root.getAttribute('data-ready')==='1')return;
             root.setAttribute('data-ready','1');
             var card=document.getElementById('mg-sarresid-diag-card');
@@ -4283,14 +4283,14 @@ jobs:
           if check_b < 0:
               raise SystemExit('Calendar payload is incomplete during diagnostics validation')
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
-          if 'mg-sarresid-native-diagnostics-v157' not in check_inner:
+          if 'mg-sarresid-native-diagnostics-v158' not in check_inner:
               raise SystemExit('Calendar diagnostics panel was not added to the embedded calendar payload')
-          if 'versionCode 319' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.144'" not in gradle_path.read_text(encoding='utf-8'):
+          if 'versionCode 320' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.145'" not in gradle_path.read_text(encoding='utf-8'):
               raise SystemExit('Version 158 metadata was not applied')
-          print('Native Sarresid diagnostics, test notification panel and version 157 are ready.')
+          print('Native Sarresid diagnostics, test notification panel and version 158 are ready.')
           PY_DIAG
-          grep -q 'versionCode 319' app/build.gradle
-          grep -q "versionName '2.0.144'" app/build.gradle
+          grep -q 'versionCode 320' app/build.gradle
+          grep -q "versionName '2.0.145'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
