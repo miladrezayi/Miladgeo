@@ -3477,8 +3477,7 @@ jobs:
 
           p = Path('app/src/main/java/com/miladgeo/app/MainActivity.java')
           java = p.read_text(encoding='utf-8')
-          bridge_marker = '''                  @JavascriptInterface
-                  public void cancelSarresidReminder(String key) {'''
+          bridge_marker = 'public void cancelSarresidReminder(String key) {'
           bridge_methods = r'''                  @JavascriptInterface
                   public String getSarresidDiagnostics() {
                       JSONObject out = new JSONObject();
@@ -3562,8 +3561,7 @@ jobs:
           elif 'getSarresidDiagnostics()' not in java or 'sendSarresidTestNotification()' not in java:
               raise SystemExit('Could not find AndroidBridge insertion point.')
 
-          page_marker = '''                          if (url != null && url.startsWith("file:///android_asset/")) {
-                              webPageReady = true;'''
+          page_marker = 'webPageReady = true;'
           panel_js = r'''(function(){
             if(document.getElementById('mg-sarresid-diag'))return;
             var b=document.createElement('button');b.id='mg-sarresid-diag';b.textContent='🔔 عیب‌یابی اعلان';
@@ -3578,9 +3576,7 @@ jobs:
             p.querySelector('#mg-sarresid-test').onclick=function(){try{window.AndroidBridge.sendSarresidTestNotification();document.getElementById('mg-sarresid-info').textContent+=' | درخواست اعلان آزمایشی ارسال شد. نوار اعلان را بررسی کن.';}catch(e){document.getElementById('mg-sarresid-info').textContent+=' | خطا در ارسال آزمایشی: '+e;}};
             p.querySelector('#mg-sarresid-close').onclick=function(){p.style.display='none';};
           })();'''
-          page_replacement = '''                          if (url != null && url.startsWith("file:///android_asset/")) {
-                              view.evaluateJavascript(''' + json.dumps(panel_js, ensure_ascii=False) + ''', null);
-                              webPageReady = true;'''
+          page_replacement = 'view.evaluateJavascript(' + json.dumps(panel_js, ensure_ascii=False) + ', null);\\n                              webPageReady = true;'
           if page_marker in java:
               java = java.replace(page_marker, page_replacement, 1)
           elif "mg-sarresid-diag" not in java:
