@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx150 APK
+name: Build MiladGeo Indexxx151 APK
 
 on:
   workflow_dispatch:
@@ -61,6 +61,31 @@ jobs:
           p.write_text(s, encoding="utf-8")
           print("Replaced malformed inline SheetJS with the bundled offline runtime.")
           PY_REPLACE
+          test -s Indexxx150.html
+
+      - name: Remove obsolete in-app widget imitation
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_WIDGET_HTML'
+          from pathlib import Path
+          p = Path("Indexxx150.html")
+          s = p.read_text(encoding="utf-8")
+          marker = "<!-- MILADGEO V149: reliable 1x1 home widgets for every main menu entry -->"
+          start = s.find(marker)
+          if start < 0:
+              raise SystemExit("The obsolete V149 in-app widget block was not found; refusing to build with possible duplicate plus buttons.")
+          script_marker = '<script id="mg-home-widgets-v149">'
+          script_start = s.find(script_marker, start)
+          end = s.find("</script>", script_start)
+          if script_start < 0 or end < 0:
+              raise SystemExit("The V149 widget script boundary is incomplete.")
+          end += len("</script>")
+          s = s[:start] + "<!-- Home-screen shortcuts are native Android AppWidgets. -->" + s[end:]
+          if "mgw-pin-menu" in s or "mgHomeWidgets149" in s:
+              raise SystemExit("Old in-app widget controls still remain in the main HTML.")
+          p.write_text(s, encoding="utf-8")
+          print("Removed the fake in-app plus buttons and web-only widget panel.")
+          PY_WIDGET_HTML
           test -s Indexxx150.html
 
       - name: Prepare offline DWG engine
@@ -594,8 +619,8 @@ jobs:
                   applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'
                   minSdk 23
                   targetSdk 36
-                  versionCode 311
-                  versionName '2.0.136'
+                  versionCode 312
+                  versionName '2.0.137'
               }
 
               signingConfigs {
@@ -2714,11 +2739,688 @@ jobs:
               p=Path(path); p.parent.mkdir(parents=True, exist_ok=True); p.write_bytes(base64.b64decode(data))
           PY_WIDGET_V2
 
+      - name: Rebuild native widgets for all 20 menus and restore the 13-cell selector
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/java/com/miladgeo/app app/src/main/res/layout app/src/main/res/xml app/src/main/res/drawable app/src/main/res/values
+
+          cat > app/src/main/java/com/miladgeo/app/QuickToolsWidgetProvider.java <<'EOF_QUICK_PROVIDER'
+          package com.miladgeo.app;
+
+          import android.app.PendingIntent;
+          import android.appwidget.AppWidgetManager;
+          import android.appwidget.AppWidgetProvider;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.net.Uri;
+          import android.view.View;
+          import android.widget.RemoteViews;
+
+          public class QuickToolsWidgetProvider extends AppWidgetProvider {
+              static final String PREFS = "miladgeo_widget_prefs";
+              static final String[] TOOL_IDS = {
+                  "",
+                  "menu01", "menu02", "menu03", "menu04", "menu05",
+                  "menu06", "menu07", "menu08", "menu09", "menu10",
+                  "menu11", "menu12", "menu13", "menu14", "menu15",
+                  "menu16", "menu17", "menu18", "menu19", "menu20",
+                  "leica5", "measure", "stakeout", "topography", "txt",
+                  "excel", "minicad", "coordinates", "units", "calculator",
+                  "googleearth", "direction", "flashlight", "compass",
+                  "speedometer", "qibla", "level"
+              };
+              static final String[] TOOL_LABELS = {
+                  "＋ انتخاب ابزار",
+                  "🎯 منو ۱: شبیه‌ساز لایکا",
+                  "📍 منو ۲: برداشت زمینی",
+                  "📌 منو ۳: پیاده‌سازی",
+                  "📐 منو ۴: توپوگرافی و ترازیابی",
+                  "📄 منو ۵: ورود نقاط TXT",
+                  "📊 منو ۶: ورود و خروجی Excel",
+                  "📏 منو ۷: مساحت و پلیگون",
+                  "🧊 منو ۸: حجم و عملیات خاکی",
+                  "🖥️ منو ۹: مینی اتوکد",
+                  "📐 منو ۱۰: DXF و PDF",
+                  "🌐 منو ۱۱: تبدیل مختصات",
+                  "🔁 منو ۱۲: تبدیل واحدها",
+                  "🧮 منو ۱۳: محاسبات COGO",
+                  "🧮 منو ۱۴: ماشین‌حساب مهندسی",
+                  "🎮 منو ۱۵: بازی‌ها و سرگرمی",
+                  "📚 منو ۱۶: کتابخانه مهندسی",
+                  "🌍 منو ۱۷: گوگل ارث و ترسیم",
+                  "🧭 منو ۱۸: جهت‌یابی و قطب‌نما",
+                  "📷 منو ۱۹: دوربین نقشه‌برداری",
+                  "🗒️ منو ۲۰: دفتر مهندس",
+                  "🎯 منو ۱: شبیه‌ساز لایکا TS02",
+                  "📍 منو ۲: برداشت زمینی",
+                  "📌 منو ۳: پیاده‌سازی نقاط",
+                  "📐 منو ۴: توپو و ترازیابی",
+                  "📄 منو ۵: ورودی TXT",
+                  "📊 منو ۶: ورودی Excel",
+                  "🖥️ منو ۹: مینی اتوکد",
+                  "↔ تبدیل مختصات",
+                  "🔁 تبدیل واحدها",
+                  "🧮 ماشین‌حساب مهندسی",
+                  "🌍 گوگل ارث و ترسیم",
+                  "🧭 مرکز جهت‌یابی",
+                  "🔦 چراغ‌قوه",
+                  "🧭 قطب‌نما",
+                  "🏃 سرعت‌سنج",
+                  "🕋 قبله‌نما",
+                  "⚖️ تراز"
+              };
+              static final String[] DEFAULT_TOOLS = {
+                  "menu17", "menu01", "menu02", "menu03", "menu04",
+                  "menu05", "menu06", "menu07", "menu08", "menu09",
+                  "menu10", "menu13", "menu20"
+              };
+              static final int SLOT_COUNT = 13;
+              private static final int[] TILE_IDS = {
+                  R.id.widgetTile1, R.id.widgetTile2, R.id.widgetTile3,
+                  R.id.widgetTile4, R.id.widgetTile5, R.id.widgetTile6,
+                  R.id.widgetTile7, R.id.widgetTile8, R.id.widgetTile9,
+                  R.id.widgetTile10, R.id.widgetTile11, R.id.widgetTile12
+              };
+              private static final int[] ROW_IDS = {
+                  R.id.widgetRow1, R.id.widgetRow2, R.id.widgetRow3, R.id.widgetRow4
+              };
+
+              static int indexFor(String id) {
+                  for (int i = 0; i < TOOL_IDS.length; i++) {
+                      if (TOOL_IDS[i].equals(id)) return i;
+                  }
+                  return 0;
+              }
+
+              static String labelFor(String id) {
+                  int index = indexFor(id);
+                  return index == 0 ? TOOL_LABELS[0] : TOOL_LABELS[index];
+              }
+
+              static int readCount(Context context, int widgetId) {
+                  int count = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                      .getInt("count_" + widgetId, 7);
+                  return (count == 4 || count == 7 || count == 10 || count == 13) ? count : 7;
+              }
+
+              static String[] readTools(Context context, int widgetId) {
+                  SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+                  String saved = prefs.getString("tools_" + widgetId, null);
+                  String[] result = DEFAULT_TOOLS.clone();
+                  if (saved == null || saved.trim().isEmpty()) return result;
+                  String[] values = saved.split(",", -1);
+                  for (int i = 0; i < SLOT_COUNT && i < values.length; i++) {
+                      String candidate = values[i] == null ? "" : values[i].trim();
+                      if (candidate.isEmpty()) {
+                          result[i] = "";
+                      } else if (indexFor(candidate) > 0) {
+                          result[i] = candidate;
+                      }
+                  }
+                  return result;
+              }
+
+              static void updateAllWidgets(Context context) {
+                  AppWidgetManager manager = AppWidgetManager.getInstance(context);
+                  ComponentName provider = new ComponentName(context, QuickToolsWidgetProvider.class);
+                  for (int id : manager.getAppWidgetIds(provider)) updateWidget(context, id);
+              }
+
+              static void updateWidget(Context context, int widgetId) {
+                  AppWidgetManager manager = AppWidgetManager.getInstance(context);
+                  RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_quick_tools);
+                  String[] tools = readTools(context, widgetId);
+                  int count = readCount(context, widgetId);
+
+                  Intent settings = new Intent(context, QuickToolsWidgetConfigActivity.class);
+                  settings.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+                  settings.setData(Uri.parse("miladgeo://widget/config/" + widgetId));
+                  settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  PendingIntent configPending = PendingIntent.getActivity(
+                      context, widgetId * 100 + 90, settings,
+                      PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  views.setOnClickPendingIntent(R.id.widgetSettings, configPending);
+
+                  bind(views, context, widgetId, R.id.widgetBigTile, tools[0], -1);
+                  for (int i = 0; i < 12; i++) {
+                      int viewId = TILE_IDS[i];
+                      boolean visible = i < count - 1;
+                      views.setViewVisibility(viewId, visible ? View.VISIBLE : View.GONE);
+                      if (visible) bind(views, context, widgetId, viewId, tools[i + 1], i);
+                  }
+                  for (int row = 0; row < ROW_IDS.length; row++) {
+                      boolean visible = row * 3 < count - 1;
+                      views.setViewVisibility(ROW_IDS[row], visible ? View.VISIBLE : View.GONE);
+                  }
+                  manager.updateAppWidget(widgetId, views);
+              }
+
+              private static void bind(RemoteViews views, Context context, int widgetId,
+                                       int viewId, String tool, int slot) {
+                  String selected = tool == null ? "" : tool;
+                  views.setTextViewText(viewId, selected.isEmpty() ? TOOL_LABELS[0] : labelFor(selected));
+                  Intent click;
+                  int requestCode;
+                  if (selected.isEmpty()) {
+                      click = new Intent(context, QuickToolsWidgetConfigActivity.class);
+                      click.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+                      click.setData(Uri.parse("miladgeo://widget/config/" + widgetId + "/slot/" + slot));
+                      click.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                      requestCode = widgetId * 100 + slot + 20;
+                  } else {
+                      click = new Intent(context, MainActivity.class);
+                      click.putExtra("widget_tool", selected);
+                      click.setData(Uri.parse("miladgeo://widget/quick/" + widgetId + "/slot/" + slot + "/" + selected));
+                      click.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                      requestCode = widgetId * 100 + slot + 20;
+                  }
+                  PendingIntent pending = PendingIntent.getActivity(
+                      context, requestCode, click,
+                      PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  views.setOnClickPendingIntent(viewId, pending);
+              }
+
+              @Override
+              public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
+                  for (int id : appWidgetIds) updateWidget(context, id);
+              }
+
+              @Override
+              public void onDeleted(Context context, int[] appWidgetIds) {
+                  SharedPreferences.Editor editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit();
+                  for (int id : appWidgetIds) {
+                      editor.remove("tools_" + id);
+                      editor.remove("count_" + id);
+                  }
+                  editor.apply();
+                  super.onDeleted(context, appWidgetIds);
+              }
+          }
+          EOF_QUICK_PROVIDER
+
+          cat > app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java <<'EOF_QUICK_CONFIG'
+          package com.miladgeo.app;
+
+          import android.app.Activity;
+          import android.appwidget.AppWidgetManager;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.graphics.Color;
+          import android.graphics.drawable.GradientDrawable;
+          import android.os.Bundle;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.ViewGroup;
+          import android.widget.AdapterView;
+          import android.widget.ArrayAdapter;
+          import android.widget.Button;
+          import android.widget.LinearLayout;
+          import android.widget.ScrollView;
+          import android.widget.Spinner;
+          import android.widget.TextView;
+
+          public class QuickToolsWidgetConfigActivity extends Activity {
+              private int appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
+              private Spinner countSpinner;
+              private Spinner bigSpinner;
+              private final Spinner[] small = new Spinner[12];
+              private final LinearLayout[] slotCards = new LinearLayout[12];
+              private final int[] counts = {4, 7, 10, 13};
+
+              @Override
+              protected void onCreate(Bundle state) {
+                  super.onCreate(state);
+                  setResult(RESULT_CANCELED);
+                  appWidgetId = getIntent().getIntExtra(
+                      AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+                  if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+                      finish();
+                      return;
+                  }
+
+                  ScrollView scroll = new ScrollView(this);
+                  scroll.setFillViewport(true);
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setPadding(dp(16), dp(16), dp(16), dp(20));
+                  root.setBackgroundColor(Color.rgb(244, 249, 244));
+                  scroll.addView(root);
+
+                  TextView title = new TextView(this);
+                  title.setText("تنظیم حرفه‌ای ویجت نقشه‌بردار");
+                  title.setTextColor(Color.rgb(31, 99, 55));
+                  title.setTextSize(21);
+                  title.setTypeface(null, android.graphics.Typeface.BOLD);
+                  title.setGravity(Gravity.CENTER);
+                  title.setPadding(0, dp(4), 0, dp(8));
+                  root.addView(title, new LinearLayout.LayoutParams(-1, -2));
+
+                  TextView subtitle = new TextView(this);
+                  subtitle.setText("تعداد خانه‌ها را مشخص کن و برای هر خانه، یکی از منوهای اصلی یا ابزارهای تخصصی را انتخاب کن. هر خانه با لمس، مستقیماً همان ابزار را باز می‌کند.");
+                  subtitle.setTextColor(Color.rgb(83, 100, 83));
+                  subtitle.setTextSize(13);
+                  subtitle.setGravity(Gravity.CENTER);
+                  subtitle.setPadding(dp(4), 0, dp(4), dp(15));
+                  root.addView(subtitle, new LinearLayout.LayoutParams(-1, -2));
+
+                  addSectionTitle(root, "چیدمان ویجت");
+                  String[] countLabels = {"۴ خانه", "۷ خانه", "۱۰ خانه", "۱۳ خانه"};
+                  countSpinner = new Spinner(this);
+                  countSpinner.setAdapter(new ArrayAdapter<>(
+                      this, android.R.layout.simple_spinner_dropdown_item, countLabels));
+                  int savedCount = QuickToolsWidgetProvider.readCount(this, appWidgetId);
+                  int countIndex = 1;
+                  for (int i = 0; i < counts.length; i++) if (counts[i] == savedCount) countIndex = i;
+                  countSpinner.setSelection(countIndex);
+                  root.addView(countSpinner, new LinearLayout.LayoutParams(-1, dp(50)));
+
+                  ArrayAdapter<String> toolAdapter = new ArrayAdapter<>(
+                      this, android.R.layout.simple_spinner_item, QuickToolsWidgetProvider.TOOL_LABELS);
+                  toolAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+                  addSectionTitle(root, "خانه بزرگ و شاخص");
+                  bigSpinner = new Spinner(this);
+                  bigSpinner.setAdapter(toolAdapter);
+                  String[] saved = QuickToolsWidgetProvider.readTools(this, appWidgetId);
+                  bigSpinner.setSelection(QuickToolsWidgetProvider.indexFor(saved[0]));
+                  root.addView(bigSpinner, new LinearLayout.LayoutParams(-1, dp(50)));
+
+                  for (int i = 0; i < small.length; i++) {
+                      LinearLayout card = new LinearLayout(this);
+                      card.setOrientation(LinearLayout.VERTICAL);
+                      card.setPadding(dp(11), dp(7), dp(11), dp(8));
+                      GradientDrawable background = new GradientDrawable();
+                      background.setColor(Color.WHITE);
+                      background.setCornerRadius(dp(13));
+                      background.setStroke(dp(1), Color.rgb(211, 227, 213));
+                      card.setBackground(background);
+                      LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
+                      cardParams.topMargin = dp(7);
+
+                      TextView label = new TextView(this);
+                      label.setText("خانه کوچک " + persian(i + 1));
+                      label.setTextColor(Color.rgb(48, 81, 54));
+                      label.setTextSize(13);
+                      label.setTypeface(null, android.graphics.Typeface.BOLD);
+                      card.addView(label, new LinearLayout.LayoutParams(-1, -2));
+
+                      Spinner picker = new Spinner(this);
+                      picker.setAdapter(toolAdapter);
+                      picker.setSelection(QuickToolsWidgetProvider.indexFor(saved[i + 1]));
+                      card.addView(picker, new LinearLayout.LayoutParams(-1, dp(48)));
+                      small[i] = picker;
+                      slotCards[i] = card;
+                      root.addView(card, cardParams);
+                  }
+
+                  countSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                      @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                          refreshSlotVisibility();
+                      }
+                      @Override public void onNothingSelected(AdapterView<?> parent) { }
+                  });
+                  refreshSlotVisibility();
+
+                  Button save = new Button(this);
+                  save.setText("ذخیره و به‌روزرسانی ویجت");
+                  save.setTextColor(Color.WHITE);
+                  save.setTextSize(15);
+                  save.setTypeface(null, android.graphics.Typeface.BOLD);
+                  GradientDrawable saveBg = new GradientDrawable();
+                  saveBg.setColor(Color.rgb(38, 119, 65));
+                  saveBg.setCornerRadius(dp(13));
+                  save.setBackground(saveBg);
+                  LinearLayout.LayoutParams saveParams = new LinearLayout.LayoutParams(-1, dp(52));
+                  saveParams.topMargin = dp(18);
+                  root.addView(save, saveParams);
+                  save.setOnClickListener(v -> saveConfiguration());
+                  setContentView(scroll);
+              }
+
+              private void refreshSlotVisibility() {
+                  if (countSpinner == null) return;
+                  int active = counts[countSpinner.getSelectedItemPosition()] - 1;
+                  for (int i = 0; i < slotCards.length; i++) {
+                      if (slotCards[i] != null) slotCards[i].setVisibility(i < active ? View.VISIBLE : View.GONE);
+                  }
+              }
+
+              private void addSectionTitle(LinearLayout root, String text) {
+                  TextView label = new TextView(this);
+                  label.setText(text);
+                  label.setTextColor(Color.rgb(31, 91, 49));
+                  label.setTextSize(15);
+                  label.setTypeface(null, android.graphics.Typeface.BOLD);
+                  label.setPadding(0, dp(13), 0, dp(5));
+                  root.addView(label, new LinearLayout.LayoutParams(-1, -2));
+              }
+
+              private String persian(int value) {
+                  String text = String.valueOf(value);
+                  StringBuilder out = new StringBuilder();
+                  for (int i = 0; i < text.length(); i++) out.append("۰۱۲۳۴۵۶۷۸۹".charAt(text.charAt(i) - '0'));
+                  return out.toString();
+              }
+
+              private void saveConfiguration() {
+                  int count = counts[countSpinner.getSelectedItemPosition()];
+                  StringBuilder selected = new StringBuilder();
+                  selected.append(QuickToolsWidgetProvider.TOOL_IDS[bigSpinner.getSelectedItemPosition()]);
+                  for (Spinner picker : small) {
+                      selected.append(',').append(QuickToolsWidgetProvider.TOOL_IDS[picker.getSelectedItemPosition()]);
+                  }
+                  SharedPreferences prefs = getSharedPreferences(QuickToolsWidgetProvider.PREFS, MODE_PRIVATE);
+                  prefs.edit().putString("tools_" + appWidgetId, selected.toString())
+                      .putInt("count_" + appWidgetId, count).apply();
+                  QuickToolsWidgetProvider.updateWidget(this, appWidgetId);
+                  Intent result = new Intent();
+                  result.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                  setResult(RESULT_OK, result);
+                  finish();
+              }
+
+              private int dp(int value) {
+                  return Math.round(value * getResources().getDisplayMetrics().density);
+              }
+          }
+          EOF_QUICK_CONFIG
+
+          cat > app/src/main/java/com/miladgeo/app/SingleMenuWidgetProvider.java <<'EOF_SINGLE_BASE'
+          package com.miladgeo.app;
+
+          import android.app.PendingIntent;
+          import android.appwidget.AppWidgetManager;
+          import android.appwidget.AppWidgetProvider;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.widget.RemoteViews;
+          import java.util.Locale;
+
+          public abstract class SingleMenuWidgetProvider extends AppWidgetProvider {
+              protected abstract int menuIndex();
+              private static final String[] TITLES = {
+                  "", "شبیه‌ساز لایکا", "برداشت زمینی", "پیاده‌سازی نقاط",
+                  "توپو و ترازیابی", "ورودی TXT", "ورودی Excel", "مساحت و پلیگون",
+                  "حجم و عملیات خاکی", "مینی اتوکد", "DXF و PDF", "تبدیل مختصات",
+                  "تبدیل واحدها", "محاسبات COGO", "ماشین‌حساب", "بازی‌ها",
+                  "کتابخانه مهندسی", "Google Earth", "جهت‌یابی", "دوربین نقشه‌برداری",
+                  "دفتر مهندس"
+              };
+              private static final String[] ICONS = {
+                  "", "🎯", "📍", "📌", "📐", "📄", "📊", "📏", "🧊", "🖥️",
+                  "📐", "🌐", "🔁", "🧮", "🧮", "🎮", "📚", "🌍", "🧭", "📷", "🗒️"
+              };
+
+              @Override
+              public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
+                  int index = menuIndex();
+                  if (index < 1 || index > 20) return;
+                  for (int appWidgetId : ids) {
+                      RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_single_menu);
+                      views.setTextViewText(R.id.singleWidgetIcon, ICONS[index]);
+                      views.setTextViewText(R.id.singleWidgetTitle,
+                          "منوی " + persian(index) + "\\n" + TITLES[index]);
+                      Intent open = new Intent(context, MainActivity.class);
+                      open.putExtra("widget_tool", String.format(Locale.US, "menu%02d", index));
+                      open.setData(Uri.parse("miladgeo://single-menu/" + index + "/" + appWidgetId));
+                      open.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                      PendingIntent pending = PendingIntent.getActivity(
+                          context, index * 100000 + appWidgetId, open,
+                          PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                      views.setOnClickPendingIntent(R.id.singleMenuWidgetRoot, pending);
+                      manager.updateAppWidget(appWidgetId, views);
+                  }
+              }
+
+              private String persian(int value) {
+                  String text = String.valueOf(value);
+                  StringBuilder out = new StringBuilder();
+                  for (int i = 0; i < text.length(); i++) out.append("۰۱۲۳۴۵۶۷۸۹".charAt(text.charAt(i) - '0'));
+                  return out.toString();
+              }
+          }
+          EOF_SINGLE_BASE
+
+          cat > app/src/main/res/layout/widget_single_menu.xml <<'EOF_SINGLE_LAYOUT'
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/singleMenuWidgetRoot"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:gravity="center"
+              android:padding="5dp"
+              android:background="@drawable/widget_single_bg">
+              <TextView
+                  android:id="@+id/singleWidgetIcon"
+                  android:layout_width="wrap_content"
+                  android:layout_height="0dp"
+                  android:layout_weight="1"
+                  android:gravity="center"
+                  android:text="🎯"
+                  android:textSize="27sp"
+                  android:includeFontPadding="false" />
+              <TextView
+                  android:id="@+id/singleWidgetTitle"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:gravity="center"
+                  android:text="منو"
+                  android:textColor="#205A34"
+                  android:textSize="10sp"
+                  android:textStyle="bold"
+                  android:maxLines="2"
+                  android:ellipsize="end"
+                  android:includeFontPadding="false" />
+          </LinearLayout>
+          EOF_SINGLE_LAYOUT
+
+          cat > app/src/main/res/drawable/widget_single_bg.xml <<'EOF_SINGLE_BG'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <gradient android:startColor="#FFFFFF" android:endColor="#DDEFE0" android:angle="315" />
+              <stroke android:width="1dp" android:color="#9CC6A4" />
+              <corners android:radius="15dp" />
+          </shape>
+          EOF_SINGLE_BG
+
+          python3 - <<'PY_SINGLE_PROVIDERS'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          java_dir = Path("app/src/main/java/com/miladgeo/app")
+          xml_dir = Path("app/src/main/res/xml")
+          values_dir = Path("app/src/main/res/values")
+          java_dir.mkdir(parents=True, exist_ok=True)
+          xml_dir.mkdir(parents=True, exist_ok=True)
+          values_dir.mkdir(parents=True, exist_ok=True)
+
+          titles = [
+              "شبیه‌ساز لایکا", "برداشت زمینی", "پیاده‌سازی نقاط", "توپو و ترازیابی",
+              "ورودی TXT", "ورودی Excel", "مساحت و پلیگون", "حجم و عملیات خاکی",
+              "مینی اتوکد", "DXF و PDF", "تبدیل مختصات", "تبدیل واحدها",
+              "محاسبات COGO", "ماشین‌حساب مهندسی", "بازی‌ها و سرگرمی",
+              "کتابخانه مهندسی", "Google Earth و ترسیم", "جهت‌یابی و قطب‌نما",
+              "دوربین نقشه‌برداری", "دفتر مهندس"
+          ]
+          manifest_receivers = []
+          string_entries = []
+          for n, title in enumerate(titles, 1):
+              two = f"{n:02d}"
+              cls = f"Menu{two}WidgetProvider"
+              (java_dir / f"{cls}.java").write_text(
+                  "package com.miladgeo.app;\\n"
+                  f"public class {cls} extends SingleMenuWidgetProvider {{\\n"
+                  f"    @Override protected int menuIndex() {{ return {n}; }}\\n"
+                  "}\\n",
+                  encoding="utf-8"
+              )
+              label = f"MiladGeo · منوی {n}: {title}"
+              string_entries.append(f'    <string name="widget_menu_{two}_label">{label}</string>')
+              string_entries.append(f'    <string name="widget_menu_{two}_description">میانبر یک‌لمسی به {title} در برنامه میلادژئو</string>')
+              info = (
+                  '<?xml version="1.0" encoding="utf-8"?>\\n'
+                  '<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"\\n'
+                  '    android:minWidth="72dp"\\n'
+                  '    android:minHeight="72dp"\\n'
+                  '    android:minResizeWidth="72dp"\\n'
+                  '    android:minResizeHeight="72dp"\\n'
+                  '    android:updatePeriodMillis="0"\\n'
+                  '    android:initialLayout="@layout/widget_single_menu"\\n'
+                  '    android:resizeMode="none"\\n'
+                  '    android:widgetCategory="home_screen"\\n'
+                  f'    android:description="@string/widget_menu_{two}_description" />\\n'
+              )
+              (xml_dir / f"widget_menu_{two}_info.xml").write_text(info, encoding="utf-8")
+              manifest_receivers.append(
+                  f'''    <receiver
+                  android:name=".{cls}"
+                  android:label="@string/widget_menu_{two}_label"
+                  android:exported="true">
+                  <intent-filter>
+                      <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                  </intent-filter>
+                  <meta-data
+                      android:name="android.appwidget.provider"
+                      android:resource="@xml/widget_menu_{two}_info" />
+              </receiver>'''
+              )
+
+          strings_path = values_dir / "widget_strings.xml"
+          if strings_path.exists():
+              strings = strings_path.read_text(encoding="utf-8")
+          else:
+              strings = '<?xml version="1.0" encoding="utf-8"?>\\n<resources>\\n    <string name="quick_tools_widget_description">میانبرهای قابل تنظیم جعبه‌ابزار نقشه‌بردار</string>\\n</resources>\\n'
+          for n in range(1, 21):
+              two = f"{n:02d}"
+              import re
+              strings = re.sub(rf'\\s*<string name="widget_menu_{two}_(?:label|description)">.*?</string>', '', strings)
+          strings = strings.replace("</resources>", "\\n" + "\\n".join(string_entries) + "\\n</resources>")
+          strings_path.write_text(strings, encoding="utf-8")
+
+          manifest_path = Path("app/src/main/AndroidManifest.xml")
+          manifest = manifest_path.read_text(encoding="utf-8")
+          if ".Menu01WidgetProvider" not in manifest:
+              manifest = manifest.replace("</application>", "\\n" + "\\n".join(manifest_receivers) + "\\n</application>")
+              manifest_path.write_text(manifest, encoding="utf-8")
+          if ".Menu20WidgetProvider" not in manifest_path.read_text(encoding="utf-8"):
+              raise SystemExit("Not all 20 single-menu widget receivers were registered.")
+          print("Generated 20 individual 1x1 Android AppWidget providers and their picker entries.")
+          PY_SINGLE_PROVIDERS
+
+          python3 - <<'PY_WIDGET_MAIN'
+          from pathlib import Path
+          import re
+          p = Path("app/src/main/java/com/miladgeo/app/MainActivity.java")
+          java = p.read_text(encoding="utf-8")
+
+          if "private String pendingWidgetTool;" not in java:
+              marker = "private GeolocationPermissions.Callback pendingGeoCallback;"
+              if marker not in java:
+                  raise SystemExit("Could not add the pending widget command field.")
+              java = java.replace(marker, marker + "\\n    private String pendingWidgetTool;", 1)
+
+          if 'pendingWidgetTool = getIntent().getStringExtra("widget_tool");' not in java:
+              marker = "super.onCreate(savedInstanceState);"
+              if marker not in java:
+                  raise SystemExit("Could not initialize the widget command in onCreate.")
+              java = java.replace(marker, marker + '\\n        pendingWidgetTool = getIntent().getStringExtra("widget_tool");', 1)
+
+          ready_marker = "webPageReady = true;"
+          ready_call = "if (pendingWidgetTool != null) { view.postDelayed(() -> handlePendingWidgetTool(), 500); }"
+          if ready_call not in java:
+              if ready_marker not in java:
+                  raise SystemExit("Could not find WebView page-ready callback for widget dispatch.")
+              java = java.replace(ready_marker, ready_marker + "\\n                              " + ready_call, 1)
+
+          start = java.find("    private void handlePendingWidgetTool() {")
+          end = java.find("    private void launchCameraForWebView() {", start + 1)
+          if start < 0 or end < 0:
+              raise SystemExit("Could not locate the widget shortcut handler boundaries.")
+          handler = r'''    private void handlePendingWidgetTool() {
+                  final String tool = pendingWidgetTool;
+                  if (tool == null || tool.isEmpty() || webView == null) return;
+                  pendingWidgetTool = null;
+                  String js = "(function(){try{var k=" + JSONObject.quote(tool) + ";"
+                      + "function root(n){var a=document.querySelectorAll('#main .menu-grid > a.menu-btn');"
+                      + "var el=a[n-1];if(!el){console.warn('MiladGeo widget menu missing',n);return false;}"
+                      + "el.click();return true;}"
+                      + "function child18(panel){root(18);setTimeout(function(){try{"
+                      + "var c=document.querySelector('#menu18 [data-m18-open=\"'+panel+'\"]');"
+                      + "if(c&&typeof window.m18OpenDirect==='function')window.m18OpenDirect(c);"
+                      + "}catch(e){console.warn(e);}},500);}"
+                      + "var m=/^menu(\\\\d{2})$/.exec(k);if(m){root(parseInt(m[1],10));return;}"
+                      + "var a={"
+                      + "'leica5':function(){root(1);setTimeout(function(){var c=document.querySelector('#leica .leica-v36-card');if(c)c.click();},500);},"
+                      + "'measure':function(){root(2);},"
+                      + "'stakeout':function(){root(3);},"
+                      + "'topography':function(){root(4);},"
+                      + "'txt':function(){root(5);},"
+                      + "'excel':function(){root(6);},"
+                      + "'minicad':function(){root(9);},"
+                      + "'coordinates':function(){root(11);},"
+                      + "'units':function(){root(12);},"
+                      + "'calculator':function(){root(14);},"
+                      + "'googleearth':function(){root(17);},"
+                      + "'direction':function(){root(18);},"
+                      + "'flashlight':function(){child18('m18PanelFlash');},"
+                      + "'compass':function(){child18('m18PanelCompass');},"
+                      + "'speedometer':function(){child18('m18PanelSpeed');},"
+                      + "'qibla':function(){child18('m18PanelQibla');},"
+                      + "'level':function(){child18('m18PanelLevel');}};"
+                      + "if(a[k])a[k]();else console.warn('Unknown MiladGeo widget tool',k);"
+                      + "}catch(e){console.error('MiladGeo widget shortcut failed',e);}})();";
+                  webView.evaluateJavascript(js, null);
+              }
+
+              '''
+          java = java[:start] + handler + java[end:]
+
+          if 'pendingWidgetTool = intent.getStringExtra("widget_tool");' not in java:
+              raise SystemExit("The widget shortcut is not wired to onNewIntent.")
+          if java.count("{") != java.count("}"):
+              raise SystemExit("MainActivity.java braces are unbalanced after widget routing.")
+          p.write_text(java, encoding="utf-8")
+          print("Connected native widget taps to WebView page-ready and exact main-menu anchors.")
+          PY_WIDGET_MAIN
+
+          python3 - <<'PY_WIDGET_VERIFY'
+          from pathlib import Path
+          import re
+          base = Path("app/src/main")
+          java = base / "java/com/miladgeo/app"
+          xml = base / "res/xml"
+          manifest = (base / "AndroidManifest.xml").read_text(encoding="utf-8")
+          provider = (java / "QuickToolsWidgetProvider.java").read_text(encoding="utf-8")
+          config = (java / "QuickToolsWidgetConfigActivity.java").read_text(encoding="utf-8")
+          main = (java / "MainActivity.java").read_text(encoding="utf-8")
+          if "SLOT_COUNT = 13" not in provider or "widgetTile12" not in (base / "res/layout/widget_quick_tools.xml").read_text(encoding="utf-8"):
+              raise SystemExit("13-cell widget layout/provider is incomplete.")
+          if "menu20" not in provider or "منو ۲۰" not in provider:
+              raise SystemExit("The 13-cell selector is missing the new main-menu options.")
+          if "refreshSlotVisibility" not in config or "TOOL_LABELS" not in config:
+              raise SystemExit("13-cell widget selector is missing its active-slot logic or expanded choices.")
+          if "handlePendingWidgetTool()" not in main or "menu(\\\\d{2})" not in main:
+              raise SystemExit("Native widget taps are not connected to root menu routing.")
+          for n in range(1, 21):
+              two = f"{n:02d}"
+              if not (java / f"Menu{two}WidgetProvider.java").is_file():
+                  raise SystemExit(f"Missing single menu provider: {two}")
+              if not (xml / f"widget_menu_{two}_info.xml").is_file():
+                  raise SystemExit(f"Missing single menu widget metadata: {two}")
+              if f".Menu{two}WidgetProvider" not in manifest:
+                  raise SystemExit(f"Menu {n} provider is not registered in AndroidManifest.xml.")
+          print("Verified: 13 selectable tiles, full 20-menu choices, and 20 independent 1x1 widget providers.")
+          PY_WIDGET_VERIFY
+
       - name: Verify generated project
         run: |
           set -euo pipefail
-          grep -q 'versionCode 311' app/build.gradle
-          grep -q "versionName '2.0.136'" app/build.gradle
+          grep -q 'versionCode 312' app/build.gradle
+          grep -q "versionName '2.0.137'" app/build.gradle
           grep -q 'android.permission.POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECEIVE_BOOT_COMPLETED' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.SCHEDULE_EXACT_ALARM' app/src/main/AndroidManifest.xml
@@ -2743,7 +3445,7 @@ jobs:
           grep -q 'widgetTile12' app/src/main/res/layout/widget_quick_tools.xml
           grep -q 'countSpinner' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
           grep -q 'putInt("count_"' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
-          grep -q "versionName '2.0.136'" app/build.gradle
+          grep -q "versionName '2.0.137'" app/build.gradle
           grep -q "applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'" app/build.gradle
           grep -q 'android.permission.CAMERA' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECORD_AUDIO' app/src/main/AndroidManifest.xml
@@ -2806,7 +3508,7 @@ jobs:
           test -s app/src/main/assets/dwg/wasm/libredwg-web.wasm
           grep -q 'getMiladDwgEngine' app/src/main/assets/index.html
           grep -q 'processCadChatFile' app/src/main/assets/index.html
-          grep -q 'versionCode 311' app/build.gradle
+          grep -q 'versionCode 312' app/build.gradle
           test -s app/src/main/assets/index858.html
           test -s app/src/main/assets/Index880.html
           test -s app/src/main/assets/Index885robot13.html
@@ -2971,7 +3673,7 @@ jobs:
 
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
-          if "versionName '2.0.136'" not in gradle:
+          if "versionName '2.0.137'" not in gradle:
               raise SystemExit('Expected versionName 2.0.136 was not generated in app/build.gradle')
           gradle_path.write_text(gradle, encoding='utf-8')
           print('Share-sheet integration and version 2.0.129 (303) applied.')
@@ -2990,8 +3692,8 @@ jobs:
           grep -q 'extractMiladGeoIncomingUri' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'uriDisplayName' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'Preserve the file extension' app/src/main/java/com/miladgeo/app/MainActivity.java
-          grep -q 'versionCode 311' app/build.gradle
-          grep -q "versionName '2.0.136'" app/build.gradle
+          grep -q 'versionCode 312' app/build.gradle
+          grep -q "versionName '2.0.137'" app/build.gradle
 
       - name: Build Release APK and AAB
         env:
@@ -3015,7 +3717,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx150-APK
+          name: MiladGeo-Indexxx151-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -3023,7 +3725,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx150-AAB
+          name: MiladGeo-Indexxx151-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
