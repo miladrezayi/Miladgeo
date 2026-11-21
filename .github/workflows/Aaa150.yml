@@ -102,7 +102,7 @@ jobs:
           if pos < 0:
               raise SystemExit("Could not locate the embedded Sarresid calendar payload.")
           b64_start = pos + len(prefix)
-          b64_end = html.find("'),buf=", b64_start)
+          b64_end = html.find("')", b64_start)
           if b64_end < 0:
               raise SystemExit("The embedded Sarresid calendar payload is incomplete.")
           inner = base64.b64decode(html[b64_start:b64_end]).decode("utf-8")
