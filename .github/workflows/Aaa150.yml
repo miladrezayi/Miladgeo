@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx157 APK
+name: Build MiladGeo Indexxx158 APK
 # Clean rebuild after removing faulty diagnostics injection
 # Notification diagnostics insertion marker corrected
 
@@ -90,7 +90,7 @@ jobs:
           PY_WIDGET_HTML
           test -s Indexxx150.html
 
-      - name: Connect embedded Sarresid calendar to native Android alarms
+      - name: Route Sarresid iframe alarms through the main WebView bridge
         run: |
           set -euo pipefail
           python3 - <<'PY_SARRESID_BRIDGE'
@@ -112,49 +112,96 @@ jobs:
           end = inner.find("function escapeHtml(v){", start)
           if start < 0 or end < 0:
               raise SystemExit("Could not locate Sarresid Android reminder functions.")
-          replacement = """function nativeAndroidBridge(){try{return window.AndroidBridge||(window.parent&&window.parent.AndroidBridge)||(window.top&&window.top.AndroidBridge)||null}catch(e){return null}}
+
+          # The calendar lives in an iframe. Forward requests to the top-level WebView,
+          # where AndroidBridge is guaranteed to be injected by MainActivity.
+          replacement = """function nativeAndroidBridge(){
+           try{
+            const parent=window.parent;
+            if(parent&&parent!==window)return {
+             scheduleSarresidReminder:function(k,when,title,body){
+              parent.postMessage({type:'MILADGEO_SARRESID_NATIVE_V158',action:'schedule',key:String(k),triggerAtMillis:String(when),title:String(title||'یادآوری سررسید مهندس'),body:String(body||'')},'*');
+             },
+             cancelSarresidReminder:function(k){
+              parent.postMessage({type:'MILADGEO_SARRESID_NATIVE_V158',action:'cancel',key:String(k)},'*');
+             }
+            };
+            return window.AndroidBridge||null;
+           }catch(e){return window.AndroidBridge||null;}
+          }
           function scheduleAndroidReminder(k,x){
            const body=reminderPayload(x),bridge=nativeAndroidBridge();
            try{
             if(!body){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
-            const p=String(k).split(/[\\/\\-]/).map(Number),hm=String(x.remindTime||'09:00').split(':').map(Number);
-            if(p.length!==3||hm.length!==2||!Number.isFinite(hm[0])||!Number.isFinite(hm[1]))return;
+            const p=String(k||'').split('/').map(Number),hm=String(x.remindTime||'09:00').split(':').map(Number);
+            if(p.length!==3||p.some(v=>!Number.isFinite(v))||hm.length!==2||hm.some(v=>!Number.isFinite(v)||v<0))return;
             const g=d2g(j2d(p[0],p[1],p[2]));
             const when=new Date(g.gy,g.gm-1,g.gd,hm[0],hm[1],0,0).getTime();
-            if(when<=Date.now()){return;}
+            if(!Number.isFinite(when))return;
+            if(when<=Date.now()){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
             if(bridge&&typeof bridge.scheduleSarresidReminder==='function')bridge.scheduleSarresidReminder(k,String(when),'یادآوری سررسید مهندس',body);
            }catch(e){console.warn('MiladGeo Sarresid Android reminder:',e);}
           }
           function syncAllAndroidReminders(){
            const bridge=nativeAndroidBridge();
            if(!bridge||typeof bridge.scheduleSarresidReminder!=='function')return;
-           try{Object.keys(data).forEach(k=>scheduleAndroidReminder(k,data[k]||{}));}catch(e){}
+           try{Object.keys(data).forEach(k=>scheduleAndroidReminder(k,data[k]||{}));}catch(e){console.warn('MiladGeo Sarresid sync:',e);}
           }
           """
           inner = inner[:start] + replacement + inner[end:]
+
           old_status = "const native=!!(window.AndroidBridge&&typeof window.AndroidBridge.scheduleSarresidReminder==='function');"
           new_status = "const bridge=nativeAndroidBridge();const native=!!(bridge&&typeof bridge.scheduleSarresidReminder==='function');"
           if old_status in inner:
               inner = inner.replace(old_status, new_status, 1)
           elif new_status not in inner:
               raise SystemExit("Could not update the Sarresid native status check.")
-          # Keep the native alarm queue synchronized after calendar edits as well as at startup.
-          sync_marker = "function syncAllAndroidReminders(){"
-          sync_end = "          }\\n          "
-          sync_at = inner.find(sync_marker)
-          escape_at = inner.find("function escapeHtml(v){", sync_at)
-          if sync_at < 0 or escape_at < 0:
-              raise SystemExit("Could not locate the calendar sync function for live-save synchronization.")
-          if "setInterval(syncAllAndroidReminders,2000)" not in inner:
-              inner = inner[:escape_at] + "setInterval(syncAllAndroidReminders,2000);\n          " + inner[escape_at:]
+
+          # No polling loop is needed: save/cancel events and startup sync are explicit.
+          inner = inner.replace("setInterval(syncAllAndroidReminders,2000);", "")
           if "installMonthSwipe();syncAllAndroidReminders();" not in inner:
               raise SystemExit("Startup synchronization of saved Sarresid reminders is missing.")
-          if "window.parent&&window.parent.AndroidBridge" not in inner:
-              raise SystemExit("The embedded calendar cannot reach the native Android bridge.")
+
           encoded = base64.b64encode(inner.encode("utf-8")).decode("ascii")
           html = html[:b64_start] + encoded + html[b64_end:]
+
+          # Install one parent-page listener. It accepts messages only from the actual
+          # calendar iframe hosted in m20SarresidHost, never from unrelated frames.
+          listener = """<script id="mg-sarresid-parent-native-bridge-v158">
+          (function(){
+           if(window.__mgSarresidParentBridgeV158)return;
+           window.__mgSarresidParentBridgeV158=true;
+           window.addEventListener('message',function(ev){
+            var m=ev&&ev.data;
+            if(!m||m.type!=='MILADGEO_SARRESID_NATIVE_V158')return;
+            var host=document.getElementById('m20SarresidHost');
+            var frame=host&&host.querySelector('iframe');
+            if(!frame||ev.source!==frame.contentWindow)return;
+            var bridge=window.AndroidBridge;
+            if(!bridge)return;
+            try{
+             if(m.action==='schedule'&&typeof bridge.scheduleSarresidReminder==='function'){
+              bridge.scheduleSarresidReminder(String(m.key||''),String(m.triggerAtMillis||''),String(m.title||'یادآوری سررسید مهندس'),String(m.body||''));
+             }else if(m.action==='cancel'&&typeof bridge.cancelSarresidReminder==='function'){
+              bridge.cancelSarresidReminder(String(m.key||''));
+             }
+            }catch(e){console.warn('MiladGeo native Sarresid bridge error:',e);}
+           },false);
+          })();
+          </script>
+          """
+          if 'id="mg-sarresid-parent-native-bridge-v158"' not in html:
+              close_at = html.lower().rfind("</body>")
+              if close_at < 0:
+                  raise SystemExit("Could not find main page closing body tag for Sarresid bridge listener.")
+              html = html[:close_at] + listener + html[close_at:]
+
+          if "MILADGEO_SARRESID_NATIVE_V158" not in inner or "MILADGEO_SARRESID_NATIVE_V158" not in html:
+              raise SystemExit("The iframe-to-main-page Sarresid bridge was not installed.")
+          if 'setInterval(syncAllAndroidReminders,2000)' in inner:
+              raise SystemExit("The old two-second Sarresid alarm polling loop remains.")
           path.write_text(html, encoding="utf-8")
-          print("Connected iframe save, cancel and startup sync to Android alarm scheduling.")
+          print("Sarresid schedule/cancel requests now route through the main Android WebView bridge.")
           PY_SARRESID_BRIDGE
           test -s Indexxx150.html
 
@@ -4140,7 +4187,7 @@ jobs:
           if b64_end < 0:
               raise SystemExit('Embedded calendar base64 payload is incomplete')
           inner = base64.b64decode(main_html[b64_start:b64_end]).decode('utf-8')
-          panel_marker = 'id="mg-sarresid-native-diagnostics-v157"'
+          panel_marker = 'id="mg-sarresid-native-diagnostics-v158"'
           if panel_marker not in inner:
               panel = r"""
           <div id="mg-sarresid-native-diagnostics-v157" dir="rtl" style="position:fixed;z-index:2147483000;right:10px;bottom:10px;font-family:Tahoma,Arial,sans-serif;color:#172033;">
@@ -4216,8 +4263,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 318' not in gradle or "versionName '2.0.143'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 318', 'versionCode 319', 1)
-          gradle = gradle.replace("versionName '2.0.143'", "versionName '2.0.144'", 1)
+          gradle = gradle.replace('versionCode 318', 'versionCode 320', 1)
+          gradle = gradle.replace("versionName '2.0.143'", "versionName '2.0.145'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4239,7 +4286,7 @@ jobs:
           if 'mg-sarresid-native-diagnostics-v157' not in check_inner:
               raise SystemExit('Calendar diagnostics panel was not added to the embedded calendar payload')
           if 'versionCode 319' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.144'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 157 metadata was not applied')
+              raise SystemExit('Version 158 metadata was not applied')
           print('Native Sarresid diagnostics, test notification panel and version 157 are ready.')
           PY_DIAG
           grep -q 'versionCode 319' app/build.gradle
@@ -4269,7 +4316,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx157-APK
+          name: MiladGeo-Indexxx158-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4277,7 +4324,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx157-AAB
+          name: MiladGeo-Indexxx158-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
