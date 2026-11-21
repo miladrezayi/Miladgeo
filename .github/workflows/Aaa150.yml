@@ -145,7 +145,7 @@ jobs:
               raise SystemExit("Could not locate the calendar sync function for live-save synchronization.")
           if "setInterval(syncAllAndroidReminders,2000)" not in inner:
               inner = inner[:escape_at] + "setInterval(syncAllAndroidReminders,2000);\\n          " + inner[escape_at:]
-                    if "installMonthSwipe();syncAllAndroidReminders();" not in inner:
+          if "installMonthSwipe();syncAllAndroidReminders();" not in inner:
               raise SystemExit("Startup synchronization of saved Sarresid reminders is missing.")
           if "window.parent&&window.parent.AndroidBridge" not in inner:
               raise SystemExit("The embedded calendar cannot reach the native Android bridge.")
