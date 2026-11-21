@@ -1,4 +1,5 @@
 name: Build MiladGeo Indexxx155 APK
+# Clean rebuild after removing faulty diagnostics injection
 # Notification diagnostics insertion marker corrected
 
 on:
