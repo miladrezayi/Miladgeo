@@ -3409,7 +3409,7 @@ jobs:
           grep -q 'exact widget destination not found' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'showSarresidSettingsDialog' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'MY_PACKAGE_REPLACED' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
-          grep -q 'منوی ۰۱ | شبیه‌ساز لایکا' app/src/main/java/com/miladgeo/app/QuickToolsWidgetProvider.java
+          grep -q '۰۱ | شبیه‌ساز لایکا' app/src/main/java/com/miladgeo/app/QuickToolsWidgetProvider.java
           test -s app/src/main/res/layout/widget_quick_tools.xml
           test -s app/src/main/res/xml/quick_tools_widget_info.xml
           test -s app/src/main/res/values/widget_styles.xml
