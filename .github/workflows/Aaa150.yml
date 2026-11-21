@@ -3329,7 +3329,12 @@ jobs:
               '''
               java = java[:at] + helper + java[at:]
 
-          permission_marker = 'webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(" + granted + ")", null);\\n                  }\\n              }\\n\\n              @Override\\n              protected void onActivityResult'
+          permission_marker = """webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(" + granted + ")", null);
+                  }
+              }
+
+              @Override
+              protected void onActivityResult"""
           permission_branch = """webView.evaluateJavascript("window.onNativeLocationPermission && window.onNativeLocationPermission(" + granted + ")", null);
                   }
                   if (requestCode == 1013) {
