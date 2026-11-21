@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx158 APK
+name: Build MiladGeo Indexxx159 APK
 # Clean rebuild after removing faulty diagnostics injection
 # Notification diagnostics insertion marker corrected
 
@@ -191,9 +191,9 @@ jobs:
           </script>
           """
           if 'id="mg-sarresid-parent-native-bridge-v158"' not in html:
-              close_at = html.lower().rfind("</body>")
+              close_at = html.lower().rfind("</head>")
               if close_at < 0:
-                  raise SystemExit("Could not find main page closing body tag for Sarresid bridge listener.")
+                  raise SystemExit("Could not find main page closing head tag for Sarresid bridge listener.")
               html = html[:close_at] + listener + html[close_at:]
 
           if "MILADGEO_SARRESID_NATIVE_V158" not in inner or "MILADGEO_SARRESID_NATIVE_V158" not in html:
@@ -736,8 +736,8 @@ jobs:
                   applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'
                   minSdk 23
                   targetSdk 36
-                  versionCode 318
-                  versionName '2.0.143'
+                  versionCode 319
+                  versionName '2.0.144'
               }
 
               signingConfigs {
@@ -3520,8 +3520,8 @@ jobs:
       - name: Verify generated project
         run: |
           set -euxo pipefail
-          grep -q 'versionCode 318' app/build.gradle
-          grep -q "versionName '2.0.143'" app/build.gradle
+          grep -q 'versionCode 319' app/build.gradle
+          grep -q "versionName '2.0.144'" app/build.gradle
           grep -q 'android.permission.POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECEIVE_BOOT_COMPLETED' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.SCHEDULE_EXACT_ALARM' app/src/main/AndroidManifest.xml
@@ -3550,7 +3550,7 @@ jobs:
           grep -q 'widgetTile12' app/src/main/res/layout/widget_quick_tools.xml
           grep -q 'countSpinner' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
           grep -q 'putInt("count_"' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
-          grep -q "versionName '2.0.143'" app/build.gradle
+          grep -q "versionName '2.0.144'" app/build.gradle
           grep -q "applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'" app/build.gradle
           grep -q 'android.permission.CAMERA' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECORD_AUDIO' app/src/main/AndroidManifest.xml
@@ -3612,7 +3612,7 @@ jobs:
           test -s app/src/main/assets/dwg/wasm/libredwg-web.wasm
           grep -q 'getMiladDwgEngine' app/src/main/assets/index.html
           grep -q 'processCadChatFile' app/src/main/assets/index.html
-          grep -q 'versionCode 318' app/build.gradle
+          grep -q 'versionCode 319' app/build.gradle
           test -s app/src/main/assets/index858.html
           test -s app/src/main/assets/Index880.html
           test -s app/src/main/assets/Index885robot13.html
@@ -3842,7 +3842,7 @@ jobs:
 
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
-          if "versionName '2.0.143'" not in gradle:
+          if "versionName '2.0.144'" not in gradle:
               raise SystemExit('Expected versionName 2.0.136 was not generated in app/build.gradle')
           gradle_path.write_text(gradle, encoding='utf-8')
           print('Share-sheet integration and version 2.0.129 (303) applied.')
@@ -3861,8 +3861,8 @@ jobs:
           grep -q 'extractMiladGeoIncomingUri' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'uriDisplayName' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'Preserve the file extension' app/src/main/java/com/miladgeo/app/MainActivity.java
-          grep -q 'versionCode 318' app/build.gradle
-          grep -q "versionName '2.0.143'" app/build.gradle
+          grep -q 'versionCode 319' app/build.gradle
+          grep -q "versionName '2.0.144'" app/build.gradle
 
       - name: Add native Sarresid diagnostics and test notification
         run: |
@@ -4071,7 +4071,7 @@ jobs:
               public static boolean sendTestNotification(Context context) {
                   return postNotification(context, "miladgeo-test", "تست اعلان میلادژئو",
                       "اگر این پیام را در نوار اعلان می‌بینی، مسیر نمایش اعلان اندروید فعال است.",
-                      15700157, true);
+                      15900159, true);
               }
 
               '''
@@ -4220,7 +4220,7 @@ jobs:
                 var channel=String(d.channelImportance);
                 var channelText=channel==='not_created'?'هنوز ساخته نشده':channel==='0'?'مسدود':channel==='1'?'حداقل':channel==='2'?'کم':channel==='3'?'معمولی':channel==='4'?'زیاد':channel;
                 var lines=[
-                  'نسخه تشخیصی: ۱۵۷',
+                  'نسخه تشخیصی: ۱۵۹',
                   'نسخه اندروید: '+d.sdk,
                   'مجوز نمایش اعلان: '+yes(d.notificationPermission),
                   'اعلان‌های برنامه: '+yes(d.notificationsEnabled),
@@ -4261,10 +4261,10 @@ jobs:
           # Bump Android version after the existing source/version consistency checks.
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
-          if 'versionCode 318' not in gradle or "versionName '2.0.143'" not in gradle:
+          if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 318', 'versionCode 320', 1)
-          gradle = gradle.replace("versionName '2.0.143'", "versionName '2.0.145'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 320', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.145'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
