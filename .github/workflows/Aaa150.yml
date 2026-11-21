@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx154 APK
+name: Build MiladGeo Indexxx155 APK
 
 on:
   workflow_dispatch:
@@ -687,8 +687,8 @@ jobs:
                   applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'
                   minSdk 23
                   targetSdk 36
-                  versionCode 316
-                  versionName '2.0.141'
+                  versionCode 317
+                  versionName '2.0.142'
               }
 
               signingConfigs {
@@ -3468,16 +3468,151 @@ jobs:
           print("Verified: 13 selectable tiles, full 20-menu choices, and 20 independent 1x1 widget providers.")
           PY_WIDGET_VERIFY
 
+      - name: Add native Sarresid notification diagnostics and test panel
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SARRESID_DIAGNOSTICS'
+          from pathlib import Path
+          import json
+
+          p = Path('app/src/main/java/com/miladgeo/app/MainActivity.java')
+          java = p.read_text(encoding='utf-8')
+          bridge_marker = '''                  @JavascriptInterface
+                  public void cancelSarresidReminder(String key) {'''
+          bridge_methods = r'''                  @JavascriptInterface
+                  public String getSarresidDiagnostics() {
+                      JSONObject out = new JSONObject();
+                      try {
+                          boolean permission = Build.VERSION.SDK_INT < 33 ||
+                              checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+                          android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                          boolean enabled = Build.VERSION.SDK_INT < 24 || (nm != null && nm.areNotificationsEnabled());
+                          int channelImportance = -1;
+                          if (Build.VERSION.SDK_INT >= 26 && nm != null) {
+                              android.app.NotificationChannel channel = nm.getNotificationChannel("miladgeo_sarresid_reminders");
+                              channelImportance = channel == null ? 0 : channel.getImportance();
+                          }
+                          boolean exact = true;
+                          if (Build.VERSION.SDK_INT >= 31) {
+                              AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                              exact = am != null && am.canScheduleExactAlarms();
+                          }
+                          SharedPreferences prefs = getSharedPreferences("miladgeo_sarresid_alarms", MODE_PRIVATE);
+                          JSONObject items = new JSONObject(prefs.getString("items", "{}"));
+                          long now = System.currentTimeMillis();
+                          long next = 0L;
+                          int future = 0;
+                          java.util.Iterator<String> it = items.keys();
+                          while (it.hasNext()) {
+                              JSONObject item = items.optJSONObject(it.next());
+                              long when = item == null ? 0L : item.optLong("when", 0L);
+                              if (when > now) { future++; if (next == 0L || when < next) next = when; }
+                          }
+                          out.put("bridge", true);
+                          out.put("notificationsEnabled", enabled);
+                          out.put("postPermission", permission);
+                          out.put("exactAlarmAllowed", exact);
+                          out.put("channelImportance", channelImportance);
+                          out.put("savedReminders", items.length());
+                          out.put("futureReminders", future);
+                          out.put("nextAlarmMillis", next);
+                          out.put("sdk", Build.VERSION.SDK_INT);
+                      } catch (Exception e) {
+                          try { out.put("error", e.getClass().getSimpleName() + ": " + e.getMessage()); } catch (Exception ignored) {}
+                      }
+                      return out.toString();
+                  }
+
+                  @JavascriptInterface
+                  public void sendSarresidTestNotification() {
+                      try {
+                          if (Build.VERSION.SDK_INT >= 33 &&
+                              checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
+                          android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                          if (nm == null) return;
+                          String channelId = "miladgeo_sarresid_reminders";
+                          if (Build.VERSION.SDK_INT >= 26) {
+                              android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                                  channelId, "یادآوری‌های سررسید میلادژئو", android.app.NotificationManager.IMPORTANCE_HIGH);
+                              channel.setDescription("اعلان قرارها، بازدیدها و مهلت‌های ثبت‌شده در سررسید مهندس");
+                              nm.createNotificationChannel(channel);
+                          }
+                          Intent open = new Intent(MainActivity.this, MainActivity.class);
+                          open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                          PendingIntent content = PendingIntent.getActivity(MainActivity.this, 991315, open,
+                              PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                          android.app.Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+                              ? new android.app.Notification.Builder(MainActivity.this, channelId)
+                              : new android.app.Notification.Builder(MainActivity.this);
+                          android.app.Notification notification = builder
+                              .setSmallIcon(android.R.drawable.ic_popup_reminder)
+                              .setContentTitle("آزمایش اعلان میلادژئو")
+                              .setContentText("اگر این اعلان را در نوار بالای گوشی می‌بینی، ارسال اعلان اندروید فعال است.")
+                              .setAutoCancel(true).setContentIntent(content)
+                              .setPriority(android.app.Notification.PRIORITY_HIGH).build();
+                          nm.notify(991315, notification);
+                      } catch (Exception e) {
+                          android.util.Log.e("MiladGeoSarresid", "Test notification failed", e);
+                      }
+                  }
+
+          '''
+          if bridge_marker in java:
+              java = java.replace(bridge_marker, bridge_methods + bridge_marker, 1)
+          elif 'getSarresidDiagnostics()' not in java or 'sendSarresidTestNotification()' not in java:
+              raise SystemExit('Could not find AndroidBridge insertion point.')
+
+          page_marker = '''                          if (url != null && url.startsWith("file:///android_asset/")) {
+                              webPageReady = true;'''
+          panel_js = r'''(function(){
+            if(document.getElementById('mg-sarresid-diag'))return;
+            var b=document.createElement('button');b.id='mg-sarresid-diag';b.textContent='🔔 عیب‌یابی اعلان';
+            b.style.cssText='position:fixed;z-index:2147483647;bottom:18px;right:12px;border:0;border-radius:24px;padding:11px 15px;background:#075985;color:#fff;font-weight:700;box-shadow:0 3px 12px #0005;direction:rtl';
+            var p=document.createElement('div');p.id='mg-sarresid-panel';
+            p.style.cssText='display:none;position:fixed;z-index:2147483647;bottom:70px;right:10px;left:10px;max-height:65vh;overflow:auto;background:#fff;color:#172033;border:1px solid #94a3b8;border-radius:16px;padding:14px;box-shadow:0 5px 25px #0006;direction:rtl;font:14px sans-serif';
+            p.innerHTML='<b>وضعیت اعلان سررسید</b><div id="mg-sarresid-info" style="white-space:pre-line;line-height:1.9;margin:10px 0">در حال بررسی...</div><button id="mg-sarresid-refresh" style="padding:9px;border:0;border-radius:9px;background:#e2e8f0;margin-left:6px">بروزرسانی وضعیت</button><button id="mg-sarresid-test" style="padding:9px;border:0;border-radius:9px;background:#0f766e;color:white">ارسال اعلان آزمایشی</button><button id="mg-sarresid-close" style="padding:9px;border:0;border-radius:9px;background:#fee2e2;margin-right:6px">بستن</button>';
+            document.body.appendChild(p);document.body.appendChild(b);
+            function refresh(){var t=document.getElementById('mg-sarresid-info');try{var d=JSON.parse(window.AndroidBridge.getSarresidDiagnostics());var imp=d.channelImportance<0?'نامشخص':(d.channelImportance===0?'مسدود':d.channelImportance===1?'حداقل':d.channelImportance===2?'کم':d.channelImportance===3?'معمولی':'زیاد');var next=d.nextAlarmMillis?new Date(d.nextAlarmMillis).toLocaleString():'ندارد';t.textContent='اتصال اندروید: '+(d.bridge?'فعال':'غیرفعال')+'
+اجازه اعلان: '+(d.postPermission?'فعال':'غیرفعال')+'
+اعلان‌های برنامه: '+(d.notificationsEnabled?'فعال':'غیرفعال')+'
+اهمیت کانال: '+imp+'
+اجازه زمان‌بندی دقیق: '+(d.exactAlarmAllowed?'فعال':'غیرفعال')+'
+یادآوری‌های ذخیره‌شده: '+d.savedReminders+'
+یادآوری‌های آینده: '+d.futureReminders+'
+نزدیک‌ترین زمان: '+next+(d.error?'
+خطا: '+d.error:'');}catch(e){t.textContent='خطا در خواندن وضعیت: '+e;}}
+            b.onclick=function(){p.style.display=p.style.display==='block'?'none':'block';refresh();};
+            p.querySelector('#mg-sarresid-refresh').onclick=refresh;
+            p.querySelector('#mg-sarresid-test').onclick=function(){try{window.AndroidBridge.sendSarresidTestNotification();document.getElementById('mg-sarresid-info').textContent+='\nدرخواست اعلان آزمایشی ارسال شد. نوار اعلان را بررسی کن.';}catch(e){document.getElementById('mg-sarresid-info').textContent+='\nخطا در ارسال آزمایشی: '+e;}};
+            p.querySelector('#mg-sarresid-close').onclick=function(){p.style.display='none';};
+          })();'''
+          page_replacement = '''                          if (url != null && url.startsWith("file:///android_asset/")) {
+                              view.evaluateJavascript(''' + json.dumps(panel_js, ensure_ascii=False) + ''', null);
+                              webPageReady = true;'''
+          if page_marker in java:
+              java = java.replace(page_marker, page_replacement, 1)
+          elif "mg-sarresid-diag" not in java:
+              raise SystemExit('Could not find WebView page-finished insertion point.')
+
+          p.write_text(java, encoding='utf-8')
+          print('Added native notification diagnostics, test notification and in-app status panel.')
+          gradle = Path('app/build.gradle').read_text(encoding='utf-8')
+          if "versionCode 317" not in gradle or "versionName '2.0.142'" not in gradle:
+              raise SystemExit('MiladGeo 155 version metadata is incorrect.')
+          PY_SARRESID_DIAGNOSTICS
       - name: Verify generated project
         run: |
           set -euxo pipefail
-          grep -q 'versionCode 316' app/build.gradle
-          grep -q "versionName '2.0.141'" app/build.gradle
+          grep -q 'versionCode 317' app/build.gradle
+          grep -q "versionName '2.0.142'" app/build.gradle
           grep -q 'android.permission.POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECEIVE_BOOT_COMPLETED' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.SCHEDULE_EXACT_ALARM' app/src/main/AndroidManifest.xml
           grep -q 'SarresidAlarmReceiver' app/src/main/AndroidManifest.xml
           grep -q 'scheduleSarresidReminder' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'sendSarresidTestNotification' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'mg-sarresid-diag' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'cancelSarresidReminder' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'setExactAndAllowWhileIdle' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
           grep -q 'BOOT_COMPLETED' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
@@ -3501,7 +3636,7 @@ jobs:
           grep -q 'widgetTile12' app/src/main/res/layout/widget_quick_tools.xml
           grep -q 'countSpinner' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
           grep -q 'putInt("count_"' app/src/main/java/com/miladgeo/app/QuickToolsWidgetConfigActivity.java
-          grep -q "versionName '2.0.141'" app/build.gradle
+          grep -q "versionName '2.0.142'" app/build.gradle
           grep -q "applicationId 'com.miladgeo.hooshmasnooi.naghshebardar'" app/build.gradle
           grep -q 'android.permission.CAMERA' app/src/main/AndroidManifest.xml
           grep -q 'android.permission.RECORD_AUDIO' app/src/main/AndroidManifest.xml
@@ -3563,7 +3698,7 @@ jobs:
           test -s app/src/main/assets/dwg/wasm/libredwg-web.wasm
           grep -q 'getMiladDwgEngine' app/src/main/assets/index.html
           grep -q 'processCadChatFile' app/src/main/assets/index.html
-          grep -q 'versionCode 316' app/build.gradle
+          grep -q 'versionCode 317' app/build.gradle
           test -s app/src/main/assets/index858.html
           test -s app/src/main/assets/Index880.html
           test -s app/src/main/assets/Index885robot13.html
@@ -3793,7 +3928,7 @@ jobs:
 
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
-          if "versionName '2.0.141'" not in gradle:
+          if "versionName '2.0.142'" not in gradle:
               raise SystemExit('Expected versionName 2.0.136 was not generated in app/build.gradle')
           gradle_path.write_text(gradle, encoding='utf-8')
           print('Share-sheet integration and version 2.0.129 (303) applied.')
@@ -3812,8 +3947,8 @@ jobs:
           grep -q 'extractMiladGeoIncomingUri' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'uriDisplayName' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'Preserve the file extension' app/src/main/java/com/miladgeo/app/MainActivity.java
-          grep -q 'versionCode 316' app/build.gradle
-          grep -q "versionName '2.0.141'" app/build.gradle
+          grep -q 'versionCode 317' app/build.gradle
+          grep -q "versionName '2.0.142'" app/build.gradle
 
       - name: Build Release APK and AAB
         env:
@@ -3837,7 +3972,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx154-APK
+          name: MiladGeo-Indexxx155-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -3845,7 +3980,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx154-AAB
+          name: MiladGeo-Indexxx155-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
