@@ -41,38 +41,28 @@ jobs:
           cat Indexxx150.part001 Indexxx150.part002 Indexxx150.part003 Indexxx150.part004 > Indexxx150.html
           test -s Indexxx150.html
       
-      - name: Repair embedded SheetJS control characters
+      - name: Replace malformed inline SheetJS with bundled offline engine
         run: |
           set -euo pipefail
-          python3 - <<'PY_REPAIR'
+          python3 - <<'PY_REPLACE'
           from pathlib import Path
-          import re
           p = Path("Indexxx150.html")
           s = p.read_text(encoding="utf-8")
           marker = "/* MiladGeo V28: inline SheetJS engine"
-          start = s.find(marker)
-          end = s.find("</script>", start)
-          if start < 0 or end < 0:
-              raise SystemExit("Embedded SheetJS block not found")
-          block = s[start:end]
-          def escaped(value):
-              return "".join((chr(92) + "x%02X" % ord(ch)) if ord(ch) < 32 else ch for ch in value)
-          block, codepage_count = re.subn(
-              r'var e="([\s\S]*?)",r=\[\],t=\{\};',
-              lambda m: 'var e="' + escaped(m.group(1)) + '",r=[],t={};',
-              block
-          )
-          block, table_count = re.subn(
-              r'(t\[\d+\]=")((?:\\.|[^"\\])*)("\.split\(""\);)',
-              lambda m: m.group(1) + escaped(m.group(2)) + m.group(3),
-              block
-          )
-          if codepage_count != 27 or table_count != 468:
-              raise SystemExit(f"Unexpected SheetJS tables: codepage={codepage_count}, indexed={table_count}")
-          p.write_text(s[:start] + block + s[end:], encoding="utf-8")
-          print(f"Repaired {codepage_count} codepage tables and {table_count} indexed character tables.")
-          PY_REPAIR
+          at = s.find(marker)
+          if at < 0:
+              raise SystemExit("Inline SheetJS marker not found")
+          opening = s.rfind("<script", 0, at)
+          closing = s.find("</script>", at)
+          if opening < 0 or closing < 0:
+              raise SystemExit("Inline SheetJS script boundaries not found")
+          closing += len("</script>")
+          s = s[:opening] + '<script src="./xlsx.full.min.js"></script>' + s[closing:]
+          p.write_text(s, encoding="utf-8")
+          print("Replaced malformed inline SheetJS with the bundled offline runtime.")
+          PY_REPLACE
           test -s Indexxx150.html
+          test -s xlsx.full.min.js
 
       - name: Prepare offline DWG engine
         run: |
@@ -187,16 +177,7 @@ jobs:
           grep -q 'mgBuildImagePdfBlob' Indexxx150.html
           grep -q 'miladgeo-dxf-route-menu10' Indexxx150.html
           grep -q 'window.ensureMiladGeoXLSX=ensureMiladGeoXLSX' Indexxx150.html
-          python3 - <<'PY_XLSX_CHECK'
-          from pathlib import Path
-          import re
-          source = Path('Indexxx150.html').read_text(encoding='utf-8')
-          match = re.search(r'<script(?:\s[^>]*)?>\s*(/\* MiladGeo V28: inline SheetJS engine[\s\S]*?)</script>', source, re.I)
-          if not match:
-              raise SystemExit('Inline SheetJS engine block was not found')
-          Path('/tmp/miladgeo-sheetjs-engine.js').write_text(match.group(1), encoding='utf-8')
-          PY_XLSX_CHECK
-          node --check /tmp/miladgeo-sheetjs-engine.js
+          node --check xlsx.full.min.js
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
