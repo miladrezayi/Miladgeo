@@ -3654,7 +3654,7 @@ jobs:
                   } catch (Exception ignored) {}
               }
 
-              \\'\''
+              '''
           if 'private void checkSarresidPermissionsIfNeeded()' not in java:
               at = java.find(helper_marker)
               if at < 0:
