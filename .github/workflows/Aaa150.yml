@@ -3153,7 +3153,7 @@ jobs:
                   "}\n",
                   encoding="utf-8"
               )
-              fa_number = str(n).translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
+              fa_number = f"{n:02d}".translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
               label = f"{fa_number} | {title}"
               string_entries.append(f'    <string name="widget_menu_{two}_label">{label}</string>')
               string_entries.append(f'    <string name="widget_menu_{two}_description">باز کردن مستقیم منوی {fa_number}: {title}</string>')
@@ -3274,7 +3274,7 @@ jobs:
                   String js = "(function(){try{"
                       + "var k=" + JSONObject.quote(tool) + ";"
                       + "var map={'leica5':1,'measure':2,'stakeout':3,'topography':4,'txt':5,'excel':6,'minicad':9,'coordinates':11,'units':12,'calculator':14,'googleearth':17,'direction':18,'flashlight':18,'compass':18,'speedometer':18,'qibla':18,'level':18};"
-                      + "var m=/^menu(\\\\d{2})$/.exec(k);var n=m?parseInt(m[1],10):map[k];if(!n||n<1||n>20)return;"
+                      + "var m=/^menu(\\d{2})$/.exec(k);var n=m?parseInt(m[1],10):map[k];if(!n||n<1||n>20)return;"
                       + "var fa='۰۱۲۳۴۵۶۷۸۹',en='0123456789';"
                       + "function norm(s){return (s||'').toLowerCase().replace(/[۰-۹]/g,function(c){return en.charAt(fa.indexOf(c));}).replace(/[\\\\s\\\\u200c]+/g,' ').trim();}"
                       + "var id='menu'+n;"
