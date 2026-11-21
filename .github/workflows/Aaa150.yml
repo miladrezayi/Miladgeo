@@ -4193,6 +4193,8 @@ jobs:
           for marker in ('alarm_scheduled_exact', 'alarm_trigger_received', 'test_notification_posted', 'receiver_finished'):
               if marker not in receiver_path.read_text(encoding='utf-8'):
                   raise SystemExit('Receiver diagnostics marker missing: ' + marker)
+          main_html_path = Path('app/src/main/assets/index.html')
+          prefix = "var bin=atob('"
           check_html = main_html_path.read_text(encoding='utf-8')
           check_pos = check_html.find(prefix)
           if check_pos < 0:
