@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx160 APK
+name: Build MiladGeo Indexxx161 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -553,6 +553,72 @@ jobs:
               src = src.replace('Indexmiladgeojobv42.html', 'Indexmiladgeojobv43.html')
           elif 'Indexmiladgeojobv43.html' not in src:
               raise SystemExit('Employment button route was not found in Indexxx150.html')
+          # Final WebView safety net: remove only leaked JavaScript fragments from visible text nodes.
+          # The scanner's real functions remain inside their script element and are not touched.
+          leak_guard = r'''<script id="mg-js-text-leak-guard-v161">
+          (function(){
+            'use strict';
+            var leakedCode = [
+              /window\.m10CamReset\s*=\s*function/,
+              /window\.m10CamPdf\s*=\s*function/,
+              /w\.document\.close\(\)\s*;\s*say\(/
+            ];
+            function isLeakedSource(value){
+              var text=String(value||'');
+              return leakedCode.some(function(pattern){return pattern.test(text);});
+            }
+            function scrub(root){
+              if(!root)return;
+              var doc=root.ownerDocument||document;
+              var walker=doc.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+              var remove=[],node;
+              while((node=walker.nextNode())){
+                var parent=node.parentElement;
+                if(!parent||parent.closest('script,style,textarea'))continue;
+                if(isLeakedSource(node.nodeValue))remove.push(node);
+              }
+              remove.forEach(function(item){
+                if(item.parentNode)item.parentNode.removeChild(item);
+              });
+              if(root.querySelectorAll){
+                root.querySelectorAll('div,span,p,section,article,pre,code').forEach(function(item){
+                  if(item.closest('script,style,textarea'))return;
+                  if(item.children.length===0&&isLeakedSource(item.textContent))item.remove();
+                });
+              }
+            }
+            function start(){
+              if(!document.body)return;
+              scrub(document.body);
+              if(window.__mgJsTextLeakGuard161)return;
+              window.__mgJsTextLeakGuard161=true;
+              var observer=new MutationObserver(function(records){
+                records.forEach(function(record){
+                  record.addedNodes.forEach(function(node){
+                    if(node.nodeType===Node.TEXT_NODE){
+                      var parent=node.parentElement;
+                      if(parent&&!parent.closest('script,style,textarea')&&isLeakedSource(node.nodeValue))node.remove();
+                    }else if(node.nodeType===Node.ELEMENT_NODE){
+                      scrub(node);
+                    }
+                  });
+                });
+              });
+              observer.observe(document.body,{childList:true,subtree:true});
+            }
+            if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+            else start();
+          })();
+          </script>
+          '''
+          guard_marker = 'id="mg-js-text-leak-guard-v161"'
+          if guard_marker not in src:
+              close_body = src.lower().rfind('</body>')
+              if close_body < 0:
+                  raise SystemExit('Could not find final BODY tag for the JavaScript leak guard')
+              src = src[:close_body] + leak_guard + src[close_body:]
+          if src.count(guard_marker) != 1:
+              raise SystemExit('JavaScript leak guard was not inserted exactly once')
           if 'mgTopSupport' not in src or 'ارسال دعوت' not in src or 'sms:?body=' not in src:
               raise SystemExit('Top share/invite action is missing from the bundled main index')
           cad = Path('Indexcad20.html')
@@ -4182,8 +4248,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 321', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.146'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 322', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.147'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4206,12 +4272,12 @@ jobs:
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
           if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
-          if 'versionCode 321' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.146'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 160 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 160 is ready.')
+          if 'versionCode 322' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.147'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 161 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 161 is ready with the JavaScript leak guard.')
           PY_DIAG
-          grep -q 'versionCode 321' app/build.gradle
-          grep -q "versionName '2.0.146'" app/build.gradle
+          grep -q 'versionCode 322' app/build.gradle
+          grep -q "versionName '2.0.147'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4237,7 +4303,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx160-APK
+          name: MiladGeo-Indexxx161-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4245,7 +4311,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx160-AAB
+          name: MiladGeo-Indexxx161-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
