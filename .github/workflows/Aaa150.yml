@@ -3162,7 +3162,7 @@ jobs:
                       RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_single_menu);
                       views.setTextViewText(R.id.singleWidgetIcon, ICONS[index]);
                       views.setTextViewText(R.id.singleWidgetTitle,
-                          "منوی " + persian(index) + "\\n" + TITLES[index]);
+                          "منوی " + persian(index) + "\n" + TITLES[index]);
                       Intent open = new Intent(context, MainActivity.class);
                       open.putExtra("widget_tool", String.format(Locale.US, "menu%02d", index));
                       open.setData(Uri.parse("miladgeo://single-menu/" + index + "/" + appWidgetId));
@@ -3252,27 +3252,27 @@ jobs:
               two = f"{n:02d}"
               cls = f"Menu{two}WidgetProvider"
               (java_dir / f"{cls}.java").write_text(
-                  "package com.miladgeo.app;\\n"
-                  f"public class {cls} extends SingleMenuWidgetProvider {{\\n"
-                  f"    @Override protected int menuIndex() {{ return {n}; }}\\n"
-                  "}\\n",
+                  "package com.miladgeo.app;\n"
+                  f"public class {cls} extends SingleMenuWidgetProvider {{\n"
+                  f"    @Override protected int menuIndex() {{ return {n}; }}\n"
+                  "}\n",
                   encoding="utf-8"
               )
               label = f"MiladGeo · منوی {n}: {title}"
               string_entries.append(f'    <string name="widget_menu_{two}_label">{label}</string>')
               string_entries.append(f'    <string name="widget_menu_{two}_description">میانبر یک‌لمسی به {title} در برنامه میلادژئو</string>')
               info = (
-                  '<?xml version="1.0" encoding="utf-8"?>\\n'
-                  '<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"\\n'
-                  '    android:minWidth="72dp"\\n'
-                  '    android:minHeight="72dp"\\n'
-                  '    android:minResizeWidth="72dp"\\n'
-                  '    android:minResizeHeight="72dp"\\n'
-                  '    android:updatePeriodMillis="0"\\n'
-                  '    android:initialLayout="@layout/widget_single_menu"\\n'
-                  '    android:resizeMode="none"\\n'
-                  '    android:widgetCategory="home_screen"\\n'
-                  f'    android:description="@string/widget_menu_{two}_description" />\\n'
+                  '<?xml version="1.0" encoding="utf-8"?>\n'
+                  '<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"\n'
+                  '    android:minWidth="72dp"\n'
+                  '    android:minHeight="72dp"\n'
+                  '    android:minResizeWidth="72dp"\n'
+                  '    android:minResizeHeight="72dp"\n'
+                  '    android:updatePeriodMillis="0"\n'
+                  '    android:initialLayout="@layout/widget_single_menu"\n'
+                  '    android:resizeMode="none"\n'
+                  '    android:widgetCategory="home_screen"\n'
+                  f'    android:description="@string/widget_menu_{two}_description" />\n'
               )
               (xml_dir / f"widget_menu_{two}_info.xml").write_text(info, encoding="utf-8")
               manifest_receivers.append(
@@ -3293,18 +3293,18 @@ jobs:
           if strings_path.exists():
               strings = strings_path.read_text(encoding="utf-8")
           else:
-              strings = '<?xml version="1.0" encoding="utf-8"?>\\n<resources>\\n    <string name="quick_tools_widget_description">میانبرهای قابل تنظیم جعبه‌ابزار نقشه‌بردار</string>\\n</resources>\\n'
+              strings = '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <string name="quick_tools_widget_description">میانبرهای قابل تنظیم جعبه‌ابزار نقشه‌بردار</string>\n</resources>\n'
           for n in range(1, 21):
               two = f"{n:02d}"
               import re
-              strings = re.sub(rf'\\s*<string name="widget_menu_{two}_(?:label|description)">.*?</string>', '', strings)
-          strings = strings.replace("</resources>", "\\n" + "\\n".join(string_entries) + "\\n</resources>")
+              strings = re.sub(rf'\s*<string name="widget_menu_{two}_(?:label|description)">.*?</string>', '', strings)
+          strings = strings.replace("</resources>", "\n" + "\n".join(string_entries) + "\n</resources>")
           strings_path.write_text(strings, encoding="utf-8")
 
           manifest_path = Path("app/src/main/AndroidManifest.xml")
           manifest = manifest_path.read_text(encoding="utf-8")
           if ".Menu01WidgetProvider" not in manifest:
-              manifest = manifest.replace("</application>", "\\n" + "\\n".join(manifest_receivers) + "\\n</application>")
+              manifest = manifest.replace("</application>", "\n" + "\n".join(manifest_receivers) + "\n</application>")
               manifest_path.write_text(manifest, encoding="utf-8")
           if ".Menu20WidgetProvider" not in manifest_path.read_text(encoding="utf-8"):
               raise SystemExit("Not all 20 single-menu widget receivers were registered.")
@@ -3321,20 +3321,20 @@ jobs:
               marker = "private GeolocationPermissions.Callback pendingGeoCallback;"
               if marker not in java:
                   raise SystemExit("Could not add the pending widget command field.")
-              java = java.replace(marker, marker + "\\n    private String pendingWidgetTool;", 1)
+              java = java.replace(marker, marker + "\n    private String pendingWidgetTool;", 1)
 
           if 'pendingWidgetTool = getIntent().getStringExtra("widget_tool");' not in java:
               marker = "super.onCreate(savedInstanceState);"
               if marker not in java:
                   raise SystemExit("Could not initialize the widget command in onCreate.")
-              java = java.replace(marker, marker + '\\n        pendingWidgetTool = getIntent().getStringExtra("widget_tool");', 1)
+              java = java.replace(marker, marker + '\n        pendingWidgetTool = getIntent().getStringExtra("widget_tool");', 1)
 
           ready_marker = "webPageReady = true;"
           ready_call = "if (pendingWidgetTool != null) { view.postDelayed(() -> handlePendingWidgetTool(), 500); }"
           if ready_call not in java:
               if ready_marker not in java:
                   raise SystemExit("Could not find WebView page-ready callback for widget dispatch.")
-              java = java.replace(ready_marker, ready_marker + "\\n                              " + ready_call, 1)
+              java = java.replace(ready_marker, ready_marker + "\n                              " + ready_call, 1)
 
           start = java.find("    private void handlePendingWidgetTool() {")
           end = java.find("    private void launchCameraForWebView() {", start + 1)
@@ -3352,7 +3352,7 @@ jobs:
                       + "var c=document.querySelector('#menu18 [data-m18-open=\"'+panel+'\"]');"
                       + "if(c&&typeof window.m18OpenDirect==='function')window.m18OpenDirect(c);"
                       + "}catch(e){console.warn(e);}},500);}"
-                      + "var m=/^menu(\\\\d{2})$/.exec(k);if(m){root(parseInt(m[1],10));return;}"
+                      + "var m=/^menu(\\d{2})$/.exec(k);if(m){root(parseInt(m[1],10));return;}"
                       + "var a={"
                       + "'leica5':function(){root(1);setTimeout(function(){var c=document.querySelector('#leica .leica-v36-card');if(c)c.click();},500);},"
                       + "'measure':function(){root(2);},"
