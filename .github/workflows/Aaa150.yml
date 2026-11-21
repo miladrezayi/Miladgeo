@@ -3315,7 +3315,7 @@ jobs:
 
       - name: Verify generated project
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           grep -q 'versionCode 312' app/build.gradle
           grep -q "versionName '2.0.137'" app/build.gradle
           grep -q 'android.permission.POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
