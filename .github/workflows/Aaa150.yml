@@ -3371,7 +3371,7 @@ jobs:
           main = (java / "MainActivity.java").read_text(encoding="utf-8")
           if "SLOT_COUNT = 13" not in provider or "widgetTile12" not in (base / "res/layout/widget_quick_tools.xml").read_text(encoding="utf-8"):
               raise SystemExit("13-cell widget layout/provider is incomplete.")
-          if "menu20" not in provider or "منو ۲۰" not in provider:
+          if "menu20" not in provider or "۲۰ | دفتر مهندس" not in provider:
               raise SystemExit("The 13-cell selector is missing the new main-menu options.")
           if "refreshSlotVisibility" not in config or "TOOL_LABELS" not in config:
               raise SystemExit("13-cell widget selector is missing its active-slot logic or expanded choices.")
