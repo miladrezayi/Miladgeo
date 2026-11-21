@@ -6,6 +6,7 @@ on:
     paths:
       - 'Index880.html'
       - 'Indexxx149.html'
+      - '.miladgeo-source/**'
       - 'icon.png'
       - 'Index885robot13.html'
       - 'Index885robot14.html'
@@ -36,6 +37,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Assemble Indexxx149 source from upload parts
+        run: |
+          set -euo pipefail
+          cat .miladgeo-source/part-*.txt > Indexxx149.html
+          test -s Indexxx149.html
+          echo "Reassembled Indexxx149.html from uploaded source parts."
 
       - name: Assemble and normalize Indexxx149.html
         shell: bash
