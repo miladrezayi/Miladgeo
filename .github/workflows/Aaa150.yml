@@ -1,6 +1,6 @@
-name: Build MiladGeo Indexxx159 APK
-# Clean rebuild after removing faulty diagnostics injection
-# Notification diagnostics insertion marker corrected
+name: Build MiladGeo Indexxx160 APK
+# Native reminder scheduler retained; visible notification diagnostics panel disabled
+# No notification diagnostics controls are added to the app UI
 
 on:
   workflow_dispatch:
@@ -3864,7 +3864,7 @@ jobs:
           grep -q 'versionCode 319' app/build.gradle
           grep -q "versionName '2.0.144'" app/build.gradle
 
-      - name: Add native Sarresid diagnostics and test notification
+      - name: Preserve native Sarresid reminder engine without diagnostics UI
         run: |
           set -euo pipefail
           python3 - <<'PY_DIAG'
@@ -4071,7 +4071,7 @@ jobs:
               public static boolean sendTestNotification(Context context) {
                   return postNotification(context, "miladgeo-test", "تست اعلان میلادژئو",
                       "اگر این پیام را در نوار اعلان می‌بینی، مسیر نمایش اعلان اندروید فعال است.",
-                      15900159, true);
+                      16000160, true);
               }
 
               '''
@@ -4174,97 +4174,16 @@ jobs:
           receiver = receiver[:receive_start] + receive_method + receiver[class_end:]
           receiver_path.write_text(receiver, encoding='utf-8')
 
-          # Insert a compact, collapsible diagnostic card into the embedded calendar.
-          # The panel is deliberately limited to the Sarresid screen and remains hidden until tapped.
-          main_html_path = Path('app/src/main/assets/index.html')
-          main_html = main_html_path.read_text(encoding='utf-8')
-          prefix = "var bin=atob('"
-          pos = main_html.find(prefix)
-          if pos < 0:
-              raise SystemExit('Could not locate embedded calendar HTML for diagnostic panel')
-          b64_start = pos + len(prefix)
-          b64_end = main_html.find("')", b64_start)
-          if b64_end < 0:
-              raise SystemExit('Embedded calendar base64 payload is incomplete')
-          inner = base64.b64decode(main_html[b64_start:b64_end]).decode('utf-8')
-          panel_marker = 'id="mg-sarresid-native-diagnostics-v158"'
-          if panel_marker not in inner:
-              panel = r"""
-          <div id="mg-sarresid-native-diagnostics-v158" dir="rtl" style="position:fixed;z-index:2147483000;right:10px;bottom:10px;font-family:Tahoma,Arial,sans-serif;color:#172033;">
-            <button id="mg-sarresid-diag-open" type="button" style="border:0;border-radius:22px;padding:10px 14px;background:#263b58;color:#fff;font-size:12px;font-weight:700;box-shadow:0 3px 12px #0003;">🔔 عیب‌یابی اعلان</button>
-            <section id="mg-sarresid-diag-card" style="display:none;margin-top:7px;width:min(92vw,360px);max-height:55vh;overflow:auto;background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:12px;box-shadow:0 8px 28px #0004;">
-              <div style="font-weight:800;font-size:14px;margin-bottom:8px;">گزارش فنی اعلان سررسید</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px;">
-                <button id="mg-sarresid-diag-refresh" type="button" style="border:0;border-radius:9px;padding:8px 10px;background:#e6edf7;color:#172033;font-size:12px;">به‌روزرسانی گزارش</button>
-                <button id="mg-sarresid-diag-test" type="button" style="border:0;border-radius:9px;padding:8px 10px;background:#176b52;color:#fff;font-size:12px;">ارسال اعلان آزمایشی</button>
-                <button id="mg-sarresid-diag-close" type="button" style="border:0;border-radius:9px;padding:8px 10px;background:#eee;color:#333;font-size:12px;">بستن</button>
-              </div>
-              <pre id="mg-sarresid-diag-output" style="white-space:pre-wrap;overflow-wrap:anywhere;direction:rtl;text-align:right;font:11px/1.8 Tahoma,Arial,sans-serif;margin:0;color:#111827;">برای دریافت گزارش، روی به‌روزرسانی بزن.</pre>
-            </section>
-          </div>
-          <script id="mg-sarresid-native-diagnostics-script-v158">
-          (function(){
-            var root=document.getElementById('mg-sarresid-native-diagnostics-v158');
-            if(!root||root.getAttribute('data-ready')==='1')return;
-            root.setAttribute('data-ready','1');
-            var card=document.getElementById('mg-sarresid-diag-card');
-            var output=document.getElementById('mg-sarresid-diag-output');
-            function bridge(){try{return (window.parent&&window.parent.AndroidBridge)||(window.top&&window.top.AndroidBridge)||window.AndroidBridge||null;}catch(e){return null;}}
-            function yes(v){return v?'فعال':'غیرفعال';}
-            function refresh(){
-              var b=bridge();
-              if(!b||typeof b.getSarresidDiagnostics!=='function'){output.textContent='پل اندروید در این صفحه در دسترس نیست.';return;}
-              try{
-                var raw=b.getSarresidDiagnostics();
-                var d=typeof raw==='string'?JSON.parse(raw):raw;
-                var channel=String(d.channelImportance);
-                var channelText=channel==='not_created'?'هنوز ساخته نشده':channel==='0'?'مسدود':channel==='1'?'حداقل':channel==='2'?'کم':channel==='3'?'معمولی':channel==='4'?'زیاد':channel;
-                var lines=[
-                  'نسخه تشخیصی: ۱۵۹',
-                  'نسخه اندروید: '+d.sdk,
-                  'مجوز نمایش اعلان: '+yes(d.notificationPermission),
-                  'اعلان‌های برنامه: '+yes(d.notificationsEnabled),
-                  'اهمیت کانال اعلان: '+channelText,
-                  'اجازه آلارم دقیق: '+yes(d.exactAlarmAllowed),
-                  'تعداد یادآوری‌های ذخیره‌شده: '+d.scheduledCount,
-                  'نزدیک‌ترین موعد: '+(d.nextWhen?new Date(Number(d.nextWhen)).toLocaleString():'وجود ندارد'),
-                  'آخرین مرحله ثبت‌شده: '+d.lastEvent,
-                  'زمان آخرین مرحله: '+(d.lastAt?new Date(Number(d.lastAt)).toLocaleString():'ثبت نشده'),
-                  'جزئیات: '+(d.lastDetail||'بدون جزئیات')
-                ];
-                output.textContent=lines.join('\\n');
-              }catch(e){output.textContent='خواندن گزارش ناموفق بود: '+(e.message||e);}
-            }
-            document.getElementById('mg-sarresid-diag-open').addEventListener('click',function(){card.style.display=card.style.display==='none'?'block':'none';if(card.style.display==='block')refresh();});
-            document.getElementById('mg-sarresid-diag-refresh').addEventListener('click',refresh);
-            document.getElementById('mg-sarresid-diag-close').addEventListener('click',function(){card.style.display='none';});
-            document.getElementById('mg-sarresid-diag-test').addEventListener('click',function(){
-              var b=bridge();
-              if(!b||typeof b.sendSarresidTestNotification!=='function'){output.textContent='تابع اعلان آزمایشی در پل اندروید موجود نیست.';return;}
-              try{
-                var ok=b.sendSarresidTestNotification();
-                output.textContent='درخواست اعلان آزمایشی: '+(ok?'ارسال به سیستم ثبت شد':'ارسال ناموفق بود')+'\\nدر حال خواندن گزارش...';
-                window.setTimeout(refresh,350);
-              }catch(e){output.textContent='خطا در اعلان آزمایشی: '+(e.message||e);}
-            });
-          })();
-          </script>
-          """
-              close_at = inner.lower().rfind('</body>')
-              if close_at < 0:
-                  raise SystemExit('Could not find closing body tag in embedded Sarresid calendar')
-              inner = inner[:close_at] + panel + inner[close_at:]
-              encoded = base64.b64encode(inner.encode('utf-8')).decode('ascii')
-              main_html = main_html[:b64_start] + encoded + main_html[b64_end:]
-              main_html_path.write_text(main_html, encoding='utf-8')
+                    # Keep the native reminder engine, but do not inject diagnostics controls into the app UI.
+
 
           # Bump Android version after the existing source/version consistency checks.
           gradle_path = Path('app/build.gradle')
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 320', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.145'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 321', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.146'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4277,20 +4196,20 @@ jobs:
           check_html = main_html_path.read_text(encoding='utf-8')
           check_pos = check_html.find(prefix)
           if check_pos < 0:
-              raise SystemExit('Calendar payload disappeared before diagnostics validation')
+              raise SystemExit('Calendar payload disappeared before notification validation')
           check_a = check_pos + len(prefix)
           check_b = check_html.find("')", check_a)
           if check_b < 0:
-              raise SystemExit('Calendar payload is incomplete during diagnostics validation')
+              raise SystemExit('Calendar payload is incomplete during notification validation')
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
-          if 'mg-sarresid-native-diagnostics-v158' not in check_inner:
-              raise SystemExit('Calendar diagnostics panel was not added to the embedded calendar payload')
-          if 'versionCode 320' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.145'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 158 metadata was not applied')
-          print('Native Sarresid diagnostics, test notification panel and version 158 are ready.')
+          if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
+              raise SystemExit('Notification diagnostics UI must not appear in the calendar')
+          if 'versionCode 321' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.146'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 160 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 160 is ready.')
           PY_DIAG
-          grep -q 'versionCode 320' app/build.gradle
-          grep -q "versionName '2.0.145'" app/build.gradle
+          grep -q 'versionCode 321' app/build.gradle
+          grep -q "versionName '2.0.146'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4316,7 +4235,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx158-APK
+          name: MiladGeo-Indexxx160-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4324,7 +4243,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx158-AAB
+          name: MiladGeo-Indexxx160-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
