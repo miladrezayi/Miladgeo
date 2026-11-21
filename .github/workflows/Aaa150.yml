@@ -3822,7 +3822,7 @@ jobs:
         run: |
           set -euo pipefail
           gradle --version
-          gradle clean assembleRelease bundleRelease --stacktrace --no-daemon
+          gradle -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8" clean assembleRelease bundleRelease --stacktrace --no-daemon --max-workers=1
 
       - name: Verify APK
         run: |
