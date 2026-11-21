@@ -3477,7 +3477,7 @@ jobs:
 
           p = Path('app/src/main/java/com/miladgeo/app/MainActivity.java')
           java = p.read_text(encoding='utf-8')
-          bridge_marker = '                  @JavascriptInterface\\n                  public void cancelSarresidReminder(String key) {'
+          bridge_marker = '                  @JavascriptInterface\n                  public void cancelSarresidReminder(String key) {'
           bridge_methods = r'''                  @JavascriptInterface
                   public String getSarresidDiagnostics() {
                       JSONObject out = new JSONObject();
