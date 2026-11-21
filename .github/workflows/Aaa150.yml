@@ -4228,15 +4228,22 @@ jobs:
               if marker not in receiver_path.read_text(encoding='utf-8'):
                   raise SystemExit('Receiver diagnostics marker missing: ' + marker)
           check_html = main_html_path.read_text(encoding='utf-8')
-          if 'mg-sarresid-native-diagnostics-v157' not in check_html:
-              raise SystemExit('Calendar diagnostics panel was not added to the main HTML asset')
+          check_pos = check_html.find(prefix)
+          if check_pos < 0:
+              raise SystemExit('Calendar payload disappeared before diagnostics validation')
+          check_a = check_pos + len(prefix)
+          check_b = check_html.find("')", check_a)
+          if check_b < 0:
+              raise SystemExit('Calendar payload is incomplete during diagnostics validation')
+          check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
+          if 'mg-sarresid-native-diagnostics-v157' not in check_inner:
+              raise SystemExit('Calendar diagnostics panel was not added to the embedded calendar payload')
           if 'versionCode 319' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.144'" not in gradle_path.read_text(encoding='utf-8'):
               raise SystemExit('Version 157 metadata was not applied')
           print('Native Sarresid diagnostics, test notification panel and version 157 are ready.')
           PY_DIAG
           grep -q 'versionCode 319' app/build.gradle
           grep -q "versionName '2.0.144'" app/build.gradle
-          grep -q 'mg-sarresid-native-diagnostics-v157' app/src/main/assets/index.html
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
