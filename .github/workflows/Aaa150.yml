@@ -3949,9 +3949,18 @@ jobs:
               raise SystemExit('AndroidBridge scheduleSarresidReminder method was not found')
           method_start = java.rfind('@JavascriptInterface', 0, method_at)
           cancel_at = java.find('public void cancelSarresidReminder(', method_at)
-          method_end = java.rfind('@JavascriptInterface', 0, cancel_at)
-          if method_start < 0 or cancel_at < 0 or method_end < 0:
-              raise SystemExit('Could not isolate AndroidBridge reminder scheduling method')
+          if method_start < 0:
+              raise SystemExit('Could not locate AndroidBridge reminder scheduling method')
+          # Some earlier generated projects did not contain the cancel bridge yet.
+          # In that case replace only the scheduling method and add cancel beside it.
+          if cancel_at >= 0:
+              method_end = java.rfind('@JavascriptInterface', 0, cancel_at)
+              add_cancel_method = False
+          else:
+              method_end = java.find('@JavascriptInterface', method_at)
+              if method_end < 0:
+                  raise SystemExit('Could not find the next AndroidBridge method boundary')
+              add_cancel_method = True
 
           schedule_method = '''        @JavascriptInterface
                   public void scheduleSarresidReminder(String key, String triggerAtMillis, String title, String body) {
@@ -4001,7 +4010,23 @@ jobs:
                   }
 
           '''
-          java = java[:method_start] + schedule_method + java[method_end:]
+          cancel_method = '''        @JavascriptInterface
+                  public void cancelSarresidReminder(String key) {
+                      if (key == null || key.trim().isEmpty()) return;
+                      try {
+                          SharedPreferences prefs = getSharedPreferences("miladgeo_sarresid_alarms", MODE_PRIVATE);
+                          JSONObject all = new JSONObject(prefs.getString("items", "{}"));
+                          all.remove(key);
+                          prefs.edit().putString("items", all.toString()).apply();
+                          SarresidAlarmReceiver.cancel(MainActivity.this, key);
+                          SarresidAlarmReceiver.note(MainActivity.this, "bridge_cancelled", "key=" + key);
+                      } catch (Exception ex) {
+                          SarresidAlarmReceiver.note(MainActivity.this, "bridge_cancel_error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                      }
+                  }
+
+          '''
+          java = java[:method_start] + schedule_method + (cancel_method if add_cancel_method else '') + java[method_end:]
 
           diagnostics_methods = '''        @JavascriptInterface
                   public String getSarresidDiagnostics() {
