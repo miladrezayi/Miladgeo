@@ -3572,18 +3572,10 @@ jobs:
             p.style.cssText='display:none;position:fixed;z-index:2147483647;bottom:70px;right:10px;left:10px;max-height:65vh;overflow:auto;background:#fff;color:#172033;border:1px solid #94a3b8;border-radius:16px;padding:14px;box-shadow:0 5px 25px #0006;direction:rtl;font:14px sans-serif';
             p.innerHTML='<b>وضعیت اعلان سررسید</b><div id="mg-sarresid-info" style="white-space:pre-line;line-height:1.9;margin:10px 0">در حال بررسی...</div><button id="mg-sarresid-refresh" style="padding:9px;border:0;border-radius:9px;background:#e2e8f0;margin-left:6px">بروزرسانی وضعیت</button><button id="mg-sarresid-test" style="padding:9px;border:0;border-radius:9px;background:#0f766e;color:white">ارسال اعلان آزمایشی</button><button id="mg-sarresid-close" style="padding:9px;border:0;border-radius:9px;background:#fee2e2;margin-right:6px">بستن</button>';
             document.body.appendChild(p);document.body.appendChild(b);
-            function refresh(){var t=document.getElementById('mg-sarresid-info');try{var d=JSON.parse(window.AndroidBridge.getSarresidDiagnostics());var imp=d.channelImportance<0?'نامشخص':(d.channelImportance===0?'مسدود':d.channelImportance===1?'حداقل':d.channelImportance===2?'کم':d.channelImportance===3?'معمولی':'زیاد');var next=d.nextAlarmMillis?new Date(d.nextAlarmMillis).toLocaleString():'ندارد';t.textContent='اتصال اندروید: '+(d.bridge?'فعال':'غیرفعال')+'
-اجازه اعلان: '+(d.postPermission?'فعال':'غیرفعال')+'
-اعلان‌های برنامه: '+(d.notificationsEnabled?'فعال':'غیرفعال')+'
-اهمیت کانال: '+imp+'
-اجازه زمان‌بندی دقیق: '+(d.exactAlarmAllowed?'فعال':'غیرفعال')+'
-یادآوری‌های ذخیره‌شده: '+d.savedReminders+'
-یادآوری‌های آینده: '+d.futureReminders+'
-نزدیک‌ترین زمان: '+next+(d.error?'
-خطا: '+d.error:'');}catch(e){t.textContent='خطا در خواندن وضعیت: '+e;}}
+            function refresh(){var t=document.getElementById('mg-sarresid-info');try{var d=JSON.parse(window.AndroidBridge.getSarresidDiagnostics());var imp=d.channelImportance<0?'نامشخص':(d.channelImportance===0?'مسدود':d.channelImportance===1?'حداقل':d.channelImportance===2?'کم':d.channelImportance===3?'معمولی':'زیاد');var next=d.nextAlarmMillis?new Date(d.nextAlarmMillis).toLocaleString():'ندارد';t.textContent='اتصال اندروید: '+(d.bridge?'فعال':'غیرفعال')+' | اجازه اعلان: '+(d.postPermission?'فعال':'غیرفعال')+' | اعلان‌های برنامه: '+(d.notificationsEnabled?'فعال':'غیرفعال')+' | اهمیت کانال: '+imp+' | اجازه زمان‌بندی دقیق: '+(d.exactAlarmAllowed?'فعال':'غیرفعال')+' | یادآوری‌های ذخیره‌شده: '+d.savedReminders+' | یادآوری‌های آینده: '+d.futureReminders+' | نزدیک‌ترین زمان: '+next+(d.error?' | خطا: '+d.error:'');}catch(e){t.textContent='خطا در خواندن وضعیت: '+e;}}
             b.onclick=function(){p.style.display=p.style.display==='block'?'none':'block';refresh();};
             p.querySelector('#mg-sarresid-refresh').onclick=refresh;
-            p.querySelector('#mg-sarresid-test').onclick=function(){try{window.AndroidBridge.sendSarresidTestNotification();document.getElementById('mg-sarresid-info').textContent+='\nدرخواست اعلان آزمایشی ارسال شد. نوار اعلان را بررسی کن.';}catch(e){document.getElementById('mg-sarresid-info').textContent+='\nخطا در ارسال آزمایشی: '+e;}};
+            p.querySelector('#mg-sarresid-test').onclick=function(){try{window.AndroidBridge.sendSarresidTestNotification();document.getElementById('mg-sarresid-info').textContent+=' | درخواست اعلان آزمایشی ارسال شد. نوار اعلان را بررسی کن.';}catch(e){document.getElementById('mg-sarresid-info').textContent+=' | خطا در ارسال آزمایشی: '+e;}};
             p.querySelector('#mg-sarresid-close').onclick=function(){p.style.display='none';};
           })();'''
           page_replacement = '''                          if (url != null && url.startsWith("file:///android_asset/")) {
