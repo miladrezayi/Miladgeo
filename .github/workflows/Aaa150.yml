@@ -39,6 +39,57 @@ jobs:
           set -euo pipefail
           cat Indexxx150.part001 Indexxx150.part002 Indexxx150.part003 Indexxx150.part004 > Indexxx150.html
           test -s Indexxx150.html
+      
+      - name: Repair embedded SheetJS control characters
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_REPAIR'
+          from pathlib import Path
+          p = Path("Indexxx150.html")
+          s = p.read_text(encoding="utf-8")
+          marker = "/* MiladGeo V28: inline SheetJS engine"
+          start = s.find(marker)
+          if start < 0:
+              raise SystemExit("Embedded SheetJS marker not found")
+          end = s.find("</script>", start)
+          if end < 0:
+              raise SystemExit("Embedded SheetJS script end not found")
+          block = s[start:end]
+          out = []
+          quote = None
+          escaped = False
+          repaired = 0
+          for ch in block:
+              code = ord(ch)
+              if quote is not None:
+                  if escaped:
+                      out.append(ch)
+                      escaped = False
+                      continue
+                  if ch == "\\\\":
+                      out.append(ch)
+                      escaped = True
+                      continue
+                  if ch == quote:
+                      out.append(ch)
+                      quote = None
+                      continue
+                  if code < 32:
+                      out.append("\\\\x%02X" % code)
+                      repaired += 1
+                      continue
+                  out.append(ch)
+                  continue
+              if ch in ("'", '"'):
+                  quote = ch
+              out.append(ch)
+          if quote is not None:
+              raise SystemExit("Unterminated string found while repairing SheetJS")
+          s = s[:start] + "".join(out) + s[end:]
+          p.write_text(s, encoding="utf-8")
+          print(f"Escaped {repaired} raw control characters inside SheetJS string literals.")
+          PY_REPAIR
+          test -s Indexxx150.html
 
       - name: Prepare offline DWG engine
         run: |
