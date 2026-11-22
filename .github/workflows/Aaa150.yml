@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx167 APK
+name: Build MiladGeo Indexxx168 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -4375,8 +4375,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 327', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.152'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 328', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.153'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4463,16 +4463,37 @@ jobs:
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
           if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
-          if 'mg166-hidden-native-diagnostics' not in check_html or 'getSarresidDiagnostics' not in check_html or 'sendSarresidTestNotification' not in check_html:
-              raise SystemExit('Hidden native diagnostic access was not injected')
-          if 'versionCode 327' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.152'" not in gradle_path.read_text(encoding='utf-8'):
+          if 'mg166-hidden-native-diagnostics' in check_html:
+              raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
+          if 'versionCode 328' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.153'" not in gradle_path.read_text(encoding='utf-8'):
               raise SystemExit('Version 166 metadata was not applied')
           print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 166 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 327' app/build.gradle
-          grep -q "versionName '2.0.152'" app/build.gradle
+          grep -q 'versionCode 328' app/build.gradle
+          grep -q "versionName '2.0.153'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
+
+      - name: Remove misplaced hidden diagnostics script from generated page
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_REMOVE_BAD_DIAG'
+          from pathlib import Path
+          p = Path('app/src/main/assets/index.html')
+          html = p.read_text(encoding='utf-8')
+          marker = '<script id="mg166-hidden-native-diagnostics">'
+          start = html.find(marker)
+          if start >= 0:
+              end_tag = '<' + chr(92) + '/script>'
+              end = html.find(end_tag, start)
+              if end < 0:
+                  raise SystemExit('Misplaced diagnostics script closing marker not found')
+              html = html[:start] + html[end + len(end_tag):]
+              p.write_text(html, encoding='utf-8')
+          if marker in html or 'mg166-diag-output' in html:
+              raise SystemExit('Misplaced diagnostics script still exists in packaged HTML')
+          print('Removed the injected diagnostics block from the generated JavaScript string; original HTML output boundary restored.')
+          PY_REMOVE_BAD_DIAG
 
       - name: Build Release APK and AAB
         env:
@@ -4496,7 +4517,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx167-APK
+          name: MiladGeo-Indexxx168-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4504,7 +4525,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx167-AAB
+          name: MiladGeo-Indexxx168-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
