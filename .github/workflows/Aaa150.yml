@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx168 APK
+name: Build MiladGeo Indexxx169 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -167,25 +167,47 @@ jobs:
             return window.AndroidBridge||null;
            }catch(e){return window.AndroidBridge||null;}
           }
+          // Cache each native schedule signature so periodic sync detects edits without
+          // repeatedly resetting an unchanged AlarmManager entry.
+          const nativeReminderCache=Object.create(null);
           function scheduleAndroidReminder(k,x){
-           const body=reminderPayload(x),bridge=nativeAndroidBridge();
+           const id=String(k||''),body=reminderPayload(x),bridge=nativeAndroidBridge();
            try{
-            if(!body){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
-            const p=String(k||'').split('/').map(Number),hm=String(x.remindTime||'09:00').split(':').map(Number);
+            if(!body){
+             if(nativeReminderCache[id]!=='!'){
+              if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(id);
+              nativeReminderCache[id]='!';
+             }
+             return;
+            }
+            const p=id.split('/').map(Number),hm=String(x.remindTime||'09:00').split(':').map(Number);
             if(p.length!==3||p.some(v=>!Number.isFinite(v))||hm.length!==2||hm.some(v=>!Number.isFinite(v)||v<0))return;
             const g=d2g(j2d(p[0],p[1],p[2]));
             const when=new Date(g.gy,g.gm-1,g.gd,hm[0],hm[1],0,0).getTime();
             if(!Number.isFinite(when))return;
             // Keep overdue native entries intact: Android may have delayed an inexact alarm.
-            // The native receiver retries a missed delivery on app resume or after boot.
             if(when<=Date.now())return;
-            if(bridge&&typeof bridge.scheduleSarresidReminder==='function')bridge.scheduleSarresidReminder(k,String(when),'یادآوری سررسید مهندس',body);
+            const signature=String(when)+'|'+String(body);
+            if(nativeReminderCache[id]===signature)return;
+            if(bridge&&typeof bridge.scheduleSarresidReminder==='function'){
+             bridge.scheduleSarresidReminder(id,String(when),'یادآوری سررسید مهندس',body);
+             nativeReminderCache[id]=signature;
+            }
            }catch(e){console.warn('MiladGeo Sarresid Android reminder:',e);}
           }
           function syncAllAndroidReminders(){
            const bridge=nativeAndroidBridge();
            if(!bridge||typeof bridge.scheduleSarresidReminder!=='function')return;
-           try{Object.keys(data).forEach(k=>scheduleAndroidReminder(k,data[k]||{}));}catch(e){console.warn('MiladGeo Sarresid sync:',e);}
+           try{
+            const keys=Object.keys(data||{}),seen=Object.create(null);
+            keys.forEach(k=>{seen[k]=true;scheduleAndroidReminder(k,data[k]||{});});
+            Object.keys(nativeReminderCache).forEach(k=>{
+             if(!seen[k]&&nativeReminderCache[k]!=='!'){
+              if(typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);
+              nativeReminderCache[k]='!';
+             }
+            });
+           }catch(e){console.warn('MiladGeo Sarresid sync:',e);}
           }
           """
           inner = inner[:start] + replacement + inner[end:]
@@ -197,10 +219,15 @@ jobs:
           elif new_status not in inner:
               raise SystemExit("Could not update the Sarresid native status check.")
 
-          # No polling loop is needed: save/cancel events and startup sync are explicit.
+          # Keep a lightweight change detector active because the calendar iframe can
+          # update its in-memory data without notifying the parent WebView immediately.
           inner = inner.replace("setInterval(syncAllAndroidReminders,2000);", "")
-          if "installMonthSwipe();syncAllAndroidReminders();" not in inner:
+          startup_sync = "installMonthSwipe();syncAllAndroidReminders();"
+          if startup_sync not in inner:
               raise SystemExit("Startup synchronization of saved Sarresid reminders is missing.")
+          inner = inner.replace(startup_sync, startup_sync + "setInterval(syncAllAndroidReminders,2000);", 1)
+          if "setInterval(syncAllAndroidReminders,2000);" not in inner:
+              raise SystemExit("Periodic Sarresid reminder synchronization was not installed.")
 
           encoded = base64.b64encode(inner.encode("utf-8")).decode("ascii")
           html = html[:b64_start] + encoded + html[b64_end:]
@@ -238,8 +265,8 @@ jobs:
 
           if "MILADGEO_SARRESID_NATIVE_V158" not in inner or "MILADGEO_SARRESID_NATIVE_V158" not in html:
               raise SystemExit("The iframe-to-main-page Sarresid bridge was not installed.")
-          if 'setInterval(syncAllAndroidReminders,2000)' in inner:
-              raise SystemExit("The old two-second Sarresid alarm polling loop remains.")
+          if "setInterval(syncAllAndroidReminders,2000);" not in inner:
+              raise SystemExit("The change-detection sync for saved Sarresid reminders is missing.")
           path.write_text(html, encoding="utf-8")
           print("Sarresid schedule/cancel requests now route through the main Android WebView bridge.")
           PY_SARRESID_BRIDGE
@@ -980,6 +1007,8 @@ jobs:
                       <intent-filter>
                           <action android:name="android.intent.action.BOOT_COMPLETED" />
                           <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                          <action android:name="android.intent.action.TIME_SET" />
+                          <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                           <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
                       </intent-filter>
                   </receiver>
@@ -4127,6 +4156,30 @@ jobs:
               if marker not in java:
                   raise SystemExit('Could not locate AndroidBridge diagnostics insertion point')
               java = java.replace(marker, diagnostics_methods + '                  ' + marker, 1)
+          # Create the high-importance channel on first launch, not only when the first
+          # reminder fires. Preserve any channel settings the user has already chosen.
+          if "mgEnsureSarresidChannel" not in java:
+              oncreate_marker = "super.onCreate(savedInstanceState);"
+              channel_setup = """
+                  // mgEnsureSarresidChannel
+                  if (Build.VERSION.SDK_INT >= 26) {
+                      android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                      if (nm != null && nm.getNotificationChannel("miladgeo_sarresid_reminders") == null) {
+                          android.app.NotificationChannel ch = new android.app.NotificationChannel(
+                              "miladgeo_sarresid_reminders",
+                              "یادآوری‌های سررسید میلادژئو",
+                              android.app.NotificationManager.IMPORTANCE_HIGH);
+                          ch.setDescription("اعلان قرارها، بازدیدها و مهلت‌های ثبت‌شده در سررسید مهندس");
+                          ch.enableVibration(true);
+                          ch.setVibrationPattern(new long[]{0, 350, 180, 350});
+                          nm.createNotificationChannel(ch);
+                      }
+                  }
+          """
+              if oncreate_marker not in java:
+                  raise SystemExit("Could not locate MainActivity.onCreate for notification-channel initialization.")
+              java = java.replace(oncreate_marker, oncreate_marker + channel_setup, 1)
+
           java_path.write_text(java, encoding='utf-8')
 
           # Instrument the receiver and route real and test notifications through one checked path.
@@ -4375,8 +4428,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 328', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.153'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 329', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.154'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4419,12 +4472,12 @@ jobs:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
           if 'mg166-hidden-native-diagnostics' in check_html:
               raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
-          if 'versionCode 328' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.153'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 166 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 166 is ready with expanded native reminder trace.')
+          if 'versionCode 329' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.154'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 169 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 169 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 328' app/build.gradle
-          grep -q "versionName '2.0.153'" app/build.gradle
+          grep -q 'versionCode 329' app/build.gradle
+          grep -q "versionName '2.0.154'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4471,7 +4524,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx168-APK
+          name: MiladGeo-Indexxx169-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4479,7 +4532,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx168-AAB
+          name: MiladGeo-Indexxx169-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
