@@ -3624,31 +3624,6 @@ jobs:
           print("Verified: 13 selectable tiles, full 20-menu choices, and 20 independent 1x1 widget providers.")
           PY_WIDGET_VERIFY
 
-      - name: Escape embedded diagnostics script terminator in packaged WebView HTML
-        run: |
-          set -euo pipefail
-          python3 - <<'PY_ESCAPE_REPORT_SCRIPT'
-          from pathlib import Path
-          p = Path('app/src/main/assets/index.html')
-          html = p.read_text(encoding='utf-8')
-          marker = '<script id="mg166-hidden-native-diagnostics">'
-          start = html.find(marker)
-          if start < 0:
-              raise SystemExit('Embedded native diagnostics HTML block was not found in the packaged main page')
-          close = html.find('</script>', start)
-          if close < 0:
-              raise SystemExit('Embedded native diagnostics script terminator was not found')
-          escaped = '<' + chr(92) + '/script>'
-          html = html[:close] + escaped + html[close + len('</script>'):]
-          p.write_text(html, encoding='utf-8')
-          check = p.read_text(encoding='utf-8')
-          escaped_at = check.find(escaped, start)
-          next_close = check.find('</script>', start)
-          if escaped_at < 0 or next_close < 0 or next_close < escaped_at:
-              raise SystemExit('Embedded script terminator escaping validation failed')
-          print('Nested diagnostics script escaped in the actual packaged WebView page.')
-          PY_ESCAPE_REPORT_SCRIPT
-
       - name: Verify generated project
         run: |
           set -euxo pipefail
@@ -4464,6 +4439,20 @@ jobs:
               import re
               check_html = re.sub(r'</body>', lambda m: hidden_diag + m.group(0), check_html, count=1, flags=re.I)
               main_html_path.write_text(check_html, encoding='utf-8')
+          # The diagnostics script is nested inside the main inline JavaScript HTML string.
+          # Escape its closing tag so Android WebView does not terminate the outer script.
+          diag_marker = '<script id="mg166-hidden-native-diagnostics">'
+          diag_start = check_html.find(diag_marker)
+          if diag_start < 0:
+              raise SystemExit('Hidden diagnostics script marker missing before escaping')
+          diag_close = check_html.find('</script>', diag_start)
+          if diag_close < 0:
+              raise SystemExit('Hidden diagnostics closing script tag missing')
+          escaped_close = '<' + chr(92) + '/script>'
+          check_html = check_html[:diag_close] + escaped_close + check_html[diag_close + len('</script>'):]
+          main_html_path.write_text(check_html, encoding='utf-8')
+          if escaped_close not in check_html[diag_start:]:
+              raise SystemExit('Nested diagnostics script escaping did not persist')
           check_pos = check_html.find(prefix)
           if check_pos < 0:
               raise SystemExit('Calendar payload disappeared before notification validation')
