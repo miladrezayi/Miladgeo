@@ -63,7 +63,7 @@ jobs:
           html = html[:close] + escaped + html[close + len('</script>'):]
           p.write_text(html, encoding='utf-8')
           check = p.read_text(encoding='utf-8')
-          if escaped not in check or check.find('</script>', start) == close:
+          if escaped not in check[start:] or check.find('</script>', start) < check.find(escaped, start):
               raise SystemExit('Embedded script terminator escaping validation failed')
           print('Escaped the nested diagnostics script terminator; following PDF/export code remains inside the main JavaScript block.')
           PY_ESCAPE_REPORT_SCRIPT
