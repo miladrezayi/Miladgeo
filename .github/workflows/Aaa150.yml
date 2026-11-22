@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx163 APK
+name: Build MiladGeo Indexxx164 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -2229,6 +2229,7 @@ jobs:
                   intent.putExtra("body", body);
                   PendingIntent pending = PendingIntent.getBroadcast(context, key.hashCode(), intent,
                       PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  note(context, "alarm_pending_intent_created", "key=" + key + "; requestCode=" + key.hashCode());
                   try {
                       if (Build.VERSION.SDK_INT >= 31 && manager.canScheduleExactAlarms()) {
                           manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when, pending);
@@ -4136,6 +4137,9 @@ jobs:
                               channel = new NotificationChannel(CHANNEL_ID, "یادآوری‌های سررسید میلادژئو", NotificationManager.IMPORTANCE_HIGH);
                               channel.setDescription("اعلان قرارها، بازدیدها و مهلت‌های ثبت‌شده در سررسید مهندس");
                               manager.createNotificationChannel(channel);
+                              note(context, "notification_channel_created", "importance=" + channel.getImportance());
+                          } else {
+                              note(context, "notification_channel_checked", "importance=" + channel.getImportance());
                           }
                           if (channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
                               note(context, test ? "test_blocked_channel" : "receiver_blocked_channel", "notification channel importance is NONE");
@@ -4335,15 +4339,15 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 324', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.148'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 325', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.150'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
           for marker in ('getSarresidDiagnostics()', 'sendSarresidTestNotification()', 'bridge_saved'):
               if marker not in java_path.read_text(encoding='utf-8'):
                   raise SystemExit('MainActivity diagnostics marker missing: ' + marker)
-          for marker in ('alarm_scheduled_exact', 'alarm_trigger_received', 'test_notification_posted', 'receiver_finished'):
+          for marker in ('alarm_pending_intent_created', 'alarm_scheduled_exact', 'alarm_trigger_received', 'notification_channel_created', 'test_notification_posted', 'receiver_finished'):
               if marker not in receiver_path.read_text(encoding='utf-8'):
                   raise SystemExit('Receiver diagnostics marker missing: ' + marker)
           main_html_path = Path('app/src/main/assets/index.html')
@@ -4359,12 +4363,12 @@ jobs:
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
           if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
-          if 'versionCode 324' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.148'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 163 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 163 is ready with the JavaScript leak guard.')
+          if 'versionCode 325' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.150'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 164 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 164 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 324' app/build.gradle
-          grep -q "versionName '2.0.148'" app/build.gradle
+          grep -q 'versionCode 325' app/build.gradle
+          grep -q "versionName '2.0.150'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4390,7 +4394,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx163-APK
+          name: MiladGeo-Indexxx164-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4398,7 +4402,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx163-AAB
+          name: MiladGeo-Indexxx164-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
