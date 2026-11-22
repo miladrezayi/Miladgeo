@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx166 APK
+name: Build MiladGeo Indexxx167 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -43,6 +43,31 @@ jobs:
           cat Indexxx150.part001 Indexxx150.part002 Indexxx150.part003 Indexxx150.part004 > Indexxx150.html
           test -s Indexxx150.html
       
+      - name: Escape embedded diagnostics script terminator in point-report HTML
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_ESCAPE_REPORT_SCRIPT'
+          from pathlib import Path
+          p = Path('Indexxx150.html')
+          html = p.read_text(encoding='utf-8')
+          marker = '<script id="mg166-hidden-native-diagnostics">'
+          start = html.find(marker)
+          if start < 0:
+              raise SystemExit('Embedded native diagnostics HTML block was not found')
+          close = html.find('</script>', start)
+          if close < 0:
+              raise SystemExit('Embedded native diagnostics script terminator was not found')
+          # This script tag is inside a JavaScript HTML string. Escape its closing
+          # sequence so the outer WebView parser does not terminate the main script.
+          escaped = '<' + chr(92) + '/script>'
+          html = html[:close] + escaped + html[close + len('</script>'):]
+          p.write_text(html, encoding='utf-8')
+          check = p.read_text(encoding='utf-8')
+          if escaped not in check or check.find('</script>', start) == close:
+              raise SystemExit('Embedded script terminator escaping validation failed')
+          print('Escaped the nested diagnostics script terminator; following PDF/export code remains inside the main JavaScript block.')
+          PY_ESCAPE_REPORT_SCRIPT
+
       - name: Correct Sarresid calendar note markers
         run: |
           set -euo pipefail
@@ -4482,7 +4507,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx166-APK
+          name: MiladGeo-Indexxx167-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4490,7 +4515,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx166-AAB
+          name: MiladGeo-Indexxx167-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
