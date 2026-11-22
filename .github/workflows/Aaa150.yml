@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx170 APK
+name: Build MiladGeo Indexxx171 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -2278,7 +2278,7 @@ jobs:
 
           public class SarresidAlarmReceiver extends BroadcastReceiver {
               private static final String ACTION_ALARM = "com.miladgeo.app.SARRESID_ALARM";
-              private static final String CHANNEL_ID = "miladgeo_sarresid_reminders_v170";
+              private static final String CHANNEL_ID = "miladgeo_sarresid_reminders_v171";
               private static final String PREFS = "miladgeo_sarresid_alarms";
 
               public static void schedule(Context context, String key, long when, String title, String body) {
@@ -4114,7 +4114,7 @@ jobs:
                           boolean enabled = notifications != null && (Build.VERSION.SDK_INT < 24 || notifications.areNotificationsEnabled());
                           String channelImportance = "not_available";
                           if (Build.VERSION.SDK_INT >= 26 && notifications != null) {
-                              android.app.NotificationChannel channel = notifications.getNotificationChannel("miladgeo_sarresid_reminders_v170");
+                              android.app.NotificationChannel channel = notifications.getNotificationChannel("miladgeo_sarresid_reminders_v171");
                               channelImportance = channel == null ? "not_created" : String.valueOf(channel.getImportance());
                           }
                           AlarmManager alarms = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -4164,9 +4164,9 @@ jobs:
                   // mgEnsureSarresidChannel
                   if (Build.VERSION.SDK_INT >= 26) {
                       android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                      if (nm != null && nm.getNotificationChannel("miladgeo_sarresid_reminders_v170") == null) {
+                      if (nm != null && nm.getNotificationChannel("miladgeo_sarresid_reminders_v171") == null) {
                           android.app.NotificationChannel ch = new android.app.NotificationChannel(
-                              "miladgeo_sarresid_reminders_v170",
+                              "miladgeo_sarresid_reminders_v171",
                               "یادآوری‌های سررسید میلادژئو",
                               android.app.NotificationManager.IMPORTANCE_HIGH);
                           ch.setDescription("اعلان قرارها، بازدیدها و مهلت‌های ثبت‌شده در سررسید مهندس");
@@ -4428,8 +4428,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 330', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.155'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 331', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.156'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4472,12 +4472,12 @@ jobs:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
           if 'mg166-hidden-native-diagnostics' in check_html:
               raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
-          if 'versionCode 330' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.155'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 170 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 170 is ready with expanded native reminder trace.')
+          if 'versionCode 331' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.156'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 171 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 171 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 330' app/build.gradle
-          grep -q "versionName '2.0.155'" app/build.gradle
+          grep -q 'versionCode 331' app/build.gradle
+          grep -q "versionName '2.0.156'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4502,6 +4502,195 @@ jobs:
           print('Removed the injected diagnostics block from the generated JavaScript string; original HTML output boundary restored.')
           PY_REMOVE_BAD_DIAG
 
+      - name: Add one-time direct Android notification self-test
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_NOTIFY_SELFTEST'
+          from pathlib import Path
+
+          main_path = Path("app/src/main/java/com/miladgeo/app/MainActivity.java")
+          receiver_path = Path("app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java")
+          main = main_path.read_text(encoding="utf-8")
+          receiver = receiver_path.read_text(encoding="utf-8")
+          channel_id = "miladgeo_sarresid_reminders_v171"
+
+          if channel_id not in receiver or channel_id not in main:
+              raise SystemExit("Version 171 notification channel ID is not consistent across native sources.")
+          if "public static boolean sendTestNotification(Context context)" not in receiver:
+              raise SystemExit("The native notification test sender is missing.")
+
+          helper_marker = "private void openIncomingDocument() {"
+          helper = r'''
+              private void runMiladGeoNotificationSelfTest() {
+                  final String testKey = "miladgeo_direct_native_test_v171_done";
+                  final String requestedKey = testKey + "_permission_requested";
+                  try {
+                      SharedPreferences prefs = getSharedPreferences("miladgeo_sarresid_alarms", MODE_PRIVATE);
+                      if (prefs.getBoolean(testKey, false)) return;
+
+                      if (Build.VERSION.SDK_INT >= 33 &&
+                          checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                          if (!prefs.getBoolean(requestedKey, false)) {
+                              prefs.edit().putBoolean(requestedKey, true).apply();
+                              SarresidAlarmReceiver.note(this, "self_test_requesting_notification_permission", "runtime POST_NOTIFICATIONS request");
+                              requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 17101);
+                          } else {
+                              SarresidAlarmReceiver.note(this, "self_test_permission_still_missing", "permission was not granted after runtime request");
+                              android.widget.Toast.makeText(this, "اجازه اعلان‌های MiladGeo فعال نیست؛ از تنظیمات برنامه آن را فعال کن.", android.widget.Toast.LENGTH_LONG).show();
+                          }
+                          return;
+                      }
+
+                      android.app.NotificationManager manager =
+                          (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                      if (manager == null) {
+                          SarresidAlarmReceiver.note(this, "self_test_no_notification_manager", "NotificationManager is null");
+                          android.widget.Toast.makeText(this, "سرویس اعلان اندروید در دسترس نیست.", android.widget.Toast.LENGTH_LONG).show();
+                          return;
+                      }
+
+                      if (Build.VERSION.SDK_INT >= 26) {
+                          android.app.NotificationChannel channel = manager.getNotificationChannel("miladgeo_sarresid_reminders_v171");
+                          if (channel == null) {
+                              channel = new android.app.NotificationChannel(
+                                  "miladgeo_sarresid_reminders_v171",
+                                  "یادآوری‌های سررسید میلادژئو",
+                                  android.app.NotificationManager.IMPORTANCE_HIGH);
+                              channel.setDescription("اعلان قرارها، بازدیدها و مهلت‌های ثبت‌شده در سررسید مهندس");
+                              channel.enableVibration(true);
+                              channel.setVibrationPattern(new long[]{0, 350, 180, 350});
+                              manager.createNotificationChannel(channel);
+                          }
+                          if (channel.getImportance() == android.app.NotificationManager.IMPORTANCE_NONE) {
+                              SarresidAlarmReceiver.note(this, "self_test_channel_blocked", "channel importance is NONE");
+                              android.widget.Toast.makeText(this, "کانال اعلان سررسید در تنظیمات اندروید مسدود است.", android.widget.Toast.LENGTH_LONG).show();
+                              return;
+                          }
+                      }
+
+                      if (Build.VERSION.SDK_INT >= 24 && !manager.areNotificationsEnabled()) {
+                          SarresidAlarmReceiver.note(this, "self_test_app_notifications_disabled", "NotificationManager.areNotificationsEnabled=false");
+                          android.widget.Toast.makeText(this, "اعلان‌های خود برنامه در تنظیمات گوشی خاموش هستند.", android.widget.Toast.LENGTH_LONG).show();
+                          return;
+                      }
+
+                      boolean posted = SarresidAlarmReceiver.sendTestNotification(this);
+                      if (posted) {
+                          prefs.edit().putBoolean(testKey, true).apply();
+                          SarresidAlarmReceiver.note(this, "self_test_posted", "direct native NotificationManager.notify test completed");
+                          android.widget.Toast.makeText(this, "اعلان آزمایشی مستقیماً به اندروید فرستاده شد؛ پنل اعلان‌ها را بررسی کن.", android.widget.Toast.LENGTH_LONG).show();
+                      } else {
+                          SarresidAlarmReceiver.note(this, "self_test_post_failed", "native postNotification returned false; inspect last native diagnostic");
+                          android.widget.Toast.makeText(this, "ارسال اعلان آزمایشی ناموفق بود؛ علت در گزارش داخلی ثبت شد.", android.widget.Toast.LENGTH_LONG).show();
+                      }
+                  } catch (Exception ex) {
+                      SarresidAlarmReceiver.note(this, "self_test_exception", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                      android.widget.Toast.makeText(this, "آزمایش اعلان خطا داشت: " + ex.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                  }
+              }
+
+          '''
+          if "private void runMiladGeoNotificationSelfTest()" not in main:
+              at = main.find(helper_marker)
+              if at < 0:
+                  raise SystemExit("Could not locate MainActivity insertion point for the direct notification test.")
+              main = main[:at] + helper + main[at:]
+
+          # Invoke the native test once after the WebView is attached. This test bypasses
+          # the calendar iframe and AlarmManager completely, isolating NotificationManager.
+          load_marker = 'webView.loadUrl("file:///android_asset/index.html");'
+          invocation = 'webView.postDelayed(() -> runMiladGeoNotificationSelfTest(), 1800);\n                  '
+          if "runMiladGeoNotificationSelfTest(), 1800" not in main:
+              at = main.find(load_marker)
+              if at < 0:
+                  raise SystemExit("Could not locate the initial WebView load for the native notification self-test.")
+              main = main[:at] + invocation + main[at:]
+
+          # Handle permission result for the isolated self-test without interfering with
+          # the existing Sarresid or other app permission request codes.
+          super_marker = "super.onRequestPermissionsResult(requestCode, permissions, grantResults);"
+          branch = '''super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode == 17101) {
+                      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                          getWindow().getDecorView().postDelayed(() -> runMiladGeoNotificationSelfTest(), 250);
+                      } else {
+                          SarresidAlarmReceiver.note(this, "self_test_permission_denied", "runtime POST_NOTIFICATIONS permission denied");
+                          android.widget.Toast.makeText(this, "اجازه اعلان‌ها داده نشد؛ اعلان سیستمی قابل ارسال نیست.", android.widget.Toast.LENGTH_LONG).show();
+                      }
+                      return;
+                  }'''
+          if "if (requestCode == 17101)" not in main:
+              if super_marker not in main:
+                  raise SystemExit("Could not locate onRequestPermissionsResult for the native test permission callback.")
+              main = main.replace(super_marker, branch, 1)
+
+          # The shared poster is also the scheduled-alarm path. Give reminders standard
+          # Android reminder semantics and verify/log the OS state around notify().
+          post_start = receiver.find("private static boolean postNotification(Context context")
+          notify_at = receiver.find("manager.notify(notificationId, notification);", post_start)
+          if post_start < 0 or notify_at < 0:
+              raise SystemExit("Could not locate the shared NotificationManager posting method.")
+          old_notification = '''.setAutoCancel(true)
+                          .setContentIntent(content)
+                          .setPriority(Notification.PRIORITY_HIGH)
+                          .build();'''
+          new_notification = '''.setAutoCancel(true)
+                          .setContentIntent(content)
+                          .setPriority(Notification.PRIORITY_HIGH)
+                          .setCategory(Notification.CATEGORY_REMINDER)
+                          .setVisibility(Notification.VISIBILITY_PUBLIC)
+                          .setDefaults(Notification.DEFAULT_ALL)
+                          .setShowWhen(true)
+                          .setWhen(System.currentTimeMillis())
+                          .build();'''
+          if old_notification in receiver:
+              receiver = receiver.replace(old_notification, new_notification, 1)
+          elif ".setCategory(Notification.CATEGORY_REMINDER)" not in receiver:
+              raise SystemExit("Could not safely strengthen the native reminder notification builder.")
+
+          # Log whether Android retained the notification after notify() returned.
+          marker = 'manager.notify(notificationId, notification);'
+          verify = '''manager.notify(notificationId, notification);
+                      boolean activeAfterNotify = false;
+                      if (Build.VERSION.SDK_INT >= 23) {
+                          try {
+                              for (android.service.notification.StatusBarNotification active : manager.getActiveNotifications()) {
+                                  if (active.getId() == notificationId) { activeAfterNotify = true; break; }
+                              }
+                          } catch (Exception checkError) {
+                              note(context, "notification_active_check_error", checkError.getClass().getSimpleName() + ": " + checkError.getMessage());
+                          }
+                      } else {
+                          activeAfterNotify = true;
+                      }
+                      note(context, test ? "test_notification_active_check" : "scheduled_notification_active_check",
+                          "active_after_notify=" + activeAfterNotify + "; notificationsEnabled=" + manager.areNotificationsEnabled());'''
+          if "activeAfterNotify" not in receiver:
+              receiver = receiver.replace(marker, verify, 1)
+
+          main_path.write_text(main, encoding="utf-8")
+          receiver_path.write_text(receiver, encoding="utf-8")
+
+          # Structural guards: exactly one self-test invocation, a permission callback,
+          # the same channel ID in both native classes, and no diagnostics screen injection.
+          for marker in (
+              "private void runMiladGeoNotificationSelfTest()",
+              "runMiladGeoNotificationSelfTest(), 1800",
+              "if (requestCode == 17101)",
+              "self_test_posted",
+              "active_after_notify=",
+              "Notification.CATEGORY_REMINDER"
+          ):
+              if marker not in main + receiver:
+                  raise SystemExit("Version 171 native notification self-test is incomplete: " + marker)
+          if main.count("runMiladGeoNotificationSelfTest(), 1800") != 1:
+              raise SystemExit("The direct notification self-test must be scheduled exactly once.")
+          print("Installed one-time direct NotificationManager test, explicit permission flow, channel checks, and post-notify active-state logging.")
+          PY_NOTIFY_SELFTEST
+          grep -q 'runMiladGeoNotificationSelfTest' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'active_after_notify=' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
+          grep -q 'Notification.CATEGORY_REMINDER' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
+
       - name: Build Release APK and AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -4524,7 +4713,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx170-APK
+          name: MiladGeo-Indexxx171-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4532,7 +4721,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx170-AAB
+          name: MiladGeo-Indexxx171-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
