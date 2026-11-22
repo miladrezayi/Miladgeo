@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx165 APK
+name: Build MiladGeo Indexxx166 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -43,6 +43,41 @@ jobs:
           cat Indexxx150.part001 Indexxx150.part002 Indexxx150.part003 Indexxx150.part004 > Indexxx150.html
           test -s Indexxx150.html
       
+      - name: Correct Sarresid calendar note markers
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_SARRESID_DOTS'
+          from pathlib import Path
+          import base64, re
+          path = Path('Indexxx150.html')
+          html = path.read_text(encoding='utf-8')
+          panel_start = html.find('function sarresidPanel()')
+          if panel_start < 0:
+              raise SystemExit('Could not locate the Sarresid calendar panel')
+          panel_end = html.find('\nfunction ', panel_start + 10)
+          if panel_end < 0:
+              raise SystemExit('Could not locate the Sarresid panel boundary')
+          panel = html[panel_start:panel_end]
+          match = re.search(r"atob\('([A-Za-z0-9+/=]+)'\)", panel)
+          if not match:
+              raise SystemExit('Could not locate the embedded calendar payload')
+          inner = base64.b64decode(match.group(1)).decode('utf-8')
+          old = "function hasData(x){return fields.some(f=>['done','remindAppointments','remindDeadlines','remindTime'].includes(f)?!!x[f]:String(x[f]||'').trim())}"
+          new = "function hasData(x){return !!(x.done||['important','appointments','deadlines','notes'].some(f=>String(x[f]||'').trim()))}"
+          if old not in inner:
+              if new in inner:
+                  print('Sarresid note-marker correction is already present.')
+                  raise SystemExit(0)
+              raise SystemExit('Unexpected Sarresid hasData implementation; refusing an unsafe patch')
+          inner = inner.replace(old, new, 1)
+          encoded = base64.b64encode(inner.encode('utf-8')).decode('ascii')
+          panel = panel[:match.start(1)] + encoded + panel[match.end(1):]
+          html = html[:panel_start] + panel + html[panel_end:]
+          path.write_text(html, encoding='utf-8')
+          if new not in base64.b64decode(re.search(r"atob\('([A-Za-z0-9+/=]+)'\)", panel).group(1)).decode('utf-8'):
+              raise SystemExit('Sarresid note-marker correction validation failed')
+          print('Calendar dots now require actual note content or a completed-task mark; the default reminder time no longer creates phantom dots.')
+          PY_SARRESID_DOTS
       - name: Replace malformed inline SheetJS with bundled offline engine
         run: |
           set -euo pipefail
@@ -4340,8 +4375,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 326', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.151'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 327', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.152'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4356,7 +4391,7 @@ jobs:
           check_html = main_html_path.read_text(encoding='utf-8')
           # Hidden diagnostic sheet: reveal only after seven quick taps in the top strip.
           # This keeps the normal app UI clean while letting the user expose native results.
-          hidden_diag = r"""<script id="mg165-hidden-native-diagnostics">
+          hidden_diag = r"""<script id="mg166-hidden-native-diagnostics">
           (function(){
             var taps=[],panel=null;
             function openPanel(){
@@ -4417,7 +4452,7 @@ jobs:
           if 'mg165-hidden-native-diagnostics' not in check_html or 'getSarresidDiagnostics' not in check_html or 'sendSarresidTestNotification' not in check_html:
               raise SystemExit('Hidden native diagnostic access was not injected')
           if 'versionCode 326' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.151'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 165 metadata was not applied')
+              raise SystemExit('Version 166 metadata was not applied')
           print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 165 is ready with expanded native reminder trace.')
           PY_DIAG
           grep -q 'versionCode 326' app/build.gradle
@@ -4447,7 +4482,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx165-APK
+          name: MiladGeo-Indexxx166-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
