@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx162 APK
+name: Build MiladGeo Indexxx163 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -141,7 +141,9 @@ jobs:
             const g=d2g(j2d(p[0],p[1],p[2]));
             const when=new Date(g.gy,g.gm-1,g.gd,hm[0],hm[1],0,0).getTime();
             if(!Number.isFinite(when))return;
-            if(when<=Date.now()){if(bridge&&typeof bridge.cancelSarresidReminder==='function')bridge.cancelSarresidReminder(k);return;}
+            // Keep overdue native entries intact: Android may have delayed an inexact alarm.
+            // The native receiver retries a missed delivery on app resume or after boot.
+            if(when<=Date.now())return;
             if(bridge&&typeof bridge.scheduleSarresidReminder==='function')bridge.scheduleSarresidReminder(k,String(when),'یادآوری سررسید مهندس',body);
            }catch(e){console.warn('MiladGeo Sarresid Android reminder:',e);}
           }
@@ -4231,6 +4233,48 @@ jobs:
               raise SystemExit('Could not replace AlarmManager schedule method')
           receiver = receiver[:schedule_at] + schedule_method + receiver[cancel_at:]
 
+          # Retry overdue reminders when the app returns or the device boots.
+          # Never discard a reminder merely because an exact alarm was delayed.
+          reschedule_at = receiver.find('public static void rescheduleAll(Context context)')
+          receive_boundary = receiver.find('@Override', reschedule_at)
+          if reschedule_at < 0 or receive_boundary < 0:
+              raise SystemExit('Could not isolate SarresidAlarmReceiver.rescheduleAll')
+          reschedule_method = '''public static void rescheduleAll(Context context) {
+                  try {
+                      SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+                      JSONObject all = new JSONObject(prefs.getString("items", "{}"));
+                      JSONObject retained = new JSONObject();
+                      long now = System.currentTimeMillis();
+                      Iterator<String> keys = all.keys();
+                      while (keys.hasNext()) {
+                          String key = keys.next();
+                          JSONObject item = all.optJSONObject(key);
+                          if (item == null) continue;
+                          long when = item.optLong("when", 0L);
+                          String title = item.optString("title", "یادآوری سررسید مهندس");
+                          String body = item.optString("body", "یادآوری سررسید");
+                          if (when > now) {
+                              schedule(context, key, when, title, body);
+                              retained.put(key, item);
+                          } else {
+                              boolean posted = postNotification(context, key, title, body, key.hashCode(), false);
+                              if (!posted) {
+                                  retained.put(key, item);
+                                  note(context, "overdue_reminder_retained", "key=" + key + "; notification not posted yet");
+                              } else {
+                                  note(context, "overdue_reminder_delivered_on_resume", "key=" + key);
+                              }
+                          }
+                      }
+                      prefs.edit().putString("items", retained.toString()).apply();
+                  } catch (Exception ex) {
+                      note(context, "reschedule_all_error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                  }
+              }
+
+              '''
+          receiver = receiver[:reschedule_at] + reschedule_method + receiver[receive_boundary:]
+
           receive_at = receiver.find('public void onReceive(Context context, Intent intent)')
           receive_start = receiver.rfind('@Override', 0, receive_at)
           class_end = receiver.rfind('\n}')
@@ -4245,6 +4289,7 @@ jobs:
                   String action = intent.getAction();
                   note(context, "receiver_entered", "action=" + action);
                   if (Intent.ACTION_BOOT_COMPLETED.equals(action) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) ||
+                      Intent.ACTION_TIME_CHANGED.equals(action) || Intent.ACTION_TIMEZONE_CHANGED.equals(action) ||
                       "android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED".equals(action)) {
                       note(context, "receiver_reschedule_event", "action=" + action);
                       rescheduleAll(context);
@@ -4262,13 +4307,19 @@ jobs:
                   boolean posted = postNotification(context, key, title, body,
                       key == null ? (int) System.currentTimeMillis() : key.hashCode(), false);
 
-                  try {
-                      SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-                      JSONObject all = new JSONObject(prefs.getString("items", "{}"));
-                      if (key != null) all.remove(key);
-                      prefs.edit().putString("items", all.toString()).apply();
-                  } catch (Exception ex) {
-                      note(context, "alarm_queue_cleanup_error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                  if (posted) {
+                      try {
+                          SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+                          JSONObject all = new JSONObject(prefs.getString("items", "{}"));
+                          if (key != null) all.remove(key);
+                          prefs.edit().putString("items", all.toString()).apply();
+                      } catch (Exception ex) {
+                          note(context, "alarm_queue_cleanup_error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                      }
+                  } else {
+                      // Keep failed deliveries in SharedPreferences. MainActivity.onResume()
+                      // and boot/permission broadcasts will retry instead of silently dropping them.
+                      note(context, "alarm_delivery_kept_pending", "key=" + key);
                   }
                   note(context, "receiver_finished", "notification_posted=" + posted + "; key=" + key);
               }
@@ -4284,7 +4335,7 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 323', 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 324', 1)
           gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.148'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
@@ -4308,11 +4359,11 @@ jobs:
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
           if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
-          if 'versionCode 323' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.148'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 162 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 162 is ready with the JavaScript leak guard.')
+          if 'versionCode 324' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.148'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 163 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 163 is ready with the JavaScript leak guard.')
           PY_DIAG
-          grep -q 'versionCode 323' app/build.gradle
+          grep -q 'versionCode 324' app/build.gradle
           grep -q "versionName '2.0.148'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
@@ -4339,7 +4390,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx162-APK
+          name: MiladGeo-Indexxx163-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4347,7 +4398,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx162-AAB
+          name: MiladGeo-Indexxx163-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
