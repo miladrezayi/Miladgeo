@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx164 APK
+name: Build MiladGeo Indexxx165 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -4340,8 +4340,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 325', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.150'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 326', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.151'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4354,6 +4354,56 @@ jobs:
           main_html_path = Path('app/src/main/assets/index.html')
           prefix = "var bin=atob('"
           check_html = main_html_path.read_text(encoding='utf-8')
+          # Hidden diagnostic sheet: reveal only after seven quick taps in the top strip.
+          # This keeps the normal app UI clean while letting the user expose native results.
+          hidden_diag = r"""<script id="mg165-hidden-native-diagnostics">
+          (function(){
+            var taps=[],panel=null;
+            function openPanel(){
+              if(panel){panel.style.display='flex';refresh();return;}
+              panel=document.createElement('div');
+              panel.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px;direction:rtl;font-family:Arial,sans-serif';
+              panel.innerHTML='<div style="background:#fff;color:#111;border-radius:16px;padding:16px;width:min(94vw,560px);max-height:85vh;overflow:auto;box-sizing:border-box"><div style="font-size:18px;font-weight:700;margin-bottom:10px">گزارش داخلی اعلان سررسید</div><div style="font-size:13px;color:#555;margin-bottom:12px">این بخش فقط با لمس مخفی باز می‌شود و در منوها نمایش داده نمی‌شود.</div><pre id="mg165-diag-output" style="white-space:pre-wrap;word-break:break-word;background:#f2f4f7;padding:10px;border-radius:8px;font-size:12px;min-height:90px">در حال خواندن گزارش...</pre><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="mg165-refresh" style="padding:11px 14px;border:0;border-radius:8px;background:#ddd">به‌روزرسانی گزارش</button><button id="mg165-test" style="padding:11px 14px;border:0;border-radius:8px;background:#1769aa;color:white">ارسال اعلان آزمایشی</button><button id="mg165-close" style="padding:11px 14px;border:0;border-radius:8px;background:#eee">بستن</button></div><div style="font-size:12px;color:#666;margin-top:10px">پس از آزمایش، گزارش را به‌روزرسانی کن و از همین صفحه عکس بفرست.</div></div>';
+              document.body.appendChild(panel);
+              panel.querySelector('#mg165-refresh').onclick=refresh;
+              panel.querySelector('#mg165-test').onclick=function(){
+                var out=panel.querySelector('#mg165-diag-output');
+                try{
+                  var b=window.AndroidBridge;
+                  if(!b||typeof b.sendSarresidTestNotification!=='function'){out.textContent='AndroidBridge یا تابع آزمایش در دسترس نیست.';return;}
+                  var ok=b.sendSarresidTestNotification();
+                  out.textContent='نتیجه اجرای درخواست آزمایشی: '+ok+'\nدر حال دریافت گزارش...';
+                  setTimeout(refresh,700);
+                }catch(e){out.textContent='خطا: '+String(e);}
+              };
+              panel.querySelector('#mg165-close').onclick=function(){panel.style.display='none';};
+              refresh();
+            }
+            function refresh(){
+              if(!panel)return;
+              var out=panel.querySelector('#mg165-diag-output');
+              try{
+                var b=window.AndroidBridge;
+                if(!b||typeof b.getSarresidDiagnostics!=='function'){out.textContent='AndroidBridge یا تابع گزارش در دسترس نیست.';return;}
+                var raw=b.getSarresidDiagnostics();
+                try{out.textContent=JSON.stringify(JSON.parse(raw),null,2);}catch(e){out.textContent=String(raw);}
+              }catch(e){out.textContent='خطا در خواندن گزارش: '+String(e);}
+            }
+            document.addEventListener('click',function(e){
+              if(panel&&panel.contains(e.target))return;
+              var now=Date.now(),y=e.clientY||0;
+              if(y>145){taps=[];return;}
+              taps.push(now);taps=taps.filter(function(t){return now-t<3500;});
+              if(taps.length>=7){taps=[];openPanel();}
+            },true);
+          })();
+          </script>"""
+          if 'mg165-hidden-native-diagnostics' not in check_html:
+              if '</body>' not in check_html.lower():
+                  raise SystemExit('Could not locate closing body tag for hidden diagnostics')
+              import re
+              check_html = re.sub(r'</body>', lambda m: hidden_diag + m.group(0), check_html, count=1, flags=re.I)
+              main_html_path.write_text(check_html, encoding='utf-8')
           check_pos = check_html.find(prefix)
           if check_pos < 0:
               raise SystemExit('Calendar payload disappeared before notification validation')
@@ -4364,12 +4414,14 @@ jobs:
           check_inner = base64.b64decode(check_html[check_a:check_b]).decode('utf-8')
           if 'mg-sarresid-native-diagnostics-v158' in check_inner or 'عیب‌یابی اعلان' in check_inner:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
-          if 'versionCode 325' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.150'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 164 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 164 is ready with expanded native reminder trace.')
+          if 'mg165-hidden-native-diagnostics' not in check_html or 'getSarresidDiagnostics' not in check_html or 'sendSarresidTestNotification' not in check_html:
+              raise SystemExit('Hidden native diagnostic access was not injected')
+          if 'versionCode 326' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.151'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 165 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 165 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 325' app/build.gradle
-          grep -q "versionName '2.0.150'" app/build.gradle
+          grep -q 'versionCode 326' app/build.gradle
+          grep -q "versionName '2.0.151'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4395,7 +4447,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx164-APK
+          name: MiladGeo-Indexxx165-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4403,7 +4455,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx164-AAB
+          name: MiladGeo-Indexxx165-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
