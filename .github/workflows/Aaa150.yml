@@ -43,31 +43,6 @@ jobs:
           cat Indexxx150.part001 Indexxx150.part002 Indexxx150.part003 Indexxx150.part004 > Indexxx150.html
           test -s Indexxx150.html
       
-      - name: Escape embedded diagnostics script terminator in point-report HTML
-        run: |
-          set -euo pipefail
-          python3 - <<'PY_ESCAPE_REPORT_SCRIPT'
-          from pathlib import Path
-          p = Path('Indexxx150.html')
-          html = p.read_text(encoding='utf-8')
-          marker = '<script id="mg166-hidden-native-diagnostics">'
-          start = html.find(marker)
-          if start < 0:
-              raise SystemExit('Embedded native diagnostics HTML block was not found')
-          close = html.find('</script>', start)
-          if close < 0:
-              raise SystemExit('Embedded native diagnostics script terminator was not found')
-          # This script tag is inside a JavaScript HTML string. Escape its closing
-          # sequence so the outer WebView parser does not terminate the main script.
-          escaped = '<' + chr(92) + '/script>'
-          html = html[:close] + escaped + html[close + len('</script>'):]
-          p.write_text(html, encoding='utf-8')
-          check = p.read_text(encoding='utf-8')
-          if escaped not in check[start:] or check.find('</script>', start) < check.find(escaped, start):
-              raise SystemExit('Embedded script terminator escaping validation failed')
-          print('Escaped the nested diagnostics script terminator; following PDF/export code remains inside the main JavaScript block.')
-          PY_ESCAPE_REPORT_SCRIPT
-
       - name: Correct Sarresid calendar note markers
         run: |
           set -euo pipefail
@@ -3648,6 +3623,31 @@ jobs:
                   raise SystemExit(f"Menu {n} provider is not registered in AndroidManifest.xml.")
           print("Verified: 13 selectable tiles, full 20-menu choices, and 20 independent 1x1 widget providers.")
           PY_WIDGET_VERIFY
+
+      - name: Escape embedded diagnostics script terminator in packaged WebView HTML
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_ESCAPE_REPORT_SCRIPT'
+          from pathlib import Path
+          p = Path('app/src/main/assets/index.html')
+          html = p.read_text(encoding='utf-8')
+          marker = '<script id="mg166-hidden-native-diagnostics">'
+          start = html.find(marker)
+          if start < 0:
+              raise SystemExit('Embedded native diagnostics HTML block was not found in the packaged main page')
+          close = html.find('</script>', start)
+          if close < 0:
+              raise SystemExit('Embedded native diagnostics script terminator was not found')
+          escaped = '<' + chr(92) + '/script>'
+          html = html[:close] + escaped + html[close + len('</script>'):]
+          p.write_text(html, encoding='utf-8')
+          check = p.read_text(encoding='utf-8')
+          escaped_at = check.find(escaped, start)
+          next_close = check.find('</script>', start)
+          if escaped_at < 0 or next_close < 0 or next_close < escaped_at:
+              raise SystemExit('Embedded script terminator escaping validation failed')
+          print('Nested diagnostics script escaped in the actual packaged WebView page.')
+          PY_ESCAPE_REPORT_SCRIPT
 
       - name: Verify generated project
         run: |
