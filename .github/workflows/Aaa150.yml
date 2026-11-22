@@ -4207,6 +4207,7 @@ jobs:
                   intent.putExtra("body", body);
                   PendingIntent pending = PendingIntent.getBroadcast(context, key.hashCode(), intent,
                       PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  note(context, "alarm_pending_intent_created", "key=" + key + "; requestCode=" + key.hashCode());
                   try {
                       if (Build.VERSION.SDK_INT >= 31 && manager.canScheduleExactAlarms()) {
                           manager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when, pending);
