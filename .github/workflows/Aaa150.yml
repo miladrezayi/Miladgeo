@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx174 APK
+name: Build MiladGeo Indexxx175 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -56,38 +56,6 @@ jobs:
           pattern = re.compile(r"""(?:(?:https?|myket)://)?(?:www\.)?myket\.(?:ir|com)(?:/[^\s"'<>]*)?""", re.I)
           html, url_count = pattern.subn(bazaar, html)
           html, label_count = re.subn(r'مایکت|Myket', 'کافه‌بازار', html, flags=re.I)
-          bridge = r"""<script id="miladgeo-bazaar-rating-bridge">
-          (function(){
-            function openBazaar(e, href){
-              var decoded = href || '';
-              try { decoded = decodeURIComponent(decoded); } catch (_) {}
-              if (decoded.indexOf('://') < 0 || (decoded.indexOf('comment?id=') < 0 && decoded.indexOf('details?id=') < 0)) return false;
-              if (!/(?:myket|bazaar|کافه.?بازار|بازار)/i.test(decoded)) return false;
-              if (e) { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); }
-              if (window.Android && typeof window.Android.openBazaarRating === 'function') window.Android.openBazaarRating();
-              else window.location.href = 'https://cafebazaar.ir/app/com.miladgeo.hooshmasnooi.naghshebardar';
-              return true;
-            }
-            document.addEventListener('click', function(e){
-              var node = e.target;
-              while (node && node !== document) {
-                if (node.tagName === 'A' && openBazaar(e, node.getAttribute('href') || node.href || '')) return;
-                node = node.parentNode;
-              }
-            }, true);
-            var oldOpen = window.open;
-            window.open = function(url){
-              if (openBazaar(null, String(url || ''))) return null;
-              return oldOpen.apply(window, arguments);
-            };
-          })();
-          </script>
-          """
-          if 'miladgeo-bazaar-rating-bridge' not in html:
-              body_end = html.lower().rfind('</body>')
-              if body_end < 0:
-                  raise SystemExit('Cannot install CafeBazaar bridge: closing BODY tag not found')
-              html = html[:body_end] + bridge + html[body_end:]
           if url_count == 0 and label_count == 0:
               raise SystemExit('No Myket rating/store reference was found; refusing to build an unchanged APK.')
           path.write_text(html, encoding='utf-8')
@@ -1402,15 +1370,21 @@ jobs:
 
               private boolean openExternalIfNeeded(String url) {
                   if (url == null) return false;
-                  String lowerUrl = url.trim().toLowerCase(java.util.Locale.ROOT);                  // Intercept percent-encoded CafeBazaar review links before WebView loads them.
-                  try {
-                      String decodedUrl = Uri.decode(url.trim());
-                      String normalizedUrl = decodedUrl.toLowerCase(java.util.Locale.ROOT);
-                      boolean bazaarReviewLink =
-                          (normalizedUrl.contains("://comment") || normalizedUrl.contains("://details")) &&
-                          normalizedUrl.contains("com.miladgeo.hooshmasnooi.naghshebardar");
-                      if (bazaarReviewLink) { openBazaarRating(); return true; }
-                  } catch (Exception ignored) {}
+                  String lowerUrl = url.trim().toLowerCase(java.util.Locale.ROOT);
+                  // Decode encoded/non-ASCII market schemes before WebView treats them as file pages.
+                  String decodedUrl = url.trim();
+                  for (int decodePass = 0; decodePass < 4; decodePass++) {
+                      String nextDecoded = Uri.decode(decodedUrl);
+                      if (nextDecoded.equals(decodedUrl)) break;
+                      decodedUrl = nextDecoded;
+                  }
+                  String normalizedUrl = decodedUrl.trim().toLowerCase(java.util.Locale.ROOT);
+                  boolean bazaarReviewUri = normalizedUrl.contains("://comment") || normalizedUrl.contains("://details");
+                  if (bazaarReviewUri) {
+                      openBazaarRating();
+                      return true;
+                  }
+
                   try {
                       // Phone links must be handed to Android's native dialer.
                       if (lowerUrl.startsWith("tel:")) {
@@ -1826,16 +1800,19 @@ jobs:
                   @JavascriptInterface
                   public void openBazaarRating() {
                       runOnUiThread(() -> {
+                          final String packageName = "com.miladgeo.hooshmasnooi.naghshebardar";
                           try {
-                              Intent bazaar = new Intent(Intent.ACTION_VIEW, Uri.parse("bazaar://details?id=com.miladgeo.hooshmasnooi.naghshebardar"));
-                              startActivity(bazaar);
-                          } catch (Exception unavailable) {
-                              try {
-                                  Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("https://cafebazaar.ir/app/com.miladgeo.hooshmasnooi.naghshebardar"));
-                                  startActivity(web);
-                              } catch (Exception ignored) {
-                                  try { webView.evaluateJavascript("alert('بازکردن کافه‌بازار ممکن نشد. لطفاً کافه‌بازار را نصب یا به‌روزرسانی کن.')", null); } catch (Exception ignoredAgain) {}
-                              }
+                              Intent market = new Intent(Intent.ACTION_VIEW, Uri.parse("bazaar://details?id=" + packageName));
+                              market.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                              startActivity(market);
+                              return;
+                          } catch (Exception unavailable) {}
+                          try {
+                              Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("http://cafebazaar.ir/app/?id=" + packageName + "&ref=share"));
+                              web.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                              startActivity(web);
+                          } catch (Exception ignored) {
+                              try { android.widget.Toast.makeText(MainActivity.this, "بازکردن کافه‌بازار ممکن نشد.", android.widget.Toast.LENGTH_LONG).show(); } catch (Exception ignoredAgain) {}
                           }
                       });
                   }
@@ -4464,8 +4441,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 334', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.159'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 335', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.160'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4508,12 +4485,14 @@ jobs:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
           if 'mg166-hidden-native-diagnostics' in check_html:
               raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
-          if 'versionCode 334' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.159'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 174 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 174 is ready with expanded native reminder trace.')
+          if 'versionCode 335' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.160'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 175 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 175 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 334' app/build.gradle
-          grep -q "versionName '2.0.159'" app/build.gradle
+          grep -q 'versionCode 335' app/build.gradle
+          grep -q 'for (int decodePass = 0; decodePass < 4; decodePass++)' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'normalizedUrl.contains("://comment")' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q "versionName '2.0.160'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4749,7 +4728,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx174-APK
+          name: MiladGeo-Indexxx175-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4757,7 +4736,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx174-AAB
+          name: MiladGeo-Indexxx175-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
