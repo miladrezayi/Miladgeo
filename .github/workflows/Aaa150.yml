@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx176 APK
+name: Build MiladGeo Indexxx177 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -4441,8 +4441,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 336', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.161'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 337', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.162'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4485,14 +4485,14 @@ jobs:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
           if 'mg166-hidden-native-diagnostics' in check_html:
               raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
-          if 'versionCode 336' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.161'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 176 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 176 is ready with expanded native reminder trace.')
+          if 'versionCode 337' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.162'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 177 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 177 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 336' app/build.gradle
+          grep -q 'versionCode 337' app/build.gradle
           grep -q 'for (int decodePass = 0; decodePass < 4; decodePass++)' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'normalizedUrl.contains("://comment")' app/src/main/java/com/miladgeo/app/MainActivity.java
-          grep -q "versionName '2.0.161'" app/build.gradle
+          grep -q "versionName '2.0.162'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4706,6 +4706,283 @@ jobs:
           grep -q 'active_after_notify=' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
           grep -q 'Notification.CATEGORY_REMINDER' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
+      - name: Repair Menu 10 map reader gallery and camera
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_MAP_READER'
+          from pathlib import Path
+          import re
+
+          assets = Path('app/src/main/assets')
+          html_names = ('index.html', 'index858.html', 'Index880.html', 'index843.html')
+          camera_start = 'window.m10CamOpenCamera=function(){'
+          gallery_start = 'window.m10CamOpenGallery=function(){'
+          live_start = 'window.m10CamStart=async function(){'
+          load_start = 'function loadDataUrl(url,name){'
+          native_load = "window.m10CamLoadFromNative=function(url,name){if(!url){say('فایل تصویر در دسترس نیست.');return false}loadDataUrl(url,name||'map-image');return false};"
+
+          patched_html = 0
+          for name in html_names:
+              p = assets / name
+              if not p.is_file():
+                  continue
+              src = p.read_text(encoding='utf-8')
+
+              # Android APK: bypass hidden WebView file inputs. Open the real Android
+              # Photo Picker and the system camera app through the native bridge.
+              c0 = src.find(camera_start)
+              c1 = src.find(' window.m10CamOpenGallery=function(){', c0)
+              g0 = c1 + 1 if c1 >= 0 else -1
+              g1 = src.find(' window.m10CamStart=async function(){', g0)
+              if min(c0, c1, g0, g1) < 0:
+                  raise SystemExit(f'{name}: Menu 10 camera/gallery JavaScript functions were not found.')
+              camera_fn = """window.m10CamOpenCamera=function(){
+                if(window.AndroidBridge&&typeof window.AndroidBridge.openMapReaderCamera==='function'){
+                  say('در حال بازکردن دوربین گوشی…');
+                  try{window.AndroidBridge.openMapReaderCamera();}catch(e){say('بازکردن دوربین ناموفق بود: '+(e.message||e));}
+                  return false;
+                }
+                var f=el('m10CamCameraFile');
+                if(!f){say('ورودی دوربین پیدا نشد.');return false;}
+                try{f.value='';f.click();say('دوربین گوشی را باز کن و از کاغذ عکس بگیر.');}
+                catch(e){say('بازکردن دوربین ممکن نشد: '+(e.message||e));}
+                return false;
+              };"""
+              gallery_fn = """window.m10CamOpenGallery=function(){
+                if(window.AndroidBridge&&typeof window.AndroidBridge.openMapReaderGallery==='function'){
+                  say('در حال بازکردن گالری تصاویر…');
+                  try{window.AndroidBridge.openMapReaderGallery();}catch(e){say('بازکردن گالری ناموفق بود: '+(e.message||e));}
+                  return false;
+                }
+                var f=el('m10CamFile');
+                if(!f){say('ورودی گالری پیدا نشد.');return false;}
+                try{f.value='';f.click();say('یک عکس از گالری انتخاب کن.');}
+                catch(e){say('بازکردن گالری ممکن نشد: '+(e.message||e));}
+                return false;
+              };"""
+              src = src[:c0] + camera_fn + src[c1:g0] + gallery_fn + src[g1:]
+
+              # Native code passes a private cache-file URL back to the scanner.
+              if native_load not in src:
+                  l0 = src.find(load_start)
+                  if l0 < 0:
+                      raise SystemExit(f'{name}: Menu 10 image loader was not found.')
+                  l1 = src.find('im.src=url}', l0)
+                  if l1 < 0:
+                      raise SystemExit(f'{name}: could not find the end of the Menu 10 image loader.')
+                  l1 += len('im.src=url}')
+                  src = src[:l1] + ' ' + native_load + src[l1:]
+
+              if 'openMapReaderCamera' not in src or 'openMapReaderGallery' not in src or 'm10CamLoadFromNative' not in src:
+                  raise SystemExit(f'{name}: Menu 10 native image bridge validation failed.')
+              p.write_text(src, encoding='utf-8')
+              patched_html += 1
+
+          if patched_html == 0:
+              raise SystemExit('No main HTML asset was patched for Menu 10.')
+
+          java_path = Path('app/src/main/java/com/miladgeo/app/MainActivity.java')
+          java = java_path.read_text(encoding='utf-8')
+
+          const_anchor = '              private static final int CAMERA_CAPTURE_REQUEST = 1005;'
+          if 'MAP_READER_GALLERY_REQUEST' not in java:
+              if const_anchor not in java:
+                  raise SystemExit('Could not find the Android request-code declarations.')
+              java = java.replace(const_anchor, const_anchor + """
+              private static final int MAP_READER_GALLERY_REQUEST = 1013;
+              private static final int MAP_READER_CAMERA_REQUEST = 1014;""", 1)
+
+          field_anchor = '              private String pendingCameraPath;'
+          if 'pendingMapReaderCameraPath' not in java:
+              if field_anchor not in java:
+                  raise SystemExit('Could not find the existing camera state fields.')
+              java = java.replace(field_anchor, field_anchor + """
+              private String pendingMapReaderCameraPath;
+              private Uri pendingMapReaderCameraUri;""", 1)
+
+          # The WebView bridge launches the Android Photo Picker / external camera directly.
+          bridge_anchor = '                  @JavascriptInterface\\n                  public void openBazaarRating() {'
+          if 'public void openMapReaderCamera()' not in java:
+              if bridge_anchor not in java:
+                  raise SystemExit('Could not find the AndroidBridge insertion point.')
+              bridge_methods = """                  @JavascriptInterface
+                  public void openMapReaderCamera() {
+                      runOnUiThread(() -> launchMapReaderCamera());
+                  }
+
+                  @JavascriptInterface
+                  public void openMapReaderGallery() {
+                      runOnUiThread(() -> launchMapReaderGallery());
+                  }
+
+"""
+              java = java.replace(bridge_anchor, bridge_methods + bridge_anchor, 1)
+
+          # These are outer MainActivity helpers, not methods of AndroidBridge.
+          helper_anchor = '              private boolean openExternalIfNeeded(String url) {'
+          if 'private void launchMapReaderCamera()' not in java:
+              if helper_anchor not in java:
+                  raise SystemExit('Could not find the MainActivity helper insertion point.')
+              helpers = r'''              private void launchMapReaderCamera() {
+                  try {
+                      File photo = File.createTempFile("miladgeo_mapreader_", ".jpg", getCacheDir());
+                      pendingMapReaderCameraPath = photo.getAbsolutePath();
+                      pendingMapReaderCameraUri = FileProvider.getUriForFile(
+                          this, getPackageName() + ".fileprovider", photo);
+                      Intent capture = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                      if (capture.resolveActivity(getPackageManager()) == null) {
+                          throw new IllegalStateException("No camera application is available");
+                      }
+                      capture.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, pendingMapReaderCameraUri);
+                      capture.setClipData(android.content.ClipData.newRawUri("MiladGeo map scan", pendingMapReaderCameraUri));
+                      capture.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                      startActivityForResult(capture, MAP_READER_CAMERA_REQUEST);
+                  } catch (Exception e) {
+                      pendingMapReaderCameraUri = null;
+                      if (pendingMapReaderCameraPath != null) {
+                          try { new File(pendingMapReaderCameraPath).delete(); } catch (Exception ignored) {}
+                      }
+                      pendingMapReaderCameraPath = null;
+                      android.widget.Toast.makeText(this, "بازکردن دوربین نقشه‌خوان ناموفق بود: " + e.getMessage(),
+                          android.widget.Toast.LENGTH_LONG).show();
+                  }
+              }
+
+              private void launchMapReaderGallery() {
+                  try {
+                      Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
+                      pick.addCategory(Intent.CATEGORY_OPENABLE);
+                      pick.setType("image/*");
+                      pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      startActivityForResult(Intent.createChooser(pick, "انتخاب تصویر نقشه"), MAP_READER_GALLERY_REQUEST);
+                  } catch (Exception e) {
+                      android.widget.Toast.makeText(this, "بازکردن گالری ناموفق بود: " + e.getMessage(),
+                          android.widget.Toast.LENGTH_LONG).show();
+                  }
+              }
+
+              private void deliverMapReaderFile(File file, String displayName) {
+                  if (file == null || !file.isFile() || file.length() == 0) {
+                      android.widget.Toast.makeText(this, "فایل تصویر خالی یا در دسترس نیست.", android.widget.Toast.LENGTH_LONG).show();
+                      return;
+                  }
+                  final String imageUrl = Uri.fromFile(file).toString();
+                  final String imageName = (displayName == null || displayName.trim().isEmpty()) ? "map-image.jpg" : displayName;
+                  runOnUiThread(() -> {
+                      if (webView == null) return;
+                      String js = "(function(){if(window.m10CamLoadFromNative){" +
+                          "window.m10CamLoadFromNative(" + JSONObject.quote(imageUrl) + "," +
+                          JSONObject.quote(imageName) + ");" +
+                          "}else if(window.showToast){window.showToast('بخش نقشه‌خوان هنوز آماده نیست.');}})();";
+                      webView.evaluateJavascript(js, null);
+                  });
+              }
+
+              private void deliverMapReaderUri(Uri uri) {
+                  if (uri == null) {
+                      android.widget.Toast.makeText(this, "تصویری انتخاب نشد.", android.widget.Toast.LENGTH_SHORT).show();
+                      return;
+                  }
+                  File copy = null;
+                  try {
+                      String displayName = "map-image.jpg";
+                      String mime = getContentResolver().getType(uri);
+                      try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) {
+                          if (c != null && c.moveToFirst()) {
+                              int ix = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                              if (ix >= 0) {
+                                  String n = c.getString(ix);
+                                  if (n != null && !n.trim().isEmpty()) displayName = n;
+                              }
+                          }
+                      } catch (Exception ignored) {}
+
+                      String extension = "jpg";
+                      if (mime != null) {
+                          String m = mime.toLowerCase(java.util.Locale.ROOT);
+                          if (m.contains("png")) extension = "png";
+                          else if (m.contains("webp")) extension = "webp";
+                          else if (m.contains("gif")) extension = "gif";
+                          else if (m.contains("bmp")) extension = "bmp";
+                      }
+                      copy = File.createTempFile("miladgeo_mapreader_", "." + extension, getCacheDir());
+                      try (InputStream in = getContentResolver().openInputStream(uri);
+                           FileOutputStream out = new FileOutputStream(copy)) {
+                          if (in == null) throw new IllegalStateException("Image stream is unavailable");
+                          byte[] buffer = new byte[16384];
+                          int count;
+                          while ((count = in.read(buffer)) != -1) out.write(buffer, 0, count);
+                          out.flush();
+                      }
+                      deliverMapReaderFile(copy, displayName);
+                  } catch (Exception e) {
+                      if (copy != null) try { copy.delete(); } catch (Exception ignored) {}
+                      android.widget.Toast.makeText(this, "خواندن عکس گالری ناموفق بود: " + e.getMessage(),
+                          android.widget.Toast.LENGTH_LONG).show();
+                  }
+              }
+
+'''
+              java = java.replace(helper_anchor, helpers + helper_anchor, 1)
+
+          result_anchor = '                  if (requestCode == CAMERA_CAPTURE_REQUEST) {'
+          if 'if (requestCode == MAP_READER_CAMERA_REQUEST)' not in java:
+              if result_anchor not in java:
+                  raise SystemExit('Could not find onActivityResult camera handler.')
+              result_handlers = '''                  if (requestCode == MAP_READER_GALLERY_REQUEST) {
+                      if (resultCode == RESULT_OK && data != null) {
+                          Uri selected = data.getData();
+                          if (selected == null && data.getClipData() != null && data.getClipData().getItemCount() > 0) {
+                              selected = data.getClipData().getItemAt(0).getUri();
+                          }
+                          deliverMapReaderUri(selected);
+                      } else {
+                          android.widget.Toast.makeText(this, "انتخاب عکس لغو شد.", android.widget.Toast.LENGTH_SHORT).show();
+                      }
+                      return;
+                  }
+                  if (requestCode == MAP_READER_CAMERA_REQUEST) {
+                      String capturedPath = pendingMapReaderCameraPath;
+                      pendingMapReaderCameraPath = null;
+                      pendingMapReaderCameraUri = null;
+                      if (resultCode == RESULT_OK && capturedPath != null) {
+                          File captured = new File(capturedPath);
+                          deliverMapReaderFile(captured, "map-camera.jpg");
+                      } else {
+                          if (capturedPath != null) try { new File(capturedPath).delete(); } catch (Exception ignored) {}
+                          android.widget.Toast.makeText(this, "عکس‌گرفتن لغو شد.", android.widget.Toast.LENGTH_SHORT).show();
+                      }
+                      return;
+                  }
+
+'''
+              java = java.replace(result_anchor, result_handlers + result_anchor, 1)
+
+          for marker in (
+              'public void openMapReaderCamera()',
+              'public void openMapReaderGallery()',
+              'private void launchMapReaderCamera()',
+              'private void launchMapReaderGallery()',
+              'private void deliverMapReaderUri(Uri uri)',
+              'if (requestCode == MAP_READER_GALLERY_REQUEST)',
+              'if (requestCode == MAP_READER_CAMERA_REQUEST)'
+          ):
+              if marker not in java:
+                  raise SystemExit('Menu 10 native gallery/camera repair missing: ' + marker)
+
+          if java.count('{') != java.count('}'):
+              raise SystemExit('MainActivity.java brace count changed unexpectedly after Menu 10 repair.')
+          java_path.write_text(java, encoding='utf-8')
+          print('Menu 10 native gallery picker, external camera capture, image cache handoff and WebView scanner bridge installed.')
+          print(f'Updated {patched_html} main-page HTML aliases.')
+          PY_MAP_READER
+          grep -q 'openMapReaderCamera' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'openMapReaderGallery' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'm10CamLoadFromNative' app/src/main/assets/index.html
+          grep -q 'MAP_READER_GALLERY_REQUEST' app/src/main/java/com/miladgeo/app/MainActivity.java
+          grep -q 'MAP_READER_CAMERA_REQUEST' app/src/main/java/com/miladgeo/app/MainActivity.java
+
       - name: Build Release APK and AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -4728,7 +5005,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx176-APK
+          name: MiladGeo-Indexxx177-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4736,7 +5013,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx176-AAB
+          name: MiladGeo-Indexxx177-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
