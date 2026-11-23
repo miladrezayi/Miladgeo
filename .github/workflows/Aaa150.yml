@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx171 APK
+name: Build MiladGeo Indexxx172 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -43,6 +43,25 @@ jobs:
           cat Indexxx150.part001 Indexxx150.part002 Indexxx150.part003 Indexxx150.part004 > Indexxx150.html
           test -s Indexxx150.html
       
+      - name: Replace Myket rating destination with CafeBazaar
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_MARKET'
+          from pathlib import Path
+          import re
+          path = Path('Indexxx150.html')
+          html = path.read_text(encoding='utf-8')
+          bazaar = 'http://cafebazaar.ir/app/?id=com.miladgeo.hooshmasnooi.naghshebardar&ref=share'
+          pattern = re.compile(r"(?:(?:https?|myket)://)?(?:www\\.)?myket\\.(?:ir|com)(?:/[^\\s\\\"\\\'<>]*)?", re.I)
+          html, url_count = pattern.subn(bazaar, html)
+          html, label_count = re.subn(r'مایکت|Myket', 'کافه‌بازار', html, flags=re.I)
+          if url_count == 0 and label_count == 0:
+              raise SystemExit('No Myket rating/store reference was found; refusing to build an unchanged APK.')
+          path.write_text(html, encoding='utf-8')
+          print(f'CafeBazaar destination applied: {url_count} URL(s), {label_count} label(s).')
+          PY_MARKET
+
       - name: Correct Sarresid calendar note markers
         run: |
           set -euo pipefail
@@ -4428,8 +4447,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 331', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.156'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 332', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.157'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4472,8 +4491,8 @@ jobs:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
           if 'mg166-hidden-native-diagnostics' in check_html:
               raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
-          if 'versionCode 331' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.156'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 171 metadata was not applied')
+          if 'versionCode 332' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.157'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 172 metadata was not applied')
           print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 171 is ready with expanded native reminder trace.')
           PY_DIAG
           grep -q 'versionCode 331' app/build.gradle
@@ -4713,7 +4732,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx171-APK
+          name: MiladGeo-Indexxx172-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4721,7 +4740,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx171-AAB
+          name: MiladGeo-Indexxx172-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
