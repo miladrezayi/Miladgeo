@@ -53,7 +53,7 @@ jobs:
           path = Path('Indexxx150.html')
           html = path.read_text(encoding='utf-8')
           bazaar = 'http://cafebazaar.ir/app/?id=com.miladgeo.hooshmasnooi.naghshebardar&ref=share'
-          pattern = re.compile(r"(?:(?:https?|myket)://)?(?:www\\.)?myket\\.(?:ir|com)(?:/[^\\s\\\"\\\'<>]*)?", re.I)
+          pattern = re.compile(r"""(?:(?:https?|myket)://)?(?:www\.)?myket\.(?:ir|com)(?:/[^\s"'<>]*)?""", re.I)
           html, url_count = pattern.subn(bazaar, html)
           html, label_count = re.subn(r'مایکت|Myket', 'کافه‌بازار', html, flags=re.I)
           if url_count == 0 and label_count == 0:
