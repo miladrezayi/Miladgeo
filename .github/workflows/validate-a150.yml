@@ -1,0 +1,21 @@
+name: Validate MiladGeo Android build workflow
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/Aaa150.yml'
+      - '.github/workflows/validate-a150.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Parse workflow YAML
+        run: |
+          ruby -e "require 'yaml'; YAML.load_file('.github/workflows/Aaa150.yml', aliases: true); puts 'Aaa150 YAML syntax OK'"
+      - name: Validate GitHub Actions expressions and schema
+        run: |
+          go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/Aaa150.yml
