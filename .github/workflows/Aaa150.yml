@@ -4493,10 +4493,10 @@ jobs:
               raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
           if 'versionCode 332' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.157'" not in gradle_path.read_text(encoding='utf-8'):
               raise SystemExit('Version 172 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 171 is ready with expanded native reminder trace.')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 172 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 331' app/build.gradle
-          grep -q "versionName '2.0.156'" app/build.gradle
+          grep -q 'versionCode 332' app/build.gradle
+          grep -q "versionName '2.0.157'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
