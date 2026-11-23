@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexxx173 APK
+name: Build MiladGeo Indexxx174 APK
 # Native reminder scheduler retained; visible notification diagnostics panel disabled
 # No notification diagnostics controls are added to the app UI
 
@@ -1402,7 +1402,15 @@ jobs:
 
               private boolean openExternalIfNeeded(String url) {
                   if (url == null) return false;
-                  String lowerUrl = url.trim().toLowerCase(java.util.Locale.ROOT);
+                  String lowerUrl = url.trim().toLowerCase(java.util.Locale.ROOT);                  // Intercept percent-encoded CafeBazaar review links before WebView loads them.
+                  try {
+                      String decodedUrl = Uri.decode(url.trim());
+                      String normalizedUrl = decodedUrl.toLowerCase(java.util.Locale.ROOT);
+                      boolean bazaarReviewLink =
+                          (normalizedUrl.contains("://comment") || normalizedUrl.contains("://details")) &&
+                          normalizedUrl.contains("com.miladgeo.hooshmasnooi.naghshebardar");
+                      if (bazaarReviewLink) { openBazaarRating(); return true; }
+                  } catch (Exception ignored) {}
                   try {
                       // Phone links must be handed to Android's native dialer.
                       if (lowerUrl.startsWith("tel:")) {
@@ -4456,8 +4464,8 @@ jobs:
           gradle = gradle_path.read_text(encoding='utf-8')
           if 'versionCode 319' not in gradle or "versionName '2.0.144'" not in gradle:
               raise SystemExit('Unexpected base Android version; refusing an unsafe version bump')
-          gradle = gradle.replace('versionCode 319', 'versionCode 333', 1)
-          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.158'", 1)
+          gradle = gradle.replace('versionCode 319', 'versionCode 334', 1)
+          gradle = gradle.replace("versionName '2.0.144'", "versionName '2.0.159'", 1)
           gradle_path.write_text(gradle, encoding='utf-8')
 
           # Final assertions protect the generated Java, calendar panel and version metadata.
@@ -4500,12 +4508,12 @@ jobs:
               raise SystemExit('Notification diagnostics UI must not appear in the calendar')
           if 'mg166-hidden-native-diagnostics' in check_html:
               raise SystemExit('Hidden diagnostics script must not be injected into the WebView page')
-          if 'versionCode 333' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.158'" not in gradle_path.read_text(encoding='utf-8'):
-              raise SystemExit('Version 173 metadata was not applied')
-          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 173 is ready with expanded native reminder trace.')
+          if 'versionCode 334' not in gradle_path.read_text(encoding='utf-8') or "versionName '2.0.159'" not in gradle_path.read_text(encoding='utf-8'):
+              raise SystemExit('Version 174 metadata was not applied')
+          print('Native Sarresid reminders are retained; no diagnostics panel is injected. Version 174 is ready with expanded native reminder trace.')
           PY_DIAG
-          grep -q 'versionCode 333' app/build.gradle
-          grep -q "versionName '2.0.158'" app/build.gradle
+          grep -q 'versionCode 334' app/build.gradle
+          grep -q "versionName '2.0.159'" app/build.gradle
           grep -q 'getSarresidDiagnostics' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'alarm_trigger_received' app/src/main/java/com/miladgeo/app/SarresidAlarmReceiver.java
 
@@ -4741,7 +4749,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx173-APK
+          name: MiladGeo-Indexxx174-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -4749,7 +4757,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: MiladGeo-Indexxx173-AAB
+          name: MiladGeo-Indexxx174-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
