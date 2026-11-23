@@ -61,7 +61,7 @@ jobs:
             function openBazaar(e, href){
               var decoded = href || '';
               try { decoded = decodeURIComponent(decoded); } catch (_) {}
-              if (!/:\\/\\//.test(decoded) || !/(?:comment|details)\\?id=/i.test(decoded)) return false;
+              if (decoded.indexOf('://') < 0 || (decoded.indexOf('comment?id=') < 0 && decoded.indexOf('details?id=') < 0)) return false;
               if (!/(?:myket|bazaar|کافه.?بازار|بازار)/i.test(decoded)) return false;
               if (e) { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); }
               if (window.Android && typeof window.Android.openBazaarRating === 'function') window.Android.openBazaarRating();
