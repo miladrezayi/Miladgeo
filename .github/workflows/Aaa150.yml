@@ -4802,7 +4802,7 @@ jobs:
               private Uri pendingMapReaderCameraUri;""", 1)
 
           # The WebView bridge launches the Android Photo Picker / external camera directly.
-          bridge_anchor = '                  @JavascriptInterface\\n                  public void openBazaarRating() {'
+          bridge_anchor = '                  @JavascriptInterface\n                  public void openBazaarRating() {'
           if 'public void openMapReaderCamera()' not in java:
               if bridge_anchor not in java:
                   raise SystemExit('Could not find the AndroidBridge insertion point.')
@@ -4831,9 +4831,6 @@ jobs:
                       pendingMapReaderCameraUri = FileProvider.getUriForFile(
                           this, getPackageName() + ".fileprovider", photo);
                       Intent capture = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                      if (capture.resolveActivity(getPackageManager()) == null) {
-                          throw new IllegalStateException("No camera application is available");
-                      }
                       capture.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, pendingMapReaderCameraUri);
                       capture.setClipData(android.content.ClipData.newRawUri("MiladGeo map scan", pendingMapReaderCameraUri));
                       capture.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
