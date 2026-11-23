@@ -4816,7 +4816,7 @@ jobs:
                       runOnUiThread(() -> launchMapReaderGallery());
                   }
 
-"""
+              """
               java = java.replace(bridge_anchor, bridge_methods + bridge_anchor, 1)
 
           # These are outer MainActivity helpers, not methods of AndroidBridge.
@@ -4920,7 +4920,7 @@ jobs:
                   }
               }
 
-'''
+              '''
               java = java.replace(helper_anchor, helpers + helper_anchor, 1)
 
           result_anchor = '                  if (requestCode == CAMERA_CAPTURE_REQUEST) {'
@@ -4953,7 +4953,7 @@ jobs:
                       return;
                   }
 
-'''
+              '''
               java = java.replace(result_anchor, result_handlers + result_anchor, 1)
 
           for marker in (
