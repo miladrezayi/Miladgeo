@@ -4812,7 +4812,7 @@ jobs:
                       runOnUiThread(() -> launchMapReaderGallery());
                   }
 
-"""
+          """
               java = java[:bridge_at] + bridge_methods + java[bridge_at:]
 
           # These are outer MainActivity helpers, not methods of AndroidBridge.
@@ -4950,7 +4950,7 @@ jobs:
                       return;
                   }
 
-'''
+          '''
               java = java[:result_at] + result_handlers + java[result_at:]
 
           for marker in (
