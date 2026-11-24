@@ -4785,26 +4785,22 @@ jobs:
           java_path = Path('app/src/main/java/com/miladgeo/app/MainActivity.java')
           java = java_path.read_text(encoding='utf-8')
 
-          const_anchor = '              private static final int CAMERA_CAPTURE_REQUEST = 1005;'
+          const_anchor = 'private static final int CAMERA_CAPTURE_REQUEST = 1005;'
           if 'MAP_READER_GALLERY_REQUEST' not in java:
               if const_anchor not in java:
                   raise SystemExit('Could not find the Android request-code declarations.')
-              java = java.replace(const_anchor, const_anchor + """
-              private static final int MAP_READER_GALLERY_REQUEST = 1013;
-              private static final int MAP_READER_CAMERA_REQUEST = 1014;""", 1)
+              java = java.replace(const_anchor, const_anchor + '\\n    private static final int MAP_READER_GALLERY_REQUEST = 1013;\\n    private static final int MAP_READER_CAMERA_REQUEST = 1014;', 1)
 
-          field_anchor = '              private String pendingCameraPath;'
+          field_anchor = 'private String pendingCameraPath;'
           if 'pendingMapReaderCameraPath' not in java:
               if field_anchor not in java:
                   raise SystemExit('Could not find the existing camera state fields.')
-              java = java.replace(field_anchor, field_anchor + """
-              private String pendingMapReaderCameraPath;
-              private Uri pendingMapReaderCameraUri;""", 1)
+              java = java.replace(field_anchor, field_anchor + '\\n    private String pendingMapReaderCameraPath;\\n    private Uri pendingMapReaderCameraUri;', 1)
 
-          # The WebView bridge launches the Android Photo Picker / external camera directly.
-          bridge_anchor = '                  @JavascriptInterface\n                  public void openBazaarRating() {'
+          bridge_method_at = java.find('public void openBazaarRating() {')
+          bridge_at = java.rfind('@JavascriptInterface', 0, bridge_method_at)
           if 'public void openMapReaderCamera()' not in java:
-              if bridge_anchor not in java:
+              if bridge_method_at < 0 or bridge_at < 0:
                   raise SystemExit('Could not find the AndroidBridge insertion point.')
               bridge_methods = """                  @JavascriptInterface
                   public void openMapReaderCamera() {
@@ -4816,13 +4812,14 @@ jobs:
                       runOnUiThread(() -> launchMapReaderGallery());
                   }
 
-              """
-              java = java.replace(bridge_anchor, bridge_methods + bridge_anchor, 1)
+"""
+              java = java[:bridge_at] + bridge_methods + java[bridge_at:]
 
           # These are outer MainActivity helpers, not methods of AndroidBridge.
-          helper_anchor = '              private boolean openExternalIfNeeded(String url) {'
+          helper_anchor = 'private boolean openExternalIfNeeded(String url) {'
           if 'private void launchMapReaderCamera()' not in java:
-              if helper_anchor not in java:
+              helper_at = java.find(helper_anchor)
+              if helper_at < 0:
                   raise SystemExit('Could not find the MainActivity helper insertion point.')
               helpers = r'''              private void launchMapReaderCamera() {
                   try {
@@ -4921,11 +4918,12 @@ jobs:
               }
 
               '''
-              java = java.replace(helper_anchor, helpers + helper_anchor, 1)
+              java = java[:helper_at] + helpers + java[helper_at:]
 
-          result_anchor = '                  if (requestCode == CAMERA_CAPTURE_REQUEST) {'
+          result_anchor = 'if (requestCode == CAMERA_CAPTURE_REQUEST) {'
           if 'if (requestCode == MAP_READER_CAMERA_REQUEST)' not in java:
-              if result_anchor not in java:
+              result_at = java.find(result_anchor)
+              if result_at < 0:
                   raise SystemExit('Could not find onActivityResult camera handler.')
               result_handlers = '''                  if (requestCode == MAP_READER_GALLERY_REQUEST) {
                       if (resultCode == RESULT_OK && data != null) {
@@ -4944,8 +4942,7 @@ jobs:
                       pendingMapReaderCameraPath = null;
                       pendingMapReaderCameraUri = null;
                       if (resultCode == RESULT_OK && capturedPath != null) {
-                          File captured = new File(capturedPath);
-                          deliverMapReaderFile(captured, "map-camera.jpg");
+                          deliverMapReaderFile(new File(capturedPath), "map-camera.jpg");
                       } else {
                           if (capturedPath != null) try { new File(capturedPath).delete(); } catch (Exception ignored) {}
                           android.widget.Toast.makeText(this, "عکس‌گرفتن لغو شد.", android.widget.Toast.LENGTH_SHORT).show();
@@ -4953,8 +4950,8 @@ jobs:
                       return;
                   }
 
-              '''
-              java = java.replace(result_anchor, result_handlers + result_anchor, 1)
+'''
+              java = java[:result_at] + result_handlers + java[result_at:]
 
           for marker in (
               'public void openMapReaderCamera()',
