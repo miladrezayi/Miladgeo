@@ -406,94 +406,6 @@ jobs:
           grep -q 'window.ensureMiladGeoXLSX=ensureMiladGeoXLSX' Indexxx150.html
           node --check xlsx.full.min.js
 
-      - name: Fix Menu 10 touch targets and click routing
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY_TOUCH'
-          from pathlib import Path
-
-          assets = Path('app/src/main/assets')
-          names = ('index.html', 'index858.html', 'Index880.html', 'index843.html')
-          patch = r"""
-          <style id="miladgeo-menu10-touch-fix">
-          [data-m10-touch-fix="gallery"],[data-m10-touch-fix="camera"]{
-            position:relative!important;
-            z-index:2147483000!important;
-            pointer-events:auto!important;
-            touch-action:manipulation!important;
-            -webkit-tap-highlight-color:rgba(25,90,55,.22)!important;
-          }
-          </style>
-          <script id="miladgeo-menu10-touch-fix-js">
-          (function(){
-            'use strict';
-            function norm(s){return String(s||'').replace(/[\\s\\u200c\\u200f]+/g,' ').trim();}
-            function kind(el){
-              var t=norm(el.innerText||el.textContent||el.value||el.getAttribute('aria-label')||'');
-              var h=(el.getAttribute('onclick')||'')+' '+(el.getAttribute('data-action')||'');
-              if(/m10CamOpenGallery/i.test(h)||(/گالری/.test(t)&&/انتخاب|عکس/.test(t))) return 'gallery';
-              if(/m10CamOpenCamera/i.test(h)||(/دوربین/.test(t)&&/عکس|گرفتن/.test(t))) return 'camera';
-              return '';
-            }
-            function prepare(){
-              var all=document.querySelectorAll('button,a,[role="button"],input,[onclick],div,span');
-              all.forEach(function(el){
-                if(!el||!el.getBoundingClientRect) return;
-                var k=kind(el); if(!k) return;
-                var r=el.getBoundingClientRect();
-                if(r.width<35||r.height<25) return;
-                el.setAttribute('data-m10-touch-fix',k);
-                el.style.setProperty('pointer-events','auto','important');
-                el.style.setProperty('position','relative','important');
-                el.style.setProperty('z-index','2147483000','important');
-                el.style.setProperty('touch-action','manipulation','important');
-              });
-            }
-            function dispatch(ev){
-              var n=ev.target;
-              while(n&&n!==document){
-                var k=kind(n)||n.getAttribute&&n.getAttribute('data-m10-touch-fix');
-                if(k){
-                  ev.preventDefault();
-                  ev.stopPropagation();
-                  if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
-                  if(k==='gallery'&&typeof window.m10CamOpenGallery==='function') window.m10CamOpenGallery();
-                  else if(k==='camera'&&typeof window.m10CamOpenCamera==='function') window.m10CamOpenCamera();
-                  return;
-                }
-                n=n.parentElement;
-              }
-            }
-            if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',prepare,{once:true});else prepare();
-            document.addEventListener('click',function(ev){prepare();dispatch(ev);},true);
-            document.addEventListener('touchend',function(ev){prepare();},true);
-            window.addEventListener('load',prepare,{once:true});
-            setTimeout(prepare,350);
-            setTimeout(prepare,1200);
-          })();
-          </script>
-          """
-          updated = 0
-          for name in names:
-              p = assets / name
-              if not p.is_file(): continue
-              src = p.read_text(encoding='utf-8')
-              if 'window.m10CamOpenGallery=function(){' not in src or 'window.m10CamOpenCamera=function(){' not in src:
-                  raise SystemExit(f'{name}: Menu 10 scanner functions missing; refusing to build a broken patch.')
-              if 'miladgeo-menu10-touch-fix-js' not in src:
-                  pos = src.lower().rfind('</body>')
-                  if pos >= 0: src = src[:pos] + patch + src[pos:]
-                  else: src += patch
-              p.write_text(src, encoding='utf-8')
-              updated += 1
-          if not updated: raise SystemExit('No Menu 10 HTML asset received the touch fix.')
-          print(f'Installed touch-target repair in {updated} HTML assets.')
-          PY_TOUCH
-          grep -q 'miladgeo-menu10-touch-fix-js' app/src/main/assets/index.html
-          grep -q 'm10CamOpenGallery' app/src/main/assets/index.html
-          grep -q 'm10CamOpenCamera' app/src/main/assets/index.html
-
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -5064,6 +4976,94 @@ jobs:
           grep -q 'm10CamLoadFromNative' app/src/main/assets/index.html
           grep -q 'MAP_READER_GALLERY_REQUEST' app/src/main/java/com/miladgeo/app/MainActivity.java
           grep -q 'MAP_READER_CAMERA_REQUEST' app/src/main/java/com/miladgeo/app/MainActivity.java
+
+      - name: Fix Menu 10 touch targets and click routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY_TOUCH'
+          from pathlib import Path
+
+          assets = Path('app/src/main/assets')
+          names = ('index.html', 'index858.html', 'Index880.html', 'index843.html')
+          patch = r"""
+          <style id="miladgeo-menu10-touch-fix">
+          [data-m10-touch-fix="gallery"],[data-m10-touch-fix="camera"]{
+            position:relative!important;
+            z-index:2147483000!important;
+            pointer-events:auto!important;
+            touch-action:manipulation!important;
+            -webkit-tap-highlight-color:rgba(25,90,55,.22)!important;
+          }
+          </style>
+          <script id="miladgeo-menu10-touch-fix-js">
+          (function(){
+            'use strict';
+            function norm(s){return String(s||'').replace(/[\\s\\u200c\\u200f]+/g,' ').trim();}
+            function kind(el){
+              var t=norm(el.innerText||el.textContent||el.value||el.getAttribute('aria-label')||'');
+              var h=(el.getAttribute('onclick')||'')+' '+(el.getAttribute('data-action')||'');
+              if(/m10CamOpenGallery/i.test(h)||(/گالری/.test(t)&&/انتخاب|عکس/.test(t))) return 'gallery';
+              if(/m10CamOpenCamera/i.test(h)||(/دوربین/.test(t)&&/عکس|گرفتن/.test(t))) return 'camera';
+              return '';
+            }
+            function prepare(){
+              var all=document.querySelectorAll('button,a,[role="button"],input,[onclick],div,span');
+              all.forEach(function(el){
+                if(!el||!el.getBoundingClientRect) return;
+                var k=kind(el); if(!k) return;
+                var r=el.getBoundingClientRect();
+                if(r.width<35||r.height<25) return;
+                el.setAttribute('data-m10-touch-fix',k);
+                el.style.setProperty('pointer-events','auto','important');
+                el.style.setProperty('position','relative','important');
+                el.style.setProperty('z-index','2147483000','important');
+                el.style.setProperty('touch-action','manipulation','important');
+              });
+            }
+            function dispatch(ev){
+              var n=ev.target;
+              while(n&&n!==document){
+                var k=kind(n)||n.getAttribute&&n.getAttribute('data-m10-touch-fix');
+                if(k){
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
+                  if(k==='gallery'&&typeof window.m10CamOpenGallery==='function') window.m10CamOpenGallery();
+                  else if(k==='camera'&&typeof window.m10CamOpenCamera==='function') window.m10CamOpenCamera();
+                  return;
+                }
+                n=n.parentElement;
+              }
+            }
+            if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',prepare,{once:true});else prepare();
+            document.addEventListener('click',function(ev){prepare();dispatch(ev);},true);
+            document.addEventListener('touchend',function(ev){prepare();},true);
+            window.addEventListener('load',prepare,{once:true});
+            setTimeout(prepare,350);
+            setTimeout(prepare,1200);
+          })();
+          </script>
+          """
+          updated = 0
+          for name in names:
+              p = assets / name
+              if not p.is_file(): continue
+              src = p.read_text(encoding='utf-8')
+              if 'window.m10CamOpenGallery=function(){' not in src or 'window.m10CamOpenCamera=function(){' not in src:
+                  raise SystemExit(f'{name}: Menu 10 scanner functions missing; refusing to build a broken patch.')
+              if 'miladgeo-menu10-touch-fix-js' not in src:
+                  pos = src.lower().rfind('</body>')
+                  if pos >= 0: src = src[:pos] + patch + src[pos:]
+                  else: src += patch
+              p.write_text(src, encoding='utf-8')
+              updated += 1
+          if not updated: raise SystemExit('No Menu 10 HTML asset received the touch fix.')
+          print(f'Installed touch-target repair in {updated} HTML assets.')
+          PY_TOUCH
+          grep -q 'miladgeo-menu10-touch-fix-js' app/src/main/assets/index.html
+          grep -q 'm10CamOpenGallery' app/src/main/assets/index.html
+          grep -q 'm10CamOpenCamera' app/src/main/assets/index.html
 
       - name: Build Release APK and AAB
         env:
