@@ -1,4 +1,4 @@
-name: Build MiladGeo Indexx180 Android APK
+name: Build MiladGeo Indexxx181 Android APK
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
     paths:
       - 'Index880.html'
       - 'Indexx180.html'
+      - 'miladgeo-assistant-ocr.js'
       - 'icon.png'
       - 'Index885robot13.html'
       - 'Index885robot14.html'
@@ -55,6 +56,7 @@ jobs:
           set -euo pipefail
           # Validate the current Indexx180 HTML source and custom app icon.
           test -s Indexx180.html
+          test -s miladgeo-assistant-ocr.js
           test -s Index885robot14.html
           test -s Index880.html
           test -s MiladmarketV58.html
@@ -222,6 +224,24 @@ jobs:
               raise SystemExit('Indexmiladgeojobv43.html does not point back to index858.html')
           if not volume3d.is_file() or volume3d.stat().st_size == 0:
               raise SystemExit('Index3D51.html is required for Menu 8 Volume / Earthwork')
+
+          # Add the first-party Persian/English OCR extension to the existing assistant.
+          ocr_path = Path('miladgeo-assistant-ocr.js')
+          if not ocr_path.is_file() or ocr_path.stat().st_size == 0:
+              raise SystemExit('MiladGeo assistant OCR plugin is missing')
+          ocr_js = ocr_path.read_text(encoding='utf-8')
+          ocr_button_marker = '<button type="button" id="miladBotAnalyzeFile">🧠 تحلیل هوشمند فایل نقشه‌برداری</button><input id="miladBotFileInput" type="file" accept=".txt,.csv,.tsv,.dxf,.xyz,.pts,.prn,.asc,.dat,.log,.xlsx,.xls,.kml" style="display:none" />'
+          ocr_button_markup = '<button type="button" id="miladBotAnalyzeFile">🧠 تحلیل هوشمند فایل نقشه‌برداری</button><button type="button" id="miladBotOcrBtn">📷 استخراج متن از عکس / PDF</button><input id="miladBotOcrInput" type="file" accept="image/jpeg,image/png,image/webp,image/bmp,.pdf" style="display:none" /><input id="miladBotFileInput" type="file" accept=".txt,.csv,.tsv,.dxf,.xyz,.pts,.prn,.asc,.dat,.log,.xlsx,.xls,.kml" style="display:none" />'
+          if ocr_button_marker not in src:
+              raise SystemExit('MiladGeo assistant file-analysis button marker was not found')
+          src = src.replace(ocr_button_marker, ocr_button_markup, 1)
+          if 'miladgeo-assistant-ocr-v1' in src:
+              raise SystemExit('OCR extension already exists in the source; duplicate injection refused')
+          body_pos = src.lower().rfind('</body>')
+          if body_pos < 0:
+              raise SystemExit('Cannot inject OCR extension: closing body tag was not found')
+          ocr_block = '<script id="miladgeo-assistant-ocr-v1">\n' + ocr_js + '\n</script>\n'
+          src = src[:body_pos] + ocr_block + src[body_pos:]
 
           # Indexx180.html is the authoritative source for this build.
           # Bundle the patched main index under the required legacy aliases; CI verifies these aliases match.
@@ -2088,6 +2108,8 @@ jobs:
           test -s MiladmarketV58.html
           test -s indexv40.html
           test -s app/src/main/assets/index.html
+          grep -q 'miladgeo-assistant-ocr-v1' app/src/main/assets/index.html
+          grep -q 'miladBotOcrBtn' app/src/main/assets/index.html
           test -s app/src/main/assets/index858.html
           test -s app/src/main/assets/Index880.html
           test -s app/src/main/assets/Index885robot13.html
@@ -2163,7 +2185,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HooshMasnooiNaghshebardar-X173-APK
+          name: MiladGeo-Indexxx181-APK
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -2171,7 +2193,7 @@ jobs:
       - name: Upload Google Play AAB
         uses: actions/upload-artifact@v4
         with:
-          name: HooshMasnooiNaghshebardar-X173-AAB
+          name: MiladGeo-Indexxx181-AAB
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
